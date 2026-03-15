@@ -70,7 +70,13 @@ export function MainPage() {
         ))}
       </div>
 
-      <IncomeChart cagr={null} />
+      <IncomeChart
+        categories={categories.map((cat) => ({
+          type: cat.type,
+          incomePerMonth: cat.totalIncomePerMonth,
+        }))}
+        cagr={null}
+      />
     </AppShell>
   );
 }

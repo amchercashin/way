@@ -50,7 +50,7 @@ export function CategoryPage() {
         + Добавить
       </Link>
 
-      <IncomeChart cagr={null} />
+      <IncomeChart categories={[]} cagr={null} />
     </AppShell>
   );
 }

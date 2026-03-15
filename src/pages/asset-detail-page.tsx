@@ -75,7 +75,7 @@ export function AssetDetailPage() {
         </>
       )}
 
-      <IncomeChart cagr={null} />
+      <IncomeChart categories={[]} cagr={null} />
     </AppShell>
   );
 }
