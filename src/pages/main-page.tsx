@@ -4,15 +4,37 @@ import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
 import { IncomeChart } from '@/components/shared/income-chart';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
+import { useMoexSync } from '@/hooks/use-moex-sync';
+
+function formatSyncTime(date: Date): string {
+  const d = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const t = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  return `${d}, ${t}`;
+}
 
 export function MainPage() {
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const { portfolio, categories } = usePortfolioStats();
+  const { syncing, lastSyncAt, sync } = useMoexSync();
 
-  const income = mode === 'month' ? portfolio.totalIncomePerMonth : portfolio.totalIncomePerYear;
+  const income =
+    mode === 'month'
+      ? portfolio.totalIncomePerMonth
+      : portfolio.totalIncomePerYear;
+
+  const refreshButton = (
+    <button
+      onClick={() => sync()}
+      disabled={syncing}
+      className="text-gray-400 text-base disabled:opacity-50"
+      aria-label="Обновить данные MOEX"
+    >
+      <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
+    </button>
+  );
 
   return (
-    <AppShell rightAction={<span className="text-gray-400 text-base">⟳</span>}>
+    <AppShell rightAction={refreshButton}>
       <HeroIncome
         income={income}
         yieldPercent={portfolio.yieldPercent}
@@ -20,6 +42,12 @@ export function MainPage() {
         mode={mode}
         onToggle={() => setMode((m) => (m === 'month' ? 'year' : 'month'))}
       />
+
+      {lastSyncAt && (
+        <div className="text-center text-gray-600 text-[10px] -mt-2 mb-2">
+          MOEX: {formatSyncTime(lastSyncAt)}
+        </div>
+      )}
 
       <div className="mt-4">
         {categories.length === 0 && (
