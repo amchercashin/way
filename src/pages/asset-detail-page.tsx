@@ -8,7 +8,7 @@ import { useAsset, updateAsset } from '@/hooks/use-assets';
 import { usePaymentSchedule, upsertPaymentSchedule } from '@/hooks/use-payment-schedules';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
-import { formatCurrencyFull, formatFrequency } from '@/lib/utils';
+import { formatFrequency } from '@/lib/utils';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();

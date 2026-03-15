@@ -3,7 +3,6 @@ import {
   parseMDTable,
   parseCSV,
   parseTypeLabel,
-  type ImportAssetRow,
 } from '@/services/import-parser';
 
 describe('parseTypeLabel', () => {
