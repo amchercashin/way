@@ -8,6 +8,7 @@ import { ImportAIPage } from '@/pages/import-ai-page';
 import { ImportFilePage } from '@/pages/import-file-page';
 import { ImportPreviewPage } from '@/pages/import-preview-page';
 import { SettingsPage } from '@/pages/settings-page';
+import { BackupPage } from '@/pages/backup-page';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/import/file" element={<ImportFilePage />} />
         <Route path="/import/preview" element={<ImportPreviewPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/backup" element={<BackupPage />} />
       </Routes>
     </BrowserRouter>
   );
