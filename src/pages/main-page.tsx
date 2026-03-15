@@ -15,7 +15,7 @@ function formatSyncTime(date: Date): string {
 export function MainPage() {
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const { portfolio, categories } = usePortfolioStats();
-  const { syncing, lastSyncAt, sync } = useMoexSync();
+  const { syncing, lastSyncAt, error, sync } = useMoexSync();
 
   const income =
     mode === 'month'
@@ -47,6 +47,10 @@ export function MainPage() {
         <div className="text-center text-gray-600 text-[10px] -mt-2 mb-2">
           MOEX: {formatSyncTime(lastSyncAt)}
         </div>
+      )}
+
+      {error && (
+        <div className="text-center text-red-400 text-[10px] mb-2">{error}</div>
       )}
 
       <div className="mt-4">

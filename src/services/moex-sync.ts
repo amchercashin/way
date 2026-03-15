@@ -81,7 +81,7 @@ async function syncStock(asset: Asset, boardId: string): Promise<void> {
 
 async function syncBond(asset: Asset, boardId: string): Promise<void> {
   const bondData = await fetchBondData(asset.ticker!, boardId);
-  if (!bondData) return;
+  if (!bondData) throw new Error('Нет данных на MOEX');
 
   const pricePercent = bondData.currentPrice ?? bondData.prevPrice;
   if (pricePercent != null) {

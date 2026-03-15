@@ -1,17 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { syncAllAssets, getLastSyncAt, type SyncResult } from '@/services/moex-sync';
 
 export function useMoexSync() {
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const syncingRef = useRef(false);
 
   useEffect(() => {
     getLastSyncAt().then(setLastSyncAt);
   }, []);
 
   const sync = useCallback(async (): Promise<SyncResult | null> => {
-    if (syncing) return null;
+    if (syncingRef.current) return null;
+    syncingRef.current = true;
     setSyncing(true);
     setError(null);
     try {
@@ -25,9 +27,10 @@ export function useMoexSync() {
       setError(e instanceof Error ? e.message : String(e));
       return null;
     } finally {
+      syncingRef.current = false;
       setSyncing(false);
     }
-  }, [syncing]);
+  }, []);
 
   return { syncing, lastSyncAt, error, sync };
 }
