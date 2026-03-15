@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI/UX v2 — Revised Screens</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; color: #ccc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.6; }
+  h1 { color: #fff; font-size: 24px; margin-bottom: 4px; }
+  h2 { color: #4ecca3; font-size: 18px; margin: 36px 0 12px; }
+  h3 { color: #fff; font-size: 15px; margin: 20px 0 8px; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+
+  .phones { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .phone { width: 320px; background: #111; border-radius: 28px; padding: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .phone-screen { background: #0d1117; border-radius: 20px; padding: 20px; min-height: 580px; font-family: -apple-system, monospace; overflow: hidden; }
+  .phone-label { text-align: center; color: #888; font-size: 12px; margin-top: 8px; }
+
+  .status-bar { display: flex; justify-content: space-between; color: #888; font-size: 11px; margin-bottom: 16px; }
+  .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .toggle { display: flex; background: #1a1a2e; border-radius: 20px; padding: 2px; }
+  .toggle span { padding: 5px 16px; border-radius: 18px; font-size: 12px; }
+  .toggle .active { background: #4ecca3; color: #000; font-weight: 600; }
+  .toggle .inactive { color: #666; }
+
+  .hero-label { color: #888; font-size: 11px; text-align: center; }
+  .hero-value { color: #4ecca3; font-size: 32px; font-weight: 700; text-align: center; letter-spacing: -1px; }
+  .hero-sub { color: #666; font-size: 11px; text-align: center; margin-top: 2px; }
+
+  .chart-box { background: #1a1a2e; border-radius: 10px; margin: 14px 0; padding: 12px; position: relative; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
+  .bar { background: #4ecca333; border-radius: 2px 2px 0 0; flex: 1; }
+  .bar.hi { background: #4ecca3; }
+  .chart-labels { display: flex; justify-content: space-between; color: #555; font-size: 8px; margin-top: 4px; }
+  .chart-cagr { position: absolute; top: 8px; right: 10px; font-size: 10px; color: #4ecca3; font-weight: 600; }
+
+  .asset-card { background: #1a1a2e; border-radius: 12px; padding: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .asset-left { display: flex; align-items: center; gap: 10px; }
+  .asset-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .asset-name { color: #fff; font-size: 14px; font-weight: 500; }
+  .asset-count { color: #666; font-size: 11px; }
+  .asset-income { color: #4ecca3; font-weight: 600; font-size: 14px; }
+  .asset-pct { color: #555; font-size: 11px; }
+
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .stat-box { background: #1a1a2e; padding: 10px; border-radius: 10px; text-align: center; }
+  .stat-label { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { color: #fff; font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .stat-value.green { color: #4ecca3; }
+
+  .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .back-btn { color: #888; font-size: 18px; }
+  .detail-title { color: #fff; font-size: 16px; font-weight: 600; }
+
+  .stock-row { background: #1a1a2e; border-radius: 10px; padding: 12px; margin-bottom: 6px; }
+  .stock-top { display: flex; justify-content: space-between; align-items: center; }
+  .stock-ticker { color: #fff; font-weight: 600; font-size: 14px; }
+  .stock-income { color: #4ecca3; font-weight: 600; font-size: 14px; }
+  .stock-bottom { display: flex; justify-content: space-between; color: #555; font-size: 11px; margin-top: 4px; }
+  .stock-freq { display: inline-block; background: #e9c46a22; color: #e9c46a; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+
+  .edit-field { background: #1a1a2e; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .edit-label { color: #888; font-size: 11px; margin-bottom: 4px; }
+  .edit-value { color: #fff; font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+  .tag-auto { font-size: 9px; color: #4ecca3; background: #4ecca322; padding: 2px 6px; border-radius: 4px; }
+  .tag-import { font-size: 9px; color: #e9c46a; background: #e9c46a22; padding: 2px 6px; border-radius: 4px; }
+
+  .next-div { background: linear-gradient(135deg, #1a2e1a, #1a1a2e); border: 1px solid #4ecca333; border-radius: 10px; padding: 14px; margin: 12px 0; }
+  .next-div-title { color: #4ecca3; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .next-div-row { display: flex; justify-content: space-between; color: #aaa; font-size: 12px; padding: 3px 0; }
+  .next-div-row span:last-child { color: #fff; }
+
+  .design-note { background: #1a1a2e; border-left: 3px solid #4ecca3; padding: 16px; border-radius: 0 10px 10px 0; margin: 16px 0; font-size: 13px; color: #aaa; }
+  .design-note strong { color: #4ecca3; }
+  .design-note.warn { border-left-color: #e9c46a; }
+  .design-note.warn strong { color: #e9c46a; }
+
+  .import-item { background: #1a1a2e; border-radius: 10px; padding: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .import-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .import-title { color: #fff; font-size: 14px; font-weight: 500; }
+  .import-desc { color: #666; font-size: 11px; margin-top: 2px; }
+
+  .mode-toggle { display: flex; background: #0d1117; border-radius: 10px; overflow: hidden; margin-bottom: 16px; border: 1px solid #1a1a2e; }
+  .mode-btn { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; cursor: pointer; }
+  .mode-btn.active { background: #1a1a2e; }
+  .mode-btn .mode-title { font-weight: 600; margin-bottom: 2px; }
+  .mode-btn .mode-desc { font-size: 10px; color: #666; }
+  .mode-btn.active .mode-title { color: #4ecca3; }
+
+  .prompt-box { background: #0d1117; border: 1px solid #333; border-radius: 10px; padding: 14px; font-size: 11px; color: #aaa; font-family: monospace; line-height: 1.6; margin: 12px 0; position: relative; }
+  .prompt-box .copy-btn { position: absolute; top: 8px; right: 8px; background: #1a1a2e; border: 1px solid #333; color: #888; padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; }
+  .prompt-box .copy-btn:hover { color: #4ecca3; border-color: #4ecca3; }
+</style>
+</head>
+<body>
+
+<h1>UI/UX v2: Обновлённые экраны</h1>
+<p class="subtitle">Консистентные stat-блоки, CAGR на графиках, ожидаемый дивиденд, AI-импорт, обновление vs добавление</p>
+
+<!-- ===== CONSISTENT CHARTS ===== -->
+<h2>Симметрия графиков: CAGR везде</h2>
+<p style="color: #aaa; font-size: 13px; margin-bottom: 16px;">На каждом уровне один и тот же паттерн: история выплат + CAGR. Масштаб данных меняется, форма — нет.</p>
+
+<div class="phones">
+  <!-- MAIN SCREEN v2 -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="nav-top">
+        <span style="color: #888; font-size: 18px;">☰</span>
+        <div class="toggle">
+          <span class="active">мес</span>
+          <span class="inactive">год</span>
+        </div>
+        <span style="color: #888; font-size: 16px;">⟳</span>
+      </div>
+
+      <div class="hero-label">расчётный пассивный доход</div>
+      <div class="hero-value">₽ 47 200</div>
+      <div class="hero-sub">доходность 6.9% · портфель ₽ 8.2M</div>
+
+      <div class="chart-box">
+        <span class="chart-cagr">CAGR +18.3%</span>
+        <div class="chart-bars">
+          <div class="bar" style="height: 30%;"></div>
+          <div class="bar" style="height: 38%;"></div>
+          <div class="bar" style="height: 45%;"></div>
+          <div class="bar" style="height: 52%;"></div>
+          <div class="bar" style="height: 58%;"></div>
+          <div class="bar" style="height: 65%;"></div>
+          <div class="bar" style="height: 72%;"></div>
+          <div class="bar" style="height: 82%;"></div>
+          <div class="bar hi" style="height: 100%;"></div>
+        </div>
+        <div class="chart-labels">
+          <span>2018</span><span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span>
+        </div>
+      </div>
+
+      <div class="asset-card">
+        <div class="asset-left">
+          <div class="asset-dot" style="background: #e9c46a;"></div>
+          <div><div class="asset-name">Акции</div><div class="asset-count">5 позиций</div></div>
+        </div>
+        <div style="text-align: right;">
+          <div class="asset-income">₽ 26 800</div>
+          <div class="asset-pct">56.8%</div>
+        </div>
+        <span style="color:#333; margin-left:8px;">›</span>
+      </div>
+      <div class="asset-card">
+        <div class="asset-left">
+          <div class="asset-dot" style="background: #7b68ee;"></div>
+          <div><div class="asset-name">Облигации</div><div class="asset-count">3 позиции</div></div>
+        </div>
+        <div style="text-align: right;">
+          <div class="asset-income">₽ 6 100</div>
+          <div class="asset-pct">12.9%</div>
+        </div>
+        <span style="color:#333; margin-left:8px;">›</span>
+      </div>
+      <div class="asset-card">
+        <div class="asset-left">
+          <div class="asset-dot" style="background: #e76f51;"></div>
+          <div><div class="asset-name">Фонды</div><div class="asset-count">2 позиции</div></div>
+        </div>
+        <div style="text-align: right;">
+          <div class="asset-income">₽ 5 300</div>
+          <div class="asset-pct">11.2%</div>
+        </div>
+        <span style="color:#333; margin-left:8px;">›</span>
+      </div>
+      <div class="asset-card">
+        <div class="asset-left">
+          <div class="asset-dot" style="background: #e94560;"></div>
+          <div><div class="asset-name">Недвижимость</div><div class="asset-count">1 объект</div></div>
+        </div>
+        <div style="text-align: right;">
+          <div class="asset-income">₽ 9 000</div>
+          <div class="asset-pct">19.1%</div>
+        </div>
+        <span style="color:#333; margin-left:8px;">›</span>
+      </div>
+    </div>
+    <div class="phone-label">Главный экран v2</div>
+  </div>
+
+  <!-- CATEGORY v2 -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="detail-header">
+        <span class="back-btn">‹</span>
+        <div class="asset-dot" style="background: #e9c46a;"></div>
+        <span class="detail-title">Акции</span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-label">Доход/мес</div>
+          <div class="stat-value green">₽ 26 800</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Стоимость</div>
+          <div class="stat-value">₽ 4.6M</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Доходность</div>
+          <div class="stat-value green">7.0%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Доля портф.</div>
+          <div class="stat-value">56.1%</div>
+        </div>
+      </div>
+
+      <div class="chart-box">
+        <span class="chart-cagr">CAGR +21.5%</span>
+        <div class="chart-bars">
+          <div class="bar" style="height: 25%;"></div>
+          <div class="bar" style="height: 35%;"></div>
+          <div class="bar" style="height: 40%;"></div>
+          <div class="bar" style="height: 50%;"></div>
+          <div class="bar" style="height: 55%;"></div>
+          <div class="bar" style="height: 68%;"></div>
+          <div class="bar" style="height: 78%;"></div>
+          <div class="bar" style="height: 88%;"></div>
+          <div class="bar hi" style="height: 100%;"></div>
+        </div>
+        <div class="chart-labels">
+          <span>2018</span><span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span>
+        </div>
+      </div>
+
+      <div class="stock-row">
+        <div class="stock-top">
+          <div><span class="stock-ticker">SBER</span> <span style="color:#666;font-size:12px;">Сбербанк</span></div>
+          <span class="stock-income">₽ 12 400</span>
+        </div>
+        <div class="stock-bottom">
+          <span>800 шт · ₽ 238K</span>
+          <span><span class="stock-freq">1×/год</span> ₽148 800/год</span>
+        </div>
+      </div>
+      <div class="stock-row">
+        <div class="stock-top">
+          <div><span class="stock-ticker">LKOH</span> <span style="color:#666;font-size:12px;">Лукойл</span></div>
+          <span class="stock-income">₽ 8 200</span>
+        </div>
+        <div class="stock-bottom">
+          <span>15 шт · ₽ 107K</span>
+          <span><span class="stock-freq">2×/год</span> ₽98 400/год</span>
+        </div>
+      </div>
+      <div class="stock-row">
+        <div class="stock-top">
+          <div><span class="stock-ticker">GMKN</span> <span style="color:#666;font-size:12px;">Норникель</span></div>
+          <span class="stock-income">₽ 3 500</span>
+        </div>
+        <div class="stock-bottom">
+          <span>3 шт · ₽ 37K</span>
+          <span><span class="stock-freq">2×/год</span> ₽42 000/год</span>
+        </div>
+      </div>
+      <div class="stock-row" style="opacity: 0.7;">
+        <div class="stock-top"><span style="color:#888;">ещё 2 акции</span><span style="color:#888;">₽ 2 700</span></div>
+      </div>
+    </div>
+    <div class="phone-label">Категория «Акции» v2</div>
+  </div>
+
+  <!-- ASSET DETAIL v2 -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="detail-header">
+        <span class="back-btn">‹</span>
+        <span class="detail-title">SBER · Сбербанк</span>
+        <span style="color: #888; font-size: 14px; margin-left: auto;">✏️</span>
+      </div>
+
+      <!-- CONSISTENT stat blocks -->
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-label">Доход/мес</div>
+          <div class="stat-value green">₽ 12 400</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Стоимость</div>
+          <div class="stat-value">₽ 238K</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Доходность</div>
+          <div class="stat-value green">7.5%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Доля портф.</div>
+          <div class="stat-value">2.9%</div>
+        </div>
+      </div>
+
+      <!-- NEXT DIVIDEND -->
+      <div class="next-div">
+        <div class="next-div-title">Ожидаемый дивиденд</div>
+        <div class="next-div-row"><span>Размер (прогноз)</span><span>₽ 186.00 × 800 = ₽ 148 800</span></div>
+        <div class="next-div-row"><span>Отсечка (ожид.)</span><span>~12 июня 2026</span></div>
+        <div class="next-div-row"><span>Выплата (ожид.)</span><span>~10 июля 2026</span></div>
+        <div class="next-div-row"><span>Зачисление (ожид.)</span><span>~15 июля 2026</span></div>
+        <div style="color: #555; font-size: 10px; margin-top: 6px;">На основе последней выплаты. Фактические даты будут обновлены с MOEX.</div>
+      </div>
+
+      <!-- Key fields -->
+      <div class="edit-field">
+        <div class="edit-label">Количество</div>
+        <div class="edit-value">800 шт <span class="tag-import">импорт</span></div>
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Последний дивиденд</div>
+        <div class="edit-value">₽ 186.00 / акция <span class="tag-auto">MOEX</span></div>
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Частота</div>
+        <div class="edit-value">1 раз в год <span class="tag-auto">MOEX</span></div>
+      </div>
+
+      <!-- CONSISTENT chart -->
+      <div class="chart-box">
+        <span class="chart-cagr">CAGR +24.1%</span>
+        <div class="chart-bars">
+          <div class="bar" style="height: 28%;"></div>
+          <div class="bar" style="height: 35%;"></div>
+          <div class="bar" style="height: 40%;"></div>
+          <div class="bar" style="height: 30%;"></div>
+          <div class="bar" style="height: 50%;"></div>
+          <div class="bar" style="height: 65%;"></div>
+          <div class="bar" style="height: 75%;"></div>
+          <div class="bar" style="height: 85%;"></div>
+          <div class="bar hi" style="height: 100%;"></div>
+        </div>
+        <div class="chart-labels">
+          <span>'17</span><span>'18</span><span>'19</span><span>'20</span><span>'21</span><span>'22</span><span>'23</span><span>'24</span><span>'25</span>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Детали актива v2</div>
+  </div>
+</div>
+
+<!-- ===== IMPORT v2 ===== -->
+<h2>Импорт v2: обновление vs добавление + AI-помощник</h2>
+
+<div class="phones">
+  <!-- IMPORT MODE SELECTION -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="detail-header">
+        <span class="back-btn">‹</span>
+        <span class="detail-title">Импорт данных</span>
+      </div>
+
+      <!-- UPDATE vs ADD toggle -->
+      <div class="mode-toggle">
+        <div class="mode-btn active">
+          <div class="mode-title" style="color: #4ecca3;">⟳ Обновить</div>
+          <div class="mode-desc">Синхронизировать с текущим<br>состоянием портфеля</div>
+        </div>
+        <div class="mode-btn">
+          <div class="mode-title" style="color: #fff;">+ Добавить</div>
+          <div class="mode-desc">Импортировать новые<br>сделки к существующим</div>
+        </div>
+      </div>
+
+      <div class="design-note" style="margin-bottom: 16px; font-size: 12px;">
+        <strong>⟳ Обновить</strong> — полная замена позиций из источника. Используй когда загружаешь полный отчёт. Старые данные из этого источника заменяются.<br><br>
+        <strong>+ Добавить</strong> — только новые сделки. Используй когда добавляешь свежие покупки. Существующие позиции не затрагиваются.
+      </div>
+
+      <div class="import-item">
+        <div class="import-icon" style="background: #4ecca322;">📄</div>
+        <div>
+          <div class="import-title">Отчёт брокера</div>
+          <div class="import-desc">Сбер (HTML/XLS) · авто-парсинг</div>
+        </div>
+      </div>
+
+      <div class="import-item">
+        <div class="import-icon" style="background: #7b68ee22;">🤖</div>
+        <div>
+          <div class="import-title">Через AI-помощник</div>
+          <div class="import-desc">Любой брокер → промт для ChatGPT/Claude → вставить</div>
+        </div>
+      </div>
+
+      <div class="import-item">
+        <div class="import-icon" style="background: #e9c46a22;">📊</div>
+        <div>
+          <div class="import-title">CSV / Markdown файл</div>
+          <div class="import-desc">Наш шаблон или Portfolio Open Format</div>
+        </div>
+      </div>
+
+      <div class="import-item">
+        <div class="import-icon" style="background: #2a9d8f22;">🏛</div>
+        <div>
+          <div class="import-title">Обновить с MOEX</div>
+          <div class="import-desc">Цены, дивиденды, купоны для всех бумаг</div>
+        </div>
+      </div>
+
+      <div class="import-item">
+        <div class="import-icon" style="background: #e9456022;">✍️</div>
+        <div>
+          <div class="import-title">Добавить вручную</div>
+          <div class="import-desc">Любой актив — форма ввода</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Импорт: выбор режима</div>
+  </div>
+
+  <!-- AI IMPORT FLOW -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="detail-header">
+        <span class="back-btn">‹</span>
+        <span class="detail-title">🤖 Импорт через AI</span>
+      </div>
+
+      <div style="color: #aaa; font-size: 13px; margin-bottom: 16px; line-height: 1.6;">
+        Скопируйте промт ниже и отправьте его вместе с отчётом вашего брокера в любой AI (ChatGPT, Claude, Gemini). Вставьте результат в поле.
+      </div>
+
+      <div class="prompt-box">
+        <div class="copy-btn">📋 Скопировать</div>
+        <span style="color: #4ecca3;">Промт:</span><br><br>
+        Преобразуй брокерский отчёт в формат<br>
+        для импорта в CashFlow Tracker.<br><br>
+        Формат — Markdown таблица:<br><br>
+        | Тикер | Название | Тип | Кол-во |<br>
+        | Ср.цена | Посл.выплата | Частота |<br><br>
+        Тип: акция/облигация/фонд<br>
+        Частота: 1/2/4/12 (раз в год)<br><br>
+        Только текущие позиции,<br>
+        без закрытых. Отчёт прилагаю.
+      </div>
+
+      <div style="margin-top: 16px;">
+        <div style="color: #888; font-size: 12px; margin-bottom: 6px;">Вставьте результат AI:</div>
+        <div style="background: #1a1a2e; border: 1px dashed #333; border-radius: 10px; padding: 16px; min-height: 80px; color: #555; font-size: 12px;">
+          Вставьте таблицу сюда...
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; background: #4ecca3; color: #000; text-align: center; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px;">
+        Распознать и импортировать
+      </div>
+
+      <div class="design-note" style="margin-top: 12px; font-size: 11px;">
+        <strong>Почему Markdown?</strong> Человекочитаемый, легко проверить глазами перед импортом. AI отлично генерирует MD-таблицы. Парсинг тривиален.
+      </div>
+    </div>
+    <div class="phone-label">AI-помощник: промт + вставка</div>
+  </div>
+
+  <!-- IMPORT PREVIEW -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="detail-header">
+        <span class="back-btn">‹</span>
+        <span class="detail-title">Предпросмотр импорта</span>
+      </div>
+
+      <div class="mode-toggle" style="margin-bottom: 12px;">
+        <div class="mode-btn active">
+          <div class="mode-title" style="color: #4ecca3;">⟳ Обновить</div>
+          <div class="mode-desc">Полная синхронизация</div>
+        </div>
+        <div class="mode-btn">
+          <div class="mode-title">+ Добавить</div>
+          <div class="mode-desc">Только новое</div>
+        </div>
+      </div>
+
+      <div style="color: #888; font-size: 12px; margin-bottom: 8px;">Найдено 5 позиций из отчёта Сбера:</div>
+
+      <div class="stock-row" style="border-left: 3px solid #4ecca3;">
+        <div class="stock-top">
+          <span class="stock-ticker">SBER</span>
+          <span style="color: #4ecca3; font-size: 11px;">800 → 850 шт</span>
+        </div>
+        <div style="color: #4ecca3; font-size: 10px; margin-top: 2px;">обновлено: +50 шт</div>
+      </div>
+
+      <div class="stock-row" style="border-left: 3px solid #888;">
+        <div class="stock-top">
+          <span class="stock-ticker">LKOH</span>
+          <span style="color: #888; font-size: 11px;">15 шт — без изменений</span>
+        </div>
+      </div>
+
+      <div class="stock-row" style="border-left: 3px solid #888;">
+        <div class="stock-top">
+          <span class="stock-ticker">GMKN</span>
+          <span style="color: #888; font-size: 11px;">3 шт — без изменений</span>
+        </div>
+      </div>
+
+      <div class="stock-row" style="border-left: 3px solid #4ecca3;">
+        <div class="stock-top">
+          <span class="stock-ticker">MTSS</span>
+          <span style="color: #4ecca3; font-size: 11px;">100 → 120 шт</span>
+        </div>
+        <div style="color: #4ecca3; font-size: 10px; margin-top: 2px;">обновлено: +20 шт</div>
+      </div>
+
+      <div class="stock-row" style="border-left: 3px solid #e9c46a;">
+        <div class="stock-top">
+          <span class="stock-ticker">FIVE</span>
+          <span style="color: #e9c46a; font-size: 11px;">новая · 10 шт</span>
+        </div>
+        <div style="color: #e9c46a; font-size: 10px; margin-top: 2px;">X5 Group · будет добавлена</div>
+      </div>
+
+      <div style="background: #1a1a2e; border-radius: 10px; padding: 12px; margin: 12px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+          <span style="color: #888;">Изменено</span><span style="color: #4ecca3;">2 позиции</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+          <span style="color: #888;">Новых</span><span style="color: #e9c46a;">1 позиция</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+          <span style="color: #888;">Без изменений</span><span style="color: #666;">2 позиции</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+        <div style="background: #1a1a2e; border: 1px solid #333; text-align: center; padding: 12px; border-radius: 10px; color: #888; font-size: 13px;">Отмена</div>
+        <div style="background: #4ecca3; text-align: center; padding: 12px; border-radius: 10px; color: #000; font-weight: 600; font-size: 13px;">Применить</div>
+      </div>
+    </div>
+    <div class="phone-label">Предпросмотр: что изменится</div>
+  </div>
+</div>
+
+<!-- ===== DESIGN DECISIONS ===== -->
+<h2>Решения по дизайну</h2>
+
+<div class="design-note">
+  <strong>Консистентность stat-блоков</strong><br>
+  На всех трёх уровнях (Главный → Категория → Актив) одинаковая четвёрка: Доход/мес, Стоимость, Доходность, Доля портфеля. На уровне актива «доля портфеля» = доля в общем портфеле (2.9%), а не в категории.
+</div>
+
+<div class="design-note">
+  <strong>CAGR на графиках</strong><br>
+  На каждом уровне — столбчатая диаграмма истории выплат с CAGR в правом верхнем углу. Показывается только при наличии 2+ годовых периодов. Визуальная симметрия от общего к частному.
+</div>
+
+<div class="design-note">
+  <strong>Ожидаемый дивиденд</strong><br>
+  Блок с зелёной рамкой на экране актива. Три даты: отсечка, выплата, зачисление. Данные из MOEX (если объявлены) или экстраполяция из прошлой выплаты (с пометкой «ожид.»). Показывается только для биржевых активов.
+</div>
+
+<div class="design-note warn">
+  <strong>Обновить vs Добавить — ключевое UX-решение</strong><br>
+  Два режима импорта с принципиально разной семантикой:<br><br>
+  <strong>⟳ Обновить</strong> = «вот мой полный портфель на сегодня». Система сравнивает с текущим состоянием, показывает diff (что изменилось, что новое). Пользователь подтверждает.<br><br>
+  <strong>+ Добавить</strong> = «вот новые сделки». Они добавляются поверх существующих позиций (кол-во увеличивается). Полезно когда пользователь хочет добавить только свежие покупки.<br><br>
+  По умолчанию активен «Обновить» — это безопаснее и понятнее для большинства.
+</div>
+
+<div class="design-note">
+  <strong>AI-импорт: Markdown как формат</strong><br>
+  Markdown-таблица вместо CSV/JSON: человекочитаемая (легко проверить глазами), AI отлично генерирует, парсинг тривиален. Пользователь копирует промт → отправляет с файлом отчёта в любой AI → вставляет результат. Работает с любым брокером без нашей интеграции.
+</div>
+
+</body>
+</html>
