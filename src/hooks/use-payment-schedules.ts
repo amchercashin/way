@@ -15,6 +15,20 @@ export function useAllPaymentSchedules() {
   return schedules;
 }
 
+export async function updateForecast(
+  assetId: number,
+  fields: {
+    forecastMethod?: 'none' | 'manual' | 'decay';
+    forecastAmount?: number | null;
+    activeMetric?: 'fact' | 'forecast';
+  },
+): Promise<void> {
+  const existing = await db.paymentSchedules.where('assetId').equals(assetId).first();
+  if (existing) {
+    await db.paymentSchedules.update(existing.id!, fields);
+  }
+}
+
 export async function upsertPaymentSchedule(
   assetId: number,
   data: Omit<PaymentSchedule, 'id' | 'assetId'>,

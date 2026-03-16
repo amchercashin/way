@@ -1,84 +1,107 @@
 import { useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
-import type { AssetType, CategoryStats, PortfolioStats } from '@/models/types';
-import { calcPortfolioIncome, calcYieldPercent } from '@/services/income-calculator';
+import type { AssetType, PortfolioStats, CategoryStats } from '@/models/types';
+import { calcFactPerMonth, calcMainNumber, calcYieldPercent, type PaymentRecord } from '@/services/income-calculator';
+import { useAllPaymentHistory } from './use-payment-history';
 
 export function usePortfolioStats(): {
   portfolio: PortfolioStats;
   categories: CategoryStats[];
 } {
-  const assets = useLiveQuery(() => db.assets.toArray()) ?? [];
-  const schedules = useLiveQuery(() => db.paymentSchedules.toArray()) ?? [];
+  const assets = useLiveQuery(() => db.assets.toArray(), [], []);
+  const schedules = useLiveQuery(() => db.paymentSchedules.toArray(), [], []);
+  const allHistory = useAllPaymentHistory();
 
-  return useMemo(() => {
-    const scheduleByAssetId = new Map(schedules.map((s) => [s.assetId, s]));
+  const { portfolio, categories } = useMemo(() => {
+    const scheduleByAssetId = new Map(
+      schedules.map((s) => [s.assetId, s]),
+    );
 
-    let totalValue = 0;
-    const categoryMap = new Map<AssetType, { assets: typeof assets; value: number }>();
+    const now = new Date();
 
-    for (const asset of assets) {
-      const value = (asset.currentPrice ?? asset.averagePrice ?? 0) * asset.quantity;
-      totalValue += value;
-
-      const existing = categoryMap.get(asset.type);
-      if (existing) {
-        existing.assets.push(asset);
-        existing.value += value;
-      } else {
-        categoryMap.set(asset.type, { assets: [asset], value });
-      }
+    // Build history-by-asset map
+    const historyByAsset = new Map<number, PaymentRecord[]>();
+    for (const h of (allHistory ?? [])) {
+      const arr = historyByAsset.get(h.assetId) ?? [];
+      arr.push({ amount: h.amount, date: new Date(h.date) });
+      historyByAsset.set(h.assetId, arr);
     }
 
-    const incomeItems = assets
-      .filter((asset) => scheduleByAssetId.has(asset.id!))
-      .map((asset) => {
-        const schedule = scheduleByAssetId.get(asset.id!)!;
-        return {
-          quantity: asset.quantity,
-          paymentAmount: schedule.lastPaymentAmount,
-          frequencyPerYear: schedule.frequencyPerYear,
-        };
-      });
+    // Portfolio totals
+    let totalValue = 0;
+    let totalIncomePerMonth = 0;
+    const categoryMap = new Map<AssetType, typeof assets>();
 
-    const totalIncome = calcPortfolioIncome(incomeItems);
-    const yieldPercent = calcYieldPercent(totalIncome.perYear, totalValue);
+    for (const asset of assets) {
+      const price = asset.currentPrice ?? asset.averagePrice ?? 0;
+      const assetValue = price * asset.quantity;
+      totalValue += assetValue;
+
+      // Group by category
+      const catAssets = categoryMap.get(asset.type) ?? [];
+      catAssets.push(asset);
+      categoryMap.set(asset.type, catAssets);
+
+      // Compute main number
+      const schedule = scheduleByAssetId.get(asset.id!);
+      const history = historyByAsset.get(asset.id!) ?? [];
+      const factPerMonth = calcFactPerMonth(history, asset.quantity, now);
+      totalIncomePerMonth += calcMainNumber({
+        activeMetric: schedule?.activeMetric ?? 'fact',
+        forecastAmount: schedule?.forecastAmount ?? null,
+        frequencyPerYear: schedule?.frequencyPerYear ?? 1,
+        quantity: asset.quantity,
+        factPerMonth,
+      });
+    }
+
+    const totalIncomePerYear = totalIncomePerMonth * 12;
+    const yieldPercent = totalValue > 0 ? calcYieldPercent(totalIncomePerYear, totalValue) : 0;
 
     const portfolio: PortfolioStats = {
-      totalIncomePerMonth: totalIncome.perMonth,
-      totalIncomePerYear: totalIncome.perYear,
+      totalIncomePerMonth,
+      totalIncomePerYear,
       totalValue,
       yieldPercent,
     };
 
+    // Category aggregation
     const categories: CategoryStats[] = [];
-    for (const [type, data] of categoryMap) {
-      const catIncomeItems = data.assets
-        .filter((asset) => scheduleByAssetId.has(asset.id!))
-        .map((asset) => {
-          const schedule = scheduleByAssetId.get(asset.id!)!;
-          return {
-            quantity: asset.quantity,
-            paymentAmount: schedule.lastPaymentAmount,
-            frequencyPerYear: schedule.frequencyPerYear,
-          };
-        });
-      const catIncome = calcPortfolioIncome(catIncomeItems);
-      const catYield = calcYieldPercent(catIncome.perYear, data.value);
+    for (const [type, categoryAssets] of categoryMap) {
+      let catValue = 0;
+      let catIncomePerMonth = 0;
+      for (const asset of categoryAssets) {
+        const price = asset.currentPrice ?? asset.averagePrice ?? 0;
+        const assetValue = price * asset.quantity;
+        catValue += assetValue;
 
+        const schedule = scheduleByAssetId.get(asset.id!);
+        const history = historyByAsset.get(asset.id!) ?? [];
+        const factPerMonth = calcFactPerMonth(history, asset.quantity, now);
+        catIncomePerMonth += calcMainNumber({
+          activeMetric: schedule?.activeMetric ?? 'fact',
+          forecastAmount: schedule?.forecastAmount ?? null,
+          frequencyPerYear: schedule?.frequencyPerYear ?? 1,
+          quantity: asset.quantity,
+          factPerMonth,
+        });
+      }
+      const catIncomePerYear = catIncomePerMonth * 12;
       categories.push({
         type,
-        assetCount: data.assets.length,
-        totalIncomePerMonth: catIncome.perMonth,
-        totalIncomePerYear: catIncome.perYear,
-        totalValue: data.value,
-        yieldPercent: catYield,
-        portfolioSharePercent: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
+        assetCount: categoryAssets.length,
+        totalIncomePerMonth: catIncomePerMonth,
+        totalIncomePerYear: catIncomePerYear,
+        totalValue: catValue,
+        yieldPercent: catValue > 0 ? calcYieldPercent(catIncomePerYear, catValue) : 0,
+        portfolioSharePercent: totalValue > 0 ? (catValue / totalValue) * 100 : 0,
       });
     }
-
     categories.sort((a, b) => b.totalIncomePerMonth - a.totalIncomePerMonth);
 
     return { portfolio, categories };
-  }, [assets, schedules]);
+  }, [assets, schedules, allHistory]);
+
+  return { portfolio, categories };
 }
