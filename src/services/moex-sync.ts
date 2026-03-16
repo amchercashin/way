@@ -1,10 +1,13 @@
+import Dexie from 'dexie';
 import { db } from '@/db/database';
-import type { Asset, PaymentSchedule } from '@/models/types';
+import type { Asset, PaymentSchedule, PaymentHistory } from '@/models/types';
+import type { DividendHistoryRow } from './moex-api';
 import {
   resolveSecurityInfo,
   fetchStockPrice,
   fetchBondData,
   fetchDividends,
+  fetchCouponHistory,
 } from './moex-api';
 
 export interface SyncResult {
@@ -95,6 +98,7 @@ async function syncStock(secid: string, asset: Asset, boardId: string): Promise<
 
   const divInfo = await fetchDividends(secid);
   if (divInfo) {
+    await writePaymentHistory(asset.id!, divInfo.history, 'dividend');
     await upsertMoexSchedule(asset.id!, {
       frequencyPerYear: divInfo.summary.frequencyPerYear,
       lastPaymentAmount: divInfo.summary.lastPaymentAmount,
@@ -129,6 +133,38 @@ async function syncBond(secid: string, asset: Asset, boardId: string): Promise<v
       ? new Date(bondData.nextCouponDate)
       : undefined,
   });
+
+  const couponHistory = await fetchCouponHistory(secid);
+  if (couponHistory.length > 0) {
+    await writePaymentHistory(asset.id!, couponHistory, 'coupon');
+  }
+}
+
+async function writePaymentHistory(
+  assetId: number,
+  rows: DividendHistoryRow[],
+  type: PaymentHistory['type'],
+): Promise<void> {
+  const existing = await db.paymentHistory
+    .where('[assetId+date]')
+    .between([assetId, Dexie.minKey], [assetId, Dexie.maxKey])
+    .toArray();
+
+  const existingDates = new Set(existing.map((r) => r.date.getTime()));
+
+  const newRecords = rows
+    .filter((r) => !existingDates.has(r.date.getTime()))
+    .map((r) => ({
+      assetId,
+      amount: r.amount,
+      date: r.date,
+      type,
+      dataSource: 'moex' as const,
+    }));
+
+  if (newRecords.length > 0) {
+    await db.paymentHistory.bulkAdd(newRecords);
+  }
 }
 
 async function upsertMoexSchedule(

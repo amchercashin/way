@@ -354,6 +354,58 @@ describe('syncAllAssets', () => {
     expect(resolveSecurityInfo).toHaveBeenCalledWith('SBER');
   });
 
+  it('writes dividend rows to paymentHistory on stock sync', async () => {
+    const assetId = await db.assets.add({
+      type: 'stock', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
+      quantity: 100, dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+    });
+
+    (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
+    (fetchStockPrice as Mock).mockResolvedValue({ currentPrice: 300, prevPrice: 298 });
+    (fetchDividends as Mock).mockResolvedValue({
+      summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
+      history: [
+        { date: new Date('2024-07-11'), amount: 33.3 },
+        { date: new Date('2025-07-18'), amount: 34.84 },
+      ],
+    });
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(2);
+    expect(records[0].amount).toBe(33.3);
+    expect(records[0].type).toBe('dividend');
+    expect(records[0].dataSource).toBe('moex');
+  });
+
+  it('deduplicates payment history on re-sync', async () => {
+    const assetId = await db.assets.add({
+      type: 'stock', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
+      quantity: 100, dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+    });
+
+    await db.paymentHistory.add({
+      assetId, amount: 33.3, date: new Date('2024-07-11'),
+      type: 'dividend', dataSource: 'moex',
+    });
+
+    (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
+    (fetchStockPrice as Mock).mockResolvedValue({ currentPrice: 300, prevPrice: 298 });
+    (fetchDividends as Mock).mockResolvedValue({
+      summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
+      history: [
+        { date: new Date('2024-07-11'), amount: 33.3 },
+        { date: new Date('2025-07-18'), amount: 34.84 },
+      ],
+    });
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(2); // not 3
+  });
+
   it('syncs asset with ISIN but no ticker', async () => {
     const assetId = (await db.assets.add({
       type: 'bond',
