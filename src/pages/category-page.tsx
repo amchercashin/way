@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
-import { IncomeChart } from '@/components/shared/income-chart';
+import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { AssetRow } from '@/components/category/asset-row';
 import { useAssetsByType } from '@/hooks/use-assets';
 import { useAllPaymentSchedules } from '@/hooks/use-payment-schedules';
@@ -50,7 +50,7 @@ export function CategoryPage() {
         + Добавить
       </Link>
 
-      <IncomeChart categories={[]} cagr={null} />
+      <PaymentHistoryChart history={[]} quantity={1} />
     </AppShell>
   );
 }

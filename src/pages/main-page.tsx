@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
-import { IncomeChart } from '@/components/shared/income-chart';
+import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { useMoexSync } from '@/hooks/use-moex-sync';
 import { getAppSettings } from '@/services/app-settings';
@@ -84,13 +84,7 @@ export function MainPage() {
         ))}
       </div>
 
-      <IncomeChart
-        categories={categories.map((cat) => ({
-          type: cat.type,
-          incomePerMonth: cat.totalIncomePerMonth,
-        }))}
-        cagr={null}
-      />
+      <PaymentHistoryChart history={[]} quantity={1} />
     </AppShell>
   );
 }

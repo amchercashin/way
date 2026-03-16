@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
-import { IncomeChart } from '@/components/shared/income-chart';
+import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { AssetField } from '@/components/asset-detail/asset-field';
 import { ExpectedPayment } from '@/components/asset-detail/expected-payment';
 import { useAsset, updateAsset } from '@/hooks/use-assets';
@@ -100,7 +100,7 @@ export function AssetDetailPage() {
         <ExpectedPayment schedule={schedule} quantity={asset.quantity} />
       )}
 
-      <IncomeChart categories={[]} cagr={null} />
+      <PaymentHistoryChart history={[]} quantity={1} />
     </AppShell>
   );
 }
