@@ -5,7 +5,7 @@ import { DataSourceTag } from '@/components/shared/data-source-tag';
 interface AssetFieldProps {
   label: string;
   value: string;
-  source: DataSource;
+  source?: DataSource;
   editable?: boolean;
   onSave?: (newValue: string) => void;
 }

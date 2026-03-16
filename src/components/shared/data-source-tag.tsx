@@ -6,7 +6,8 @@ const TAG_STYLES: Record<DataSource, { bg: string; text: string; label: string }
   manual: { bg: 'bg-[#88888822]', text: 'text-gray-400', label: 'ручной' },
 };
 
-export function DataSourceTag({ source }: { source: DataSource }) {
+export function DataSourceTag({ source }: { source?: DataSource }) {
+  if (!source) return null;
   const style = TAG_STYLES[source];
   return (
     <span className={`text-[9px] ${style.bg} ${style.text} px-1.5 py-0.5 rounded`}>
