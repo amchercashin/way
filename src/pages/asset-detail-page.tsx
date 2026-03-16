@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
 import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { AssetField } from '@/components/asset-detail/asset-field';
 import { ExpectedPayment } from '@/components/asset-detail/expected-payment';
+import { IncomeMetricPanel } from '@/components/asset-detail/income-metric-panel';
 import { useAsset, updateAsset } from '@/hooks/use-assets';
 import { usePaymentSchedule, upsertPaymentSchedule } from '@/hooks/use-payment-schedules';
+import { updateForecast } from '@/hooks/use-payment-schedules';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
-import { calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
+import { usePaymentHistory } from '@/hooks/use-payment-history';
+import { calcFactPerMonth, calcDecayAverage, calcMainNumber, calcYieldPercent } from '@/services/income-calculator';
 import { formatFrequency } from '@/lib/utils';
 
 export function AssetDetailPage() {
@@ -17,14 +21,33 @@ export function AssetDetailPage() {
   const asset = useAsset(assetId);
   const schedule = usePaymentSchedule(assetId);
   const { portfolio } = usePortfolioStats();
+  const history = usePaymentHistory(assetId);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   if (!asset) {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
-  const incomePerMonth = schedule
-    ? calcAssetIncomePerMonth(asset.quantity, schedule.lastPaymentAmount, schedule.frequencyPerYear)
+  const now = new Date();
+  const historyRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
+  const factPerMonth = calcFactPerMonth(historyRecords, asset.quantity, now);
+  const decayAverage = calcDecayAverage(historyRecords, now);
+
+  const activeMetric = schedule?.activeMetric ?? 'fact';
+  const forecastAmount = schedule?.forecastAmount ?? null;
+
+  const incomePerMonth = calcMainNumber({
+    activeMetric,
+    forecastAmount,
+    frequencyPerYear: schedule?.frequencyPerYear ?? 1,
+    quantity: asset.quantity,
+    factPerMonth,
+  });
+
+  const forecastPerMonth = forecastAmount != null && schedule
+    ? (forecastAmount * schedule.frequencyPerYear * asset.quantity) / 12
     : null;
+
   const value = (asset.currentPrice ?? asset.averagePrice) != null
     ? (asset.currentPrice ?? asset.averagePrice)! * asset.quantity
     : null;
@@ -73,7 +96,33 @@ export function AssetDetailPage() {
         totalValue={value}
         yieldPercent={yieldPct}
         portfolioSharePercent={sharePercent}
+        activeMetric={activeMetric}
+        onIncomeTap={() => setPanelOpen(!panelOpen)}
       />
+
+      {panelOpen && (
+        <IncomeMetricPanel
+          factPerMonth={factPerMonth}
+          forecastPerMonth={forecastPerMonth}
+          activeMetric={activeMetric}
+          decayAverage={decayAverage}
+          forecastAmount={forecastAmount}
+          onSelectMetric={(m) => updateForecast(assetId, { activeMetric: m })}
+          onSetForecastAmount={(amount) => updateForecast(assetId, {
+            forecastAmount: amount,
+            forecastMethod: 'manual',
+          })}
+          onApplyDecayAverage={() => {
+            if (decayAverage != null) {
+              updateForecast(assetId, {
+                forecastAmount: decayAverage,
+                forecastMethod: 'decay',
+                activeMetric: 'forecast',
+              });
+            }
+          }}
+        />
+      )}
 
       <AssetField
         label="Количество"
@@ -100,7 +149,7 @@ export function AssetDetailPage() {
         <ExpectedPayment schedule={schedule} quantity={asset.quantity} />
       )}
 
-      <PaymentHistoryChart history={[]} quantity={1} />
+      <PaymentHistoryChart history={historyRecords} quantity={asset.quantity} />
     </AppShell>
   );
 }
