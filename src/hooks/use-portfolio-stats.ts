@@ -30,14 +30,16 @@ export function usePortfolioStats(): {
       }
     }
 
-    const incomeItems = assets.map((asset) => {
-      const schedule = scheduleByAssetId.get(asset.id!);
-      return {
-        quantity: asset.quantity,
-        paymentAmount: schedule?.lastPaymentAmount ?? 0,
-        frequencyPerYear: schedule?.frequencyPerYear ?? 0,
-      };
-    });
+    const incomeItems = assets
+      .filter((asset) => scheduleByAssetId.has(asset.id!))
+      .map((asset) => {
+        const schedule = scheduleByAssetId.get(asset.id!)!;
+        return {
+          quantity: asset.quantity,
+          paymentAmount: schedule.lastPaymentAmount,
+          frequencyPerYear: schedule.frequencyPerYear,
+        };
+      });
 
     const totalIncome = calcPortfolioIncome(incomeItems);
     const yieldPercent = calcYieldPercent(totalIncome.perYear, totalValue);
@@ -51,14 +53,16 @@ export function usePortfolioStats(): {
 
     const categories: CategoryStats[] = [];
     for (const [type, data] of categoryMap) {
-      const catIncomeItems = data.assets.map((asset) => {
-        const schedule = scheduleByAssetId.get(asset.id!);
-        return {
-          quantity: asset.quantity,
-          paymentAmount: schedule?.lastPaymentAmount ?? 0,
-          frequencyPerYear: schedule?.frequencyPerYear ?? 0,
-        };
-      });
+      const catIncomeItems = data.assets
+        .filter((asset) => scheduleByAssetId.has(asset.id!))
+        .map((asset) => {
+          const schedule = scheduleByAssetId.get(asset.id!)!;
+          return {
+            quantity: asset.quantity,
+            paymentAmount: schedule.lastPaymentAmount,
+            frequencyPerYear: schedule.frequencyPerYear,
+          };
+        });
       const catIncome = calcPortfolioIncome(catIncomeItems);
       const catYield = calcYieldPercent(catIncome.perYear, data.value);
 
