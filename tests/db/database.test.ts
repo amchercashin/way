@@ -15,6 +15,10 @@ describe('Database', () => {
       ticker: 'SBER',
       name: 'Сбербанк',
       quantity: 800,
+      quantitySource: 'manual',
+      paymentPerUnitSource: 'fact',
+      frequencyPerYear: 1,
+      frequencySource: 'manual',
       averagePrice: 298.6,
       currentPrice: 308.2,
       dataSource: 'manual',
@@ -30,39 +34,35 @@ describe('Database', () => {
     expect(retrieved!.quantity).toBe(800);
   });
 
-  it('adds and retrieves payment schedule', async () => {
+  it('adds and retrieves asset with payment fields', async () => {
     const assetId = await db.assets.add({
       type: 'stock',
       name: 'Сбербанк',
       ticker: 'SBER',
       quantity: 800,
+      quantitySource: 'manual',
+      paymentPerUnit: 186,
+      paymentPerUnitSource: 'manual',
+      frequencyPerYear: 1,
+      frequencySource: 'manual',
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    await db.paymentSchedules.add({
-      assetId: assetId as number,
-      frequencyPerYear: 1,
-      lastPaymentAmount: 186,
-      dataSource: 'manual',
-    });
-
-    const schedules = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId as number)
-      .toArray();
-
-    expect(schedules).toHaveLength(1);
-    expect(schedules[0].lastPaymentAmount).toBe(186);
+    const asset = await db.assets.get(assetId);
+    expect(asset).toBeDefined();
+    expect(asset!.paymentPerUnit).toBe(186);
+    expect(asset!.frequencyPerYear).toBe(1);
+    expect(asset!.paymentPerUnitSource).toBe('manual');
   });
 
   it('queries assets by type', async () => {
     const now = new Date();
     await db.assets.bulkAdd([
-      { type: 'stock', name: 'Сбер', ticker: 'SBER', quantity: 100, dataSource: 'manual', createdAt: now, updatedAt: now },
-      { type: 'stock', name: 'Лукойл', ticker: 'LKOH', quantity: 10, dataSource: 'manual', createdAt: now, updatedAt: now },
-      { type: 'bond', name: 'ОФЗ 26238', ticker: 'SU26238', quantity: 50, dataSource: 'manual', createdAt: now, updatedAt: now },
+      { type: 'stock', name: 'Сбер', ticker: 'SBER', quantity: 100, quantitySource: 'manual', paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual', dataSource: 'manual', createdAt: now, updatedAt: now },
+      { type: 'stock', name: 'Лукойл', ticker: 'LKOH', quantity: 10, quantitySource: 'manual', paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual', dataSource: 'manual', createdAt: now, updatedAt: now },
+      { type: 'bond', name: 'ОФЗ 26238', ticker: 'SU26238', quantity: 50, quantitySource: 'manual', paymentPerUnitSource: 'fact', frequencyPerYear: 2, frequencySource: 'manual', dataSource: 'manual', createdAt: now, updatedAt: now },
     ]);
 
     const stocks = await db.assets.where('type').equals('stock').toArray();
@@ -73,26 +73,26 @@ describe('Database', () => {
   });
 });
 
-describe('schema v3', () => {
+describe('schema v4', () => {
   beforeEach(async () => {
     await db.delete();
     await db.open();
   });
 
-  it('stores and retrieves forecast fields on PaymentSchedule', async () => {
-    const id = await db.paymentSchedules.add({
-      assetId: 1,
-      frequencyPerYear: 1,
-      lastPaymentAmount: 50,
-      forecastMethod: 'manual',
-      forecastAmount: 100,
-      activeMetric: 'forecast',
-      dataSource: 'manual',
+  it('stores and retrieves payment per unit fields on Asset', async () => {
+    const id = await db.assets.add({
+      type: 'stock', name: 'Сбербанк', ticker: 'SBER',
+      quantity: 800, quantitySource: 'manual',
+      paymentPerUnit: 100, paymentPerUnitSource: 'manual',
+      frequencyPerYear: 1, frequencySource: 'moex', moexFrequency: 1,
+      dataSource: 'manual', createdAt: new Date(), updatedAt: new Date(),
     });
-    const record = await db.paymentSchedules.get(id);
-    expect(record!.forecastMethod).toBe('manual');
-    expect(record!.forecastAmount).toBe(100);
-    expect(record!.activeMetric).toBe('forecast');
+    const asset = await db.assets.get(id);
+    expect(asset!.paymentPerUnit).toBe(100);
+    expect(asset!.paymentPerUnitSource).toBe('manual');
+    expect(asset!.frequencyPerYear).toBe(1);
+    expect(asset!.frequencySource).toBe('moex');
+    expect(asset!.moexFrequency).toBe(1);
   });
 
   it('queries paymentHistory by compound index [assetId+date]', async () => {
