@@ -1,5 +1,5 @@
 import { db } from '@/db/database';
-import type { Asset, PaymentSchedule } from '@/models/types';
+import type { Asset } from '@/models/types';
 import type { ImportAssetRow } from './import-parser';
 
 export type ImportMode = 'update' | 'add';
@@ -33,16 +33,11 @@ export async function computeImportDiff(
   mode: ImportMode,
 ): Promise<ImportDiff> {
   const existingAssets = await db.assets.toArray();
-  const existingSchedules = await db.paymentSchedules.toArray();
   const byTicker = new Map<string, Asset>();
   const byIsin = new Map<string, Asset>();
-  const scheduleByAssetId = new Map<number, PaymentSchedule>();
   for (const asset of existingAssets) {
     if (asset.ticker) byTicker.set(asset.ticker, asset);
     if (asset.isin) byIsin.set(asset.isin, asset);
-  }
-  for (const s of existingSchedules) {
-    scheduleByAssetId.set(s.assetId, s);
   }
 
   const items: DiffItem[] = [];
@@ -57,8 +52,7 @@ export async function computeImportDiff(
     } else if (mode === 'add') {
       items.push({ status: 'unchanged', imported: row, existingAsset: existing, changes: [] });
     } else {
-      const schedule = existing.id ? scheduleByAssetId.get(existing.id) : undefined;
-      const changes = compareFields(row, existing, schedule);
+      const changes = compareFields(row, existing);
       if (changes.length === 0) {
         items.push({ status: 'unchanged', imported: row, existingAsset: existing, changes: [] });
       } else if (existing.dataSource === 'manual') {
@@ -84,7 +78,6 @@ export async function computeImportDiff(
 function compareFields(
   row: ImportAssetRow,
   existing: Asset,
-  schedule?: PaymentSchedule,
 ): DiffChange[] {
   const changes: DiffChange[] = [];
 
@@ -100,11 +93,11 @@ function compareFields(
   if (row.name !== existing.name) {
     changes.push({ field: 'name', oldValue: existing.name, newValue: row.name });
   }
-  if (row.lastPaymentAmount != null && schedule && row.lastPaymentAmount !== schedule.lastPaymentAmount) {
-    changes.push({ field: 'lastPaymentAmount', oldValue: schedule.lastPaymentAmount, newValue: row.lastPaymentAmount });
+  if (row.lastPaymentAmount != null && row.lastPaymentAmount !== existing.paymentPerUnit) {
+    changes.push({ field: 'paymentPerUnit', oldValue: existing.paymentPerUnit, newValue: row.lastPaymentAmount });
   }
-  if (row.frequencyPerYear != null && schedule && row.frequencyPerYear !== schedule.frequencyPerYear) {
-    changes.push({ field: 'frequencyPerYear', oldValue: schedule.frequencyPerYear, newValue: row.frequencyPerYear });
+  if (row.frequencyPerYear != null && row.frequencyPerYear !== existing.frequencyPerYear) {
+    changes.push({ field: 'frequencyPerYear', oldValue: existing.frequencyPerYear, newValue: row.frequencyPerYear });
   }
 
   return changes;

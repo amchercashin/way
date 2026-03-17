@@ -22,8 +22,9 @@ describe('computeImportDiff', () => {
   it('detects quantity change in update mode', async () => {
     await db.assets.add({
       type: 'stock', ticker: 'SBER', name: 'Сбербанк',
-      quantity: 500, dataSource: 'import',
-      createdAt: new Date(), updatedAt: new Date(),
+      quantity: 500, quantitySource: 'import', importedQuantity: 500,
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
     });
     const rows: ImportAssetRow[] = [
       { ticker: 'SBER', name: 'Сбербанк', type: 'stock', quantity: 800 },
@@ -36,8 +37,9 @@ describe('computeImportDiff', () => {
   it('marks unchanged assets', async () => {
     await db.assets.add({
       type: 'stock', ticker: 'SBER', name: 'Сбербанк',
-      quantity: 800, dataSource: 'import',
-      createdAt: new Date(), updatedAt: new Date(),
+      quantity: 800, quantitySource: 'import', importedQuantity: 800,
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
     });
     const rows: ImportAssetRow[] = [
       { ticker: 'SBER', name: 'Сбербанк', type: 'stock', quantity: 800 },
@@ -49,8 +51,9 @@ describe('computeImportDiff', () => {
   it('flags conflict when existing has manual dataSource', async () => {
     await db.assets.add({
       type: 'stock', ticker: 'SBER', name: 'Сбербанк',
-      quantity: 500, dataSource: 'manual',
-      createdAt: new Date(), updatedAt: new Date(),
+      quantity: 500, quantitySource: 'manual',
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'manual', createdAt: new Date(), updatedAt: new Date(),
     });
     const rows: ImportAssetRow[] = [
       { ticker: 'SBER', name: 'Сбербанк', type: 'stock', quantity: 800 },
@@ -63,8 +66,9 @@ describe('computeImportDiff', () => {
   it('in add mode, marks existing tickers as unchanged', async () => {
     await db.assets.add({
       type: 'stock', ticker: 'SBER', name: 'Сбербанк',
-      quantity: 500, dataSource: 'import',
-      createdAt: new Date(), updatedAt: new Date(),
+      quantity: 500, quantitySource: 'import', importedQuantity: 500,
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
     });
     const rows: ImportAssetRow[] = [
       { ticker: 'SBER', name: 'Сбербанк', type: 'stock', quantity: 800 },
@@ -75,14 +79,14 @@ describe('computeImportDiff', () => {
     expect(diff.items[1].status).toBe('added');
   });
 
-  it('detects payment schedule changes', async () => {
-    const assetId = (await db.assets.add({
+  it('detects payment field changes on Asset', async () => {
+    await db.assets.add({
       type: 'stock', ticker: 'SBER', name: 'Сбербанк',
       quantity: 800, dataSource: 'import',
+      quantitySource: 'import', importedQuantity: 800,
+      paymentPerUnit: 25.0, paymentPerUnitSource: 'manual',
+      frequencyPerYear: 1, frequencySource: 'manual',
       createdAt: new Date(), updatedAt: new Date(),
-    })) as number;
-    await db.paymentSchedules.add({
-      assetId, frequencyPerYear: 1, lastPaymentAmount: 25.0, dataSource: 'import',
     });
 
     const rows: ImportAssetRow[] = [
@@ -90,12 +94,14 @@ describe('computeImportDiff', () => {
     ];
     const diff = await computeImportDiff(rows, 'update');
     expect(diff.items[0].status).toBe('changed');
-    expect(diff.items[0].changes.some((c) => c.field === 'lastPaymentAmount')).toBe(true);
+    expect(diff.items[0].changes.some((c) => c.field === 'paymentPerUnit')).toBe(true);
   });
 
   it('treats rows without ticker as always added', async () => {
     await db.assets.add({
       type: 'realestate', name: 'Квартира', quantity: 1,
+      quantitySource: 'manual', paymentPerUnitSource: 'fact',
+      frequencyPerYear: 12, frequencySource: 'manual',
       dataSource: 'manual', createdAt: new Date(), updatedAt: new Date(),
     });
     const rows: ImportAssetRow[] = [
