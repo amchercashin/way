@@ -4,9 +4,9 @@ import { StatBlocks } from '@/components/shared/stat-blocks';
 import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { AssetRow } from '@/components/category/asset-row';
 import { useAssetsByType } from '@/hooks/use-assets';
-import { useAllPaymentSchedules } from '@/hooks/use-payment-schedules';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { useAllPaymentHistory } from '@/hooks/use-payment-history';
+import { calcFactPaymentPerUnit, type PaymentRecord } from '@/services/income-calculator';
 import { ASSET_TYPE_LABELS, type AssetType } from '@/models/types';
 
 export function CategoryPage() {
@@ -14,12 +14,18 @@ export function CategoryPage() {
   const navigate = useNavigate();
   const assetType = type as AssetType;
   const assets = useAssetsByType(assetType);
-  const schedules = useAllPaymentSchedules();
   const { categories } = usePortfolioStats();
   const allHistory = useAllPaymentHistory();
 
   const catStats = categories.find((c) => c.type === assetType);
-  const scheduleMap = new Map(schedules.map((s) => [s.assetId, s]));
+
+  const now = new Date();
+  const historyByAsset = new Map<number, PaymentRecord[]>();
+  for (const h of (allHistory ?? [])) {
+    const arr = historyByAsset.get(h.assetId) ?? [];
+    arr.push({ amount: h.amount, date: new Date(h.date) });
+    historyByAsset.set(h.assetId, arr);
+  }
 
   const categoryAssetIds = new Set(assets.map((a) => a.id!));
   const assetMap = new Map(assets.map((a) => [a.id!, a.quantity]));
@@ -50,9 +56,16 @@ export function CategoryPage() {
         />
       )}
 
-      {assets.map((asset) => (
-        <AssetRow key={asset.id} asset={asset} schedule={scheduleMap.get(asset.id!)} />
-      ))}
+      {assets.map((asset) => {
+        let paymentPerUnit: number;
+        if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
+          paymentPerUnit = asset.paymentPerUnit;
+        } else {
+          const history = historyByAsset.get(asset.id!) ?? [];
+          paymentPerUnit = calcFactPaymentPerUnit(history, asset.frequencyPerYear, now);
+        }
+        return <AssetRow key={asset.id} asset={asset} paymentPerUnit={paymentPerUnit} />;
+      })}
 
       <Link
         to={`/add-asset?type=${assetType}`}
