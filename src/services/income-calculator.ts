@@ -65,48 +65,31 @@ export function calcCAGR(
   return (Math.pow(incomeLast / incomeFirst, 1 / span) - 1) * 100;
 }
 
-export function calcFactPerMonth(
+/**
+ * Calculates per-unit payment amount from payment history.
+ * For monthly payers (freq >= 12): returns the most recent payment.
+ * For less frequent payers: returns sum of last 12 months / frequencyPerYear.
+ */
+export function calcFactPaymentPerUnit(
   history: PaymentRecord[],
-  quantity: number,
+  frequencyPerYear: number,
   now: Date = new Date(),
 ): number {
+  if (history.length === 0) return 0;
+
   const twelveMonthsAgo = new Date(now);
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+  if (frequencyPerYear >= 12) {
+    const recent = history
+      .filter((p) => p.date > twelveMonthsAgo && p.date <= now)
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    return recent.length > 0 ? recent[0].amount : 0;
+  }
+
   const sum = history
     .filter((p) => p.date > twelveMonthsAgo && p.date <= now)
     .reduce((acc, p) => acc + p.amount, 0);
-  return (sum * quantity) / 12;
-}
-
-export function calcDecayAverage(
-  history: PaymentRecord[],
-  now: Date = new Date(),
-): number | null {
-  if (history.length === 0) return null;
-  const sorted = [...history].sort((a, b) => b.date.getTime() - a.date.getTime());
-  const lastPaymentDate = sorted[0].date;
-  const windowStart = new Date(lastPaymentDate);
-  windowStart.setMonth(windowStart.getMonth() - 12);
-  const paymentsInWindow = sorted
-    .filter((p) => p.date > windowStart && p.date <= lastPaymentDate)
-    .reduce((acc, p) => acc + p.amount, 0);
-  const monthsElapsed =
-    (now.getFullYear() - lastPaymentDate.getFullYear()) * 12 +
-    (now.getMonth() - lastPaymentDate.getMonth());
-  return paymentsInWindow / (12 + Math.max(0, monthsElapsed));
-}
-
-export interface MainNumberInput {
-  activeMetric: 'fact' | 'forecast';
-  forecastAmount: number | null;
-  frequencyPerYear: number;
-  quantity: number;
-  factPerMonth: number;
-}
-
-export function calcMainNumber(input: MainNumberInput): number {
-  if (input.activeMetric === 'forecast' && input.forecastAmount != null) {
-    return (input.forecastAmount * input.frequencyPerYear * input.quantity) / 12;
-  }
-  return input.factPerMonth;
+  if (sum === 0) return 0;
+  return sum / frequencyPerYear;
 }
