@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
+import Dexie from 'dexie';
 import { db } from '@/db/database';
 
 vi.mock('@/services/moex-api', () => ({
@@ -15,9 +16,15 @@ import {
   fetchStockPrice,
   fetchBondData,
   fetchDividends,
-  fetchCouponHistory,
 } from '@/services/moex-api';
 import { syncAllAssets, getLastSyncAt } from '@/services/moex-sync';
+
+const ASSET_DEFAULTS = {
+  quantitySource: 'manual' as const,
+  paymentPerUnitSource: 'fact' as const,
+  frequencyPerYear: 1,
+  frequencySource: 'manual' as const,
+};
 
 describe('syncAllAssets', () => {
   beforeEach(async () => {
@@ -26,7 +33,7 @@ describe('syncAllAssets', () => {
     await db.open();
   });
 
-  it('syncs stock: updates price and creates payment schedule', async () => {
+  it('syncs stock: updates price and writes frequency to asset', async () => {
     const assetId = (await db.assets.add({
       type: 'stock',
       ticker: 'SBER',
@@ -35,6 +42,8 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      frequencySource: 'moex' as const,
     })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
@@ -59,18 +68,12 @@ describe('syncAllAssets', () => {
 
     const asset = await db.assets.get(assetId);
     expect(asset!.currentPrice).toBe(317.63);
-
-    const schedule = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId)
-      .first();
-    expect(schedule).toBeDefined();
-    expect(schedule!.lastPaymentAmount).toBe(34.84);
-    expect(schedule!.frequencyPerYear).toBe(1);
-    expect(schedule!.dataSource).toBe('moex');
+    expect(asset!.moexFrequency).toBe(1);
+    expect(asset!.frequencyPerYear).toBe(1);
+    expect(asset!.frequencySource).toBe('moex');
   });
 
-  it('syncs bond: converts price from % to rub, updates coupon', async () => {
+  it('syncs bond: converts price from % to rub, updates frequency on asset', async () => {
     const assetId = (await db.assets.add({
       type: 'bond',
       ticker: 'SU26238RMFS4',
@@ -80,6 +83,9 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      frequencyPerYear: 2,
+      frequencySource: 'moex' as const,
     })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
@@ -103,14 +109,10 @@ describe('syncAllAssets', () => {
     const asset = await db.assets.get(assetId);
     expect(asset!.currentPrice).toBe(615); // 1000 * 61.5 / 100
     expect(asset!.faceValue).toBe(1000);
-
-    const schedule = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId)
-      .first();
-    expect(schedule!.lastPaymentAmount).toBe(35.4);
-    expect(schedule!.frequencyPerYear).toBe(2); // 365/182 ≈ 2
-    expect(schedule!.dataSource).toBe('moex');
+    expect(asset!.moexFrequency).toBe(2);
+    expect(asset!.frequencyPerYear).toBe(2); // 365/182 ≈ 2
+    expect(asset!.frequencySource).toBe('moex');
+    expect(asset!.nextExpectedDate).toEqual(new Date('2026-06-03'));
   });
 
   it('skips non-exchange assets (realestate, deposit, other)', async () => {
@@ -121,6 +123,8 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      frequencyPerYear: 12,
     });
 
     const result = await syncAllAssets();
@@ -138,13 +142,14 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
     });
 
     const result = await syncAllAssets();
     expect(result.skipped).toBe(1);
   });
 
-  it('does not overwrite manual payment schedule', async () => {
+  it('does not overwrite manual frequency on asset', async () => {
     const assetId = (await db.assets.add({
       type: 'stock',
       ticker: 'SBER',
@@ -153,14 +158,10 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      frequencyPerYear: 4,
+      frequencySource: 'manual' as const,
     })) as number;
-
-    await db.paymentSchedules.add({
-      assetId,
-      frequencyPerYear: 2,
-      lastPaymentAmount: 99.99,
-      dataSource: 'manual',
-    });
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
       secid: 'SBER',
@@ -178,15 +179,15 @@ describe('syncAllAssets', () => {
 
     await syncAllAssets();
 
-    const schedule = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId)
-      .first();
-    expect(schedule!.lastPaymentAmount).toBe(99.99);
-    expect(schedule!.dataSource).toBe('manual');
+    const asset = await db.assets.get(assetId);
+    // Manual frequency is preserved
+    expect(asset!.frequencyPerYear).toBe(4);
+    expect(asset!.frequencySource).toBe('manual');
+    // But moexFrequency is still stored for reference
+    expect(asset!.moexFrequency).toBe(1);
   });
 
-  it('updates price but keeps schedule when dividends fetch fails', async () => {
+  it('updates price but keeps asset fields when dividends fetch fails', async () => {
     const assetId = (await db.assets.add({
       type: 'stock',
       ticker: 'SBER',
@@ -195,6 +196,7 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
     })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
@@ -212,15 +214,11 @@ describe('syncAllAssets', () => {
 
     const asset = await db.assets.get(assetId);
     expect(asset!.currentPrice).toBe(317.63);
-
-    const schedule = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId)
-      .first();
-    expect(schedule).toBeUndefined();
+    // No moex frequency written when dividends fetch returns null
+    expect(asset!.moexFrequency).toBeUndefined();
   });
 
-  it('updates existing moex schedule with fresh data', async () => {
+  it('updates existing moex frequency on asset with fresh data', async () => {
     const assetId = (await db.assets.add({
       type: 'stock',
       ticker: 'SBER',
@@ -229,14 +227,11 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
-    })) as number;
-
-    await db.paymentSchedules.add({
-      assetId,
+      ...ASSET_DEFAULTS,
       frequencyPerYear: 1,
-      lastPaymentAmount: 25.0,
-      dataSource: 'moex',
-    });
+      frequencySource: 'moex' as const,
+      moexFrequency: 1,
+    })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
       secid: 'SBER',
@@ -248,19 +243,16 @@ describe('syncAllAssets', () => {
       prevPrice: 316.65,
     });
     (fetchDividends as Mock).mockResolvedValue({
-      summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
+      summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 2, nextExpectedCutoffDate: null },
       history: [{ date: new Date('2025-07-18'), amount: 34.84 }],
     });
 
     await syncAllAssets();
 
-    const schedules = await db.paymentSchedules
-      .where('assetId')
-      .equals(assetId)
-      .toArray();
-    expect(schedules).toHaveLength(1);
-    expect(schedules[0].lastPaymentAmount).toBe(34.84);
-    expect(schedules[0].dataSource).toBe('moex');
+    const asset = await db.assets.get(assetId);
+    expect(asset!.frequencyPerYear).toBe(2);
+    expect(asset!.moexFrequency).toBe(2);
+    expect(asset!.frequencySource).toBe('moex');
   });
 
   it('reports failed asset when API returns null', async () => {
@@ -272,6 +264,7 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
     });
 
     (resolveSecurityInfo as Mock).mockResolvedValue(null);
@@ -298,6 +291,8 @@ describe('syncAllAssets', () => {
       dataSource: 'import',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      quantitySource: 'import' as const,
     })) as number;
 
     (resolveSecurityInfo as Mock)
@@ -333,6 +328,7 @@ describe('syncAllAssets', () => {
       dataSource: 'manual',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
     });
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
@@ -355,10 +351,11 @@ describe('syncAllAssets', () => {
   });
 
   it('writes dividend rows to paymentHistory on stock sync', async () => {
-    const assetId = await db.assets.add({
+    const assetId = (await db.assets.add({
       type: 'stock', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
       quantity: 100, dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
-    });
+      ...ASSET_DEFAULTS,
+    })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
     (fetchStockPrice as Mock).mockResolvedValue({ currentPrice: 300, prevPrice: 298 });
@@ -372,7 +369,7 @@ describe('syncAllAssets', () => {
 
     await syncAllAssets();
 
-    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    const records = await db.paymentHistory.where('[assetId+date]').between([assetId, Dexie.minKey], [assetId, Dexie.maxKey]).toArray();
     expect(records).toHaveLength(2);
     expect(records[0].amount).toBe(33.3);
     expect(records[0].type).toBe('dividend');
@@ -380,10 +377,11 @@ describe('syncAllAssets', () => {
   });
 
   it('deduplicates payment history on re-sync', async () => {
-    const assetId = await db.assets.add({
+    const assetId = (await db.assets.add({
       type: 'stock', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
       quantity: 100, dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
-    });
+      ...ASSET_DEFAULTS,
+    })) as number;
 
     await db.paymentHistory.add({
       assetId, amount: 33.3, date: new Date('2024-07-11'),
@@ -402,7 +400,7 @@ describe('syncAllAssets', () => {
 
     await syncAllAssets();
 
-    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    const records = await db.paymentHistory.where('[assetId+date]').between([assetId, Dexie.minKey], [assetId, Dexie.maxKey]).toArray();
     expect(records).toHaveLength(2); // not 3
   });
 
@@ -415,6 +413,9 @@ describe('syncAllAssets', () => {
       dataSource: 'import',
       createdAt: new Date(),
       updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+      quantitySource: 'import' as const,
+      frequencyPerYear: 2,
     })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({

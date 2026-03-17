@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { db } from '@/db/database';
-import type { Asset, PaymentSchedule, PaymentHistory } from '@/models/types';
+import type { Asset, PaymentHistory } from '@/models/types';
 import type { DividendHistoryRow } from './moex-api';
 import {
   resolveSecurityInfo,
@@ -54,13 +54,11 @@ async function syncSingleAsset(asset: Asset): Promise<void> {
   let market: 'shares' | 'bonds';
 
   if (secid) {
-    // Cached secid — still need board/market, resolve by secid
     const info = await resolveSecurityInfo(secid);
     if (!info) throw new Error('Не найден на MOEX');
     boardId = info.primaryBoardId;
     market = info.market;
   } else {
-    // Resolution chain: ticker → ISIN
     let info = asset.ticker
       ? await resolveSecurityInfo(asset.ticker)
       : null;
@@ -73,7 +71,6 @@ async function syncSingleAsset(asset: Asset): Promise<void> {
     boardId = info.primaryBoardId;
     market = info.market;
 
-    // Cache for next time
     await db.assets.update(asset.id!, { moexSecid: secid });
   }
 
@@ -99,10 +96,8 @@ async function syncStock(secid: string, asset: Asset, boardId: string): Promise<
   const divInfo = await fetchDividends(secid);
   if (divInfo) {
     await writePaymentHistory(asset.id!, divInfo.history, 'dividend');
-    await upsertMoexSchedule(asset.id!, {
+    await updateMoexAssetFields(asset, {
       frequencyPerYear: divInfo.summary.frequencyPerYear,
-      lastPaymentAmount: divInfo.summary.lastPaymentAmount,
-      lastPaymentDate: divInfo.summary.lastPaymentDate,
       nextExpectedCutoffDate: divInfo.summary.nextExpectedCutoffDate ?? undefined,
     });
   }
@@ -126,9 +121,8 @@ async function syncBond(secid: string, asset: Asset, boardId: string): Promise<v
       ? Math.round(365 / bondData.couponPeriod)
       : 2;
 
-  await upsertMoexSchedule(asset.id!, {
+  await updateMoexAssetFields(asset, {
     frequencyPerYear,
-    lastPaymentAmount: bondData.couponValue,
     nextExpectedDate: bondData.nextCouponDate
       ? new Date(bondData.nextCouponDate)
       : undefined,
@@ -167,38 +161,25 @@ async function writePaymentHistory(
   }
 }
 
-async function upsertMoexSchedule(
-  assetId: number,
+async function updateMoexAssetFields(
+  asset: Asset,
   data: {
     frequencyPerYear: number;
-    lastPaymentAmount: number;
-    lastPaymentDate?: Date;
     nextExpectedDate?: Date;
     nextExpectedCutoffDate?: Date;
   },
 ): Promise<void> {
-  const existing = await db.paymentSchedules
-    .where('assetId')
-    .equals(assetId)
-    .first();
+  const updates: Partial<Asset> = {};
 
-  if (existing?.dataSource === 'manual') return;
+  updates.moexFrequency = data.frequencyPerYear;
 
-  const scheduleData: Partial<PaymentSchedule> = {
-    frequencyPerYear: data.frequencyPerYear,
-    lastPaymentAmount: data.lastPaymentAmount,
-    lastPaymentDate: data.lastPaymentDate,
-    nextExpectedDate: data.nextExpectedDate,
-    nextExpectedCutoffDate: data.nextExpectedCutoffDate,
-    dataSource: 'moex',
-  };
-
-  if (existing) {
-    await db.paymentSchedules.update(existing.id!, scheduleData);
-  } else {
-    await db.paymentSchedules.add({
-      assetId,
-      ...scheduleData,
-    } as PaymentSchedule);
+  if (asset.frequencySource !== 'manual') {
+    updates.frequencyPerYear = data.frequencyPerYear;
+    updates.frequencySource = 'moex';
   }
+
+  if (data.nextExpectedDate) updates.nextExpectedDate = data.nextExpectedDate;
+  if (data.nextExpectedCutoffDate) updates.nextExpectedCutoffDate = data.nextExpectedCutoffDate;
+
+  await db.assets.update(asset.id!, updates);
 }
