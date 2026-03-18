@@ -55,8 +55,11 @@ const BOARD_TO_MARKET: Record<string, 'shares' | 'bonds'> = {
   TQBR: 'shares',
   TQTF: 'shares',
   TQPI: 'shares',
+  TQIR: 'shares',
+  TQIF: 'shares',
   TQOB: 'bonds',
   TQCB: 'bonds',
+  EQOB: 'bonds',
 };
 
 function resolveMarket(
@@ -149,9 +152,12 @@ export function parseDividendHistory(
 
 // ============ ISS Fetch Helper ============
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 async function fetchISS(
   path: string,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<ISSResponse | null> {
   const url = new URL(`${MOEX_BASE_URL}${path}`);
   url.searchParams.set('iss.meta', 'off');
@@ -160,13 +166,60 @@ async function fetchISS(
       url.searchParams.set(key, val);
     }
   }
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let ac: AbortController | undefined;
+
+  if (!signal) {
+    ac = new AbortController();
+    timeoutId = setTimeout(() => ac!.abort(), FETCH_TIMEOUT_MS);
+    signal = ac.signal;
+  }
+
   try {
-    const res = await fetch(url.toString());
+    const res = await fetch(url.toString(), { signal });
     if (!res.ok) return null;
     return await res.json();
   } catch {
     return null;
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
+}
+
+// ============ Paginated ISS Fetch ============
+
+// MOEX ISS default page size; used as threshold for pagination detection
+const ISS_DEFAULT_PAGE_SIZE = 20;
+const MAX_ISS_PAGES = 50;
+
+async function fetchAllISSPages(
+  path: string,
+  blockName: string,
+  params?: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<Record<string, string | number | null>[]> {
+  const allRows: Record<string, string | number | null>[] = [];
+  let start = 0;
+  let pageSize = ISS_DEFAULT_PAGE_SIZE;
+
+  for (let page = 0; page < MAX_ISS_PAGES; page++) {
+    const data = await fetchISS(path, {
+      ...params,
+      'iss.only': blockName,
+      [`${blockName}.start`]: String(start),
+    }, signal);
+    if (!data?.[blockName]) break;
+    const rows = parseISSBlock(data[blockName]);
+    if (rows.length === 0) break;
+    allRows.push(...rows);
+    // Use first page to detect actual page size (may differ from default)
+    if (page === 0 && rows.length > pageSize) pageSize = rows.length;
+    if (rows.length < pageSize) break;
+    start += rows.length;
+  }
+
+  return allRows;
 }
 
 // ============ Fetch Functions ============
@@ -245,7 +298,7 @@ export async function fetchBondData(
     prevPrice: (sec?.PREVPRICE ?? null) as number | null,
     faceValue: sec.FACEVALUE as number,
     couponValue: sec.COUPONVALUE as number,
-    nextCouponDate: (sec.NEXTCOUPON as string) ?? null,
+    nextCouponDate: (sec.NEXTCOUPON as string | null) ?? null,
     couponPeriod: sec.COUPONPERIOD as number,
   };
 }
@@ -254,15 +307,19 @@ export async function fetchDividends(
   secid: string,
 ): Promise<DividendResult | null> {
   try {
-    const data = await fetchISS(`/securities/${secid}/dividends.json`);
+    // Dividends endpoint returns all data at once (no pagination needed)
+    const data = await fetchISS(`/securities/${secid}/dividends.json`, {
+      'iss.only': 'dividends',
+    });
     if (!data?.dividends) return null;
-    const rows = parseISSBlock(data.dividends);
-    const summary = parseDividendHistory(rows);
+    const allRows = parseISSBlock(data.dividends);
+    if (allRows.length === 0) return null;
+    const summary = parseDividendHistory(allRows);
     if (!summary) return null;
 
-    const history: DividendHistoryRow[] = rows
-      .filter((r: Record<string, unknown>) => r.registryclosedate && r.value != null)
-      .map((r: Record<string, unknown>) => ({
+    const history: DividendHistoryRow[] = allRows
+      .filter((r) => r.registryclosedate && r.value != null)
+      .map((r) => ({
         date: new Date(r.registryclosedate as string),
         amount: r.value as number,
       }))
@@ -278,13 +335,14 @@ export async function fetchCouponHistory(
   secid: string,
 ): Promise<DividendHistoryRow[]> {
   try {
-    const data = await fetchISS(`/securities/${secid}/bondization.json`);
-    if (!data?.coupons) return [];
-    const rows = parseISSBlock(data.coupons);
+    const allRows = await fetchAllISSPages(
+      `/securities/${secid}/bondization.json`,
+      'coupons',
+    );
     const now = new Date();
-    return rows
-      .filter((r: Record<string, unknown>) => r.coupondate && r.value_rub != null && new Date(r.coupondate as string) <= now)
-      .map((r: Record<string, unknown>) => ({
+    return allRows
+      .filter((r) => r.coupondate && r.value_rub != null && new Date(r.coupondate as string) <= now)
+      .map((r) => ({
         date: new Date(r.coupondate as string),
         amount: r.value_rub as number,
       }))
@@ -292,4 +350,96 @@ export async function fetchCouponHistory(
   } catch {
     return [];
   }
+}
+
+// ============ Batch Functions ============
+
+export function chunk<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+export async function fetchBatchStockPrices(
+  secids: string[],
+  boardId: string,
+): Promise<Map<string, StockPriceResult>> {
+  const result = new Map<string, StockPriceResult>();
+  if (secids.length === 0) return result;
+
+  try {
+    const data = await fetchISS(
+      `/engines/stock/markets/shares/boards/${boardId}/securities.json`,
+      {
+        securities: secids.join(','),
+        'marketdata.columns': 'SECID,LAST,LCURRENTPRICE',
+        'securities.columns': 'SECID,PREVPRICE',
+      },
+    );
+    if (!data?.marketdata || !data?.securities) return result;
+
+    const mdRows = parseISSBlock(data.marketdata);
+    const secRows = parseISSBlock(data.securities);
+
+    const mdMap = new Map(mdRows.map((r) => [r.SECID as string, r]));
+    const secMap = new Map(secRows.map((r) => [r.SECID as string, r]));
+
+    for (const secid of secids) {
+      const md = mdMap.get(secid);
+      const sec = secMap.get(secid);
+      if (!md && !sec) continue;
+      result.set(secid, {
+        currentPrice: (md?.LAST ?? md?.LCURRENTPRICE ?? null) as number | null,
+        prevPrice: (sec?.PREVPRICE ?? null) as number | null,
+      });
+    }
+  } catch {
+    // partial failure — return whatever we have
+  }
+  return result;
+}
+
+export async function fetchBatchBondData(
+  secids: string[],
+  boardId: string,
+): Promise<Map<string, BondDataResult>> {
+  const result = new Map<string, BondDataResult>();
+  if (secids.length === 0) return result;
+
+  try {
+    const data = await fetchISS(
+      `/engines/stock/markets/bonds/boards/${boardId}/securities.json`,
+      {
+        securities: secids.join(','),
+        'marketdata.columns': 'SECID,LAST,LCURRENTPRICE',
+        'securities.columns':
+          'SECID,PREVPRICE,FACEVALUE,COUPONVALUE,NEXTCOUPON,COUPONPERIOD',
+      },
+    );
+    if (!data?.securities) return result;
+
+    const mdRows = data.marketdata ? parseISSBlock(data.marketdata) : [];
+    const secRows = parseISSBlock(data.securities);
+
+    const mdMap = new Map(mdRows.map((r) => [r.SECID as string, r]));
+
+    for (const sec of secRows) {
+      const secid = sec.SECID as string;
+      if (!secids.includes(secid)) continue;
+      const md = mdMap.get(secid);
+      result.set(secid, {
+        currentPrice: (md?.LAST ?? md?.LCURRENTPRICE ?? null) as number | null,
+        prevPrice: (sec.PREVPRICE ?? null) as number | null,
+        faceValue: sec.FACEVALUE as number,
+        couponValue: sec.COUPONVALUE as number,
+        nextCouponDate: (sec.NEXTCOUPON as string | null) ?? null,
+        couponPeriod: sec.COUPONPERIOD as number,
+      });
+    }
+  } catch {
+    // partial failure — return whatever we have
+  }
+  return result;
 }

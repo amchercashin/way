@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   parseISSBlock,
@@ -8,6 +9,9 @@ import {
   fetchBondData,
   fetchDividends,
   fetchCouponHistory,
+  chunk,
+  fetchBatchStockPrices,
+  fetchBatchBondData,
 } from '@/services/moex-api';
 
 describe('parseISSBlock', () => {
@@ -286,6 +290,25 @@ describe('fetchDividends', () => {
   });
 });
 
+describe('fetchDividends (no pagination)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('fetches all dividends in a single request', async () => {
+    const columns = ['secid', 'isin', 'registryclosedate', 'value', 'currencyid'];
+    const data = Array.from({ length: 25 }, (_, i) => [
+      'LKOH', 'RU0009024277', `${2000 + i}-07-01`, 50 + i, 'RUB',
+    ]);
+
+    const fetchMock = mockFetch({ dividends: { columns, data } });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchDividends('LKOH');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result).not.toBeNull();
+    expect(result!.history).toHaveLength(25);
+  });
+});
+
 describe('fetchDividends (with raw rows)', () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -327,8 +350,162 @@ describe('fetchCouponHistory', () => {
     expect(result[0]).toEqual({ date: new Date('2025-06-03'), amount: 35.4 });
   });
 
+  it('paginates through all coupon pages', async () => {
+    // Page 1: exactly 20 rows (triggers next page fetch)
+    const page1Data = Array.from({ length: 20 }, (_, i) => [
+      'RU000A0JV4Q1',
+      `2015-${String((i % 12) + 1).padStart(2, '0')}-01`,
+      10 + i,
+      10 + i,
+    ]);
+    // Page 2: 5 rows including recent ones
+    const page2Data = [
+      ['RU000A0JV4Q1', '2025-06-18', 99.33, 99.33],
+      ['RU000A0JV4Q1', '2025-12-17', 112.24, 112.24],
+      ['RU000A0JV4Q1', '2026-06-17', 50, 50],
+      ['RU000A0JV4Q1', '2026-12-16', 50, 50],
+      ['RU000A0JV4Q1', '2027-06-16', 50, 50],
+    ];
+    const columns = ['isin', 'coupondate', 'value_rub', 'value'];
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ coupons: { columns, data: page1Data } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ coupons: { columns, data: page2Data } }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchCouponHistory('SU29010RMFS4');
+    // Should have fetched 2 pages
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // All 20 past page1 coupons + 2 past 2025 coupons from page2 (future ones filtered out)
+    expect(result.length).toBe(22);
+    // Recent coupons from page 2 should be present
+    expect(result.some(r => r.amount === 99.33)).toBe(true);
+    expect(result.some(r => r.amount === 112.24)).toBe(true);
+  });
+
   it('returns empty array on error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('fail')));
     expect(await fetchCouponHistory('SU26238RMFS4')).toEqual([]);
+  });
+});
+
+describe('chunk', () => {
+  it('splits array into chunks of given size', () => {
+    expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+  });
+
+  it('returns single chunk when array fits', () => {
+    expect(chunk([1, 2, 3], 10)).toEqual([[1, 2, 3]]);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(chunk([], 5)).toEqual([]);
+  });
+});
+
+describe('fetchBatchStockPrices', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns Map of prices for multiple tickers', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['SECID', 'PREVPRICE'],
+        data: [['SBER', 316.65], ['GAZP', 150.2]],
+      },
+      marketdata: {
+        columns: ['SECID', 'LAST', 'LCURRENTPRICE'],
+        data: [['SBER', 317.63, 317.54], ['GAZP', 151.0, 150.8]],
+      },
+    }));
+    const result = await fetchBatchStockPrices(['SBER', 'GAZP'], 'TQBR');
+    expect(result.size).toBe(2);
+    expect(result.get('SBER')).toEqual({ currentPrice: 317.63, prevPrice: 316.65 });
+    expect(result.get('GAZP')).toEqual({ currentPrice: 151.0, prevPrice: 150.2 });
+  });
+
+  it('handles partial results (API returns fewer tickers)', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['SECID', 'PREVPRICE'],
+        data: [['SBER', 316.65]],
+      },
+      marketdata: {
+        columns: ['SECID', 'LAST', 'LCURRENTPRICE'],
+        data: [['SBER', 317.63, 317.54]],
+      },
+    }));
+    const result = await fetchBatchStockPrices(['SBER', 'MISSING'], 'TQBR');
+    expect(result.size).toBe(1);
+    expect(result.has('SBER')).toBe(true);
+    expect(result.has('MISSING')).toBe(false);
+  });
+
+  it('returns empty Map on network error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('fail')));
+    const result = await fetchBatchStockPrices(['SBER'], 'TQBR');
+    expect(result.size).toBe(0);
+  });
+
+  it('returns empty Map for empty secids', async () => {
+    const result = await fetchBatchStockPrices([], 'TQBR');
+    expect(result.size).toBe(0);
+  });
+});
+
+describe('fetchBatchBondData', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns Map of bond data for multiple tickers', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['SECID', 'PREVPRICE', 'FACEVALUE', 'COUPONVALUE', 'NEXTCOUPON', 'COUPONPERIOD'],
+        data: [
+          ['SU26238RMFS4', 61.107, 1000, 35.4, '2026-06-03', 182],
+          ['SU29010RMFS4', 105.0, 1000, 44.88, '2026-06-18', 182],
+        ],
+      },
+      marketdata: {
+        columns: ['SECID', 'LAST', 'LCURRENTPRICE'],
+        data: [
+          ['SU26238RMFS4', 61.5, null],
+          ['SU29010RMFS4', 105.5, null],
+        ],
+      },
+    }));
+    const result = await fetchBatchBondData(['SU26238RMFS4', 'SU29010RMFS4'], 'TQOB');
+    expect(result.size).toBe(2);
+    expect(result.get('SU26238RMFS4')).toEqual({
+      currentPrice: 61.5, prevPrice: 61.107,
+      faceValue: 1000, couponValue: 35.4,
+      nextCouponDate: '2026-06-03', couponPeriod: 182,
+    });
+    expect(result.get('SU29010RMFS4')!.currentPrice).toBe(105.5);
+  });
+
+  it('returns empty Map on network error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('fail')));
+    const result = await fetchBatchBondData(['SU26238RMFS4'], 'TQOB');
+    expect(result.size).toBe(0);
+  });
+});
+
+describe('fetchISS signal passing', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('passes AbortSignal.timeout to fetch by default', async () => {
+    const fetchMock = mockFetch({
+      securities: { columns: ['secid', 'primary_boardid', 'group', 'is_traded'], data: [] },
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await resolveSecurityInfo('SBER');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const callArgs = fetchMock.mock.calls[0];
+    expect(callArgs[1]).toHaveProperty('signal');
   });
 });

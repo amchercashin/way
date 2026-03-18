@@ -9,13 +9,22 @@ vi.mock('@/services/moex-api', () => ({
   fetchBondData: vi.fn(),
   fetchDividends: vi.fn(),
   fetchCouponHistory: vi.fn().mockResolvedValue([]),
+  fetchBatchStockPrices: vi.fn().mockResolvedValue(new Map()),
+  fetchBatchBondData: vi.fn().mockResolvedValue(new Map()),
+  chunk: vi.fn((arr: unknown[], size: number) => {
+    const result: unknown[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  }),
 }));
 
 import {
   resolveSecurityInfo,
-  fetchStockPrice,
-  fetchBondData,
   fetchDividends,
+  fetchBatchStockPrices,
+  fetchBatchBondData,
 } from '@/services/moex-api';
 import { syncAllAssets, getLastSyncAt } from '@/services/moex-sync';
 
@@ -51,10 +60,9 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQBR',
       market: 'shares',
     });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 317.63,
-      prevPrice: 316.65,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 317.63, prevPrice: 316.65 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue({
       summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
       history: [{ date: new Date('2025-07-18'), amount: 34.84 }],
@@ -93,14 +101,16 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQOB',
       market: 'bonds',
     });
-    (fetchBondData as Mock).mockResolvedValue({
-      currentPrice: 61.5,
-      prevPrice: 61.107,
-      faceValue: 1000,
-      couponValue: 35.4,
-      nextCouponDate: '2026-06-03',
-      couponPeriod: 182,
-    });
+    (fetchBatchBondData as Mock).mockResolvedValue(
+      new Map([['SU26238RMFS4', {
+        currentPrice: 61.5,
+        prevPrice: 61.107,
+        faceValue: 1000,
+        couponValue: 35.4,
+        nextCouponDate: '2026-06-03',
+        couponPeriod: 182,
+      }]]),
+    );
 
     const result = await syncAllAssets();
 
@@ -168,10 +178,9 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQBR',
       market: 'shares',
     });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 317.63,
-      prevPrice: 316.65,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 317.63, prevPrice: 316.65 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue({
       summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
       history: [{ date: new Date('2025-07-18'), amount: 34.84 }],
@@ -204,10 +213,9 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQBR',
       market: 'shares',
     });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 317.63,
-      prevPrice: 316.65,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 317.63, prevPrice: 316.65 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue(null);
 
     await syncAllAssets();
@@ -238,10 +246,9 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQBR',
       market: 'shares',
     });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 317.63,
-      prevPrice: 316.65,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 317.63, prevPrice: 316.65 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue({
       summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 2, nextExpectedCutoffDate: null },
       history: [{ date: new Date('2025-07-18'), amount: 34.84 }],
@@ -302,10 +309,9 @@ describe('syncAllAssets', () => {
         primaryBoardId: 'TQTF',
         market: 'shares',
       });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 1150,
-      prevPrice: 1100,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['RU000A1068X9', { currentPrice: 1150, prevPrice: 1100 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue(null);
 
     const result = await syncAllAssets();
@@ -318,8 +324,38 @@ describe('syncAllAssets', () => {
     expect(asset!.moexSecid).toBe('RU000A1068X9');
   });
 
-  it('uses cached moexSecid for resolution', async () => {
-    await db.assets.add({
+  it('uses cached moexSecid/boardId/market and skips resolveSecurityInfo', async () => {
+    const assetId = (await db.assets.add({
+      type: 'stock',
+      ticker: 'SBER',
+      moexSecid: 'SBER',
+      moexBoardId: 'TQBR',
+      moexMarket: 'shares',
+      name: 'Сбербанк',
+      quantity: 800,
+      dataSource: 'manual',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+    })) as number;
+
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 320.0, prevPrice: 318.0 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue(null);
+
+    const result = await syncAllAssets();
+
+    expect(result.synced).toBe(1);
+    // When all three cached fields are present, resolveSecurityInfo is NOT called
+    expect(resolveSecurityInfo).not.toHaveBeenCalled();
+
+    const asset = await db.assets.get(assetId);
+    expect(asset!.currentPrice).toBe(320.0);
+  });
+
+  it('resolves and caches boardId/market when only moexSecid present', async () => {
+    const assetId = (await db.assets.add({
       type: 'stock',
       ticker: 'SBER',
       moexSecid: 'SBER',
@@ -329,25 +365,29 @@ describe('syncAllAssets', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       ...ASSET_DEFAULTS,
-    });
+    })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({
       secid: 'SBER',
       primaryBoardId: 'TQBR',
       market: 'shares',
     });
-    (fetchStockPrice as Mock).mockResolvedValue({
-      currentPrice: 320.0,
-      prevPrice: 318.0,
-    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 320.0, prevPrice: 318.0 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue(null);
 
     const result = await syncAllAssets();
 
     expect(result.synced).toBe(1);
-    // Uses cached secid directly (1 call, not ticker→ISIN chain)
+    // Called once because moexBoardId/moexMarket were missing
     expect(resolveSecurityInfo).toHaveBeenCalledTimes(1);
     expect(resolveSecurityInfo).toHaveBeenCalledWith('SBER');
+
+    // Verify boardId and market are now cached
+    const asset = await db.assets.get(assetId);
+    expect(asset!.moexBoardId).toBe('TQBR');
+    expect(asset!.moexMarket).toBe('shares');
   });
 
   it('writes dividend rows to paymentHistory on stock sync', async () => {
@@ -358,7 +398,9 @@ describe('syncAllAssets', () => {
     })) as number;
 
     (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
-    (fetchStockPrice as Mock).mockResolvedValue({ currentPrice: 300, prevPrice: 298 });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 300, prevPrice: 298 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue({
       summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
       history: [
@@ -389,7 +431,9 @@ describe('syncAllAssets', () => {
     });
 
     (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
-    (fetchStockPrice as Mock).mockResolvedValue({ currentPrice: 300, prevPrice: 298 });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 300, prevPrice: 298 }]]),
+    );
     (fetchDividends as Mock).mockResolvedValue({
       summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
       history: [
@@ -423,14 +467,16 @@ describe('syncAllAssets', () => {
       primaryBoardId: 'TQOB',
       market: 'bonds',
     });
-    (fetchBondData as Mock).mockResolvedValue({
-      currentPrice: 105.5,
-      prevPrice: 105.0,
-      faceValue: 1000,
-      couponValue: 44.88,
-      nextCouponDate: '2026-06-18',
-      couponPeriod: 182,
-    });
+    (fetchBatchBondData as Mock).mockResolvedValue(
+      new Map([['SU29010RMFS4', {
+        currentPrice: 105.5,
+        prevPrice: 105.0,
+        faceValue: 1000,
+        couponValue: 44.88,
+        nextCouponDate: '2026-06-18',
+        couponPeriod: 182,
+      }]]),
+    );
 
     const result = await syncAllAssets();
 
@@ -439,5 +485,94 @@ describe('syncAllAssets', () => {
     const asset = await db.assets.get(assetId);
     expect(asset!.currentPrice).toBe(1055);
     expect(asset!.moexSecid).toBe('SU29010RMFS4');
+  });
+
+  it('groups assets by market+board for batch pricing', async () => {
+    // Two stocks on TQBR — should be fetched in one batch
+    await db.assets.add({
+      type: 'stock', ticker: 'SBER', moexSecid: 'SBER', moexBoardId: 'TQBR', moexMarket: 'shares',
+      name: 'Сбербанк', quantity: 100, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+    await db.assets.add({
+      type: 'stock', ticker: 'GAZP', moexSecid: 'GAZP', moexBoardId: 'TQBR', moexMarket: 'shares',
+      name: 'Газпром', quantity: 200, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([
+        ['SBER', { currentPrice: 320, prevPrice: 318 }],
+        ['GAZP', { currentPrice: 150, prevPrice: 148 }],
+      ]),
+    );
+    (fetchDividends as Mock).mockResolvedValue(null);
+
+    const result = await syncAllAssets();
+
+    expect(result.synced).toBe(2);
+    expect(resolveSecurityInfo).not.toHaveBeenCalled();
+    // Should call fetchBatchStockPrices once (both on TQBR)
+    expect(fetchBatchStockPrices).toHaveBeenCalledTimes(1);
+    expect((fetchBatchStockPrices as Mock).mock.calls[0][0]).toEqual(
+      expect.arrayContaining(['SBER', 'GAZP']),
+    );
+  });
+
+  it('isolates errors: one asset failing does not block others', async () => {
+    await db.assets.add({
+      type: 'stock', ticker: 'GOOD', moexSecid: 'GOOD', moexBoardId: 'TQBR', moexMarket: 'shares',
+      name: 'Good Stock', quantity: 100, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+    await db.assets.add({
+      type: 'stock', ticker: 'BAD',
+      name: 'Bad Stock', quantity: 100, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+
+    // BAD fails resolve, GOOD succeeds
+    (resolveSecurityInfo as Mock).mockResolvedValue(null);
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['GOOD', { currentPrice: 100, prevPrice: 99 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue(null);
+
+    const result = await syncAllAssets();
+
+    // BAD failed at resolve, GOOD should still sync
+    expect(result.failed).toBe(1);
+    expect(result.synced).toBe(1);
+  });
+
+  it('handles mixed stock+bond portfolio', async () => {
+    await db.assets.add({
+      type: 'stock', ticker: 'SBER', moexSecid: 'SBER', moexBoardId: 'TQBR', moexMarket: 'shares',
+      name: 'Сбербанк', quantity: 100, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+    await db.assets.add({
+      type: 'bond', ticker: 'SU26238RMFS4', moexSecid: 'SU26238RMFS4', moexBoardId: 'TQOB', moexMarket: 'bonds',
+      name: 'ОФЗ 26238', quantity: 50, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 320, prevPrice: 318 }]]),
+    );
+    (fetchBatchBondData as Mock).mockResolvedValue(
+      new Map([['SU26238RMFS4', {
+        currentPrice: 61.5, prevPrice: 61.107,
+        faceValue: 1000, couponValue: 35.4,
+        nextCouponDate: '2026-06-03', couponPeriod: 182,
+      }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue(null);
+
+    const result = await syncAllAssets();
+
+    expect(result.synced).toBe(2);
+    expect(fetchBatchStockPrices).toHaveBeenCalledTimes(1);
+    expect(fetchBatchBondData).toHaveBeenCalledTimes(1);
   });
 });

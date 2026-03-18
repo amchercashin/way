@@ -26,6 +26,8 @@ export interface Asset {
   ticker?: string;
   isin?: string;
   moexSecid?: string;
+  moexBoardId?: string;
+  moexMarket?: 'shares' | 'bonds';
   name: string;
   currency?: string;
   emitter?: string;
