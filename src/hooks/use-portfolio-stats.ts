@@ -15,6 +15,7 @@ export function usePortfolioStats(): {
   const { portfolio, categories } = useMemo(() => {
     const now = new Date();
 
+    // Build history lookup
     const historyByAsset = new Map<number, PaymentRecord[]>();
     for (const h of (allHistory ?? [])) {
       const arr = historyByAsset.get(h.assetId) ?? [];
@@ -22,32 +23,42 @@ export function usePortfolioStats(): {
       historyByAsset.set(h.assetId, arr);
     }
 
+    // Helper: resolve paymentPerUnit once per asset
+    const resolvePaymentPerUnit = (asset: (typeof assets)[number]): number => {
+      if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
+        return asset.paymentPerUnit;
+      }
+      const history = historyByAsset.get(asset.id!) ?? [];
+      return calcFactPaymentPerUnit(history, asset.frequencyPerYear, now);
+    };
+
+    // Single pass: accumulate portfolio totals AND per-category stats
     let totalValue = 0;
     let totalIncomePerMonth = 0;
-    const categoryMap = new Map<AssetType, typeof assets>();
+    const categoryMap = new Map<AssetType, { value: number; incomePerMonth: number; count: number }>();
 
     for (const asset of assets) {
       const price = asset.currentPrice ?? asset.averagePrice ?? 0;
       const assetValue = price * asset.quantity;
       totalValue += assetValue;
 
-      const catAssets = categoryMap.get(asset.type) ?? [];
-      catAssets.push(asset);
-      categoryMap.set(asset.type, catAssets);
-
-      let paymentPerUnit: number;
-      if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
-        paymentPerUnit = asset.paymentPerUnit;
-      } else {
-        const history = historyByAsset.get(asset.id!) ?? [];
-        paymentPerUnit = calcFactPaymentPerUnit(history, asset.frequencyPerYear, now);
-      }
-
-      totalIncomePerMonth += calcAssetIncomePerMonth(
+      const paymentPerUnit = resolvePaymentPerUnit(asset);
+      const assetIncomePerMonth = calcAssetIncomePerMonth(
         asset.quantity,
         paymentPerUnit,
         asset.frequencyPerYear,
       );
+      totalIncomePerMonth += assetIncomePerMonth;
+
+      // Accumulate category stats
+      const cat = categoryMap.get(asset.type);
+      if (cat) {
+        cat.value += assetValue;
+        cat.incomePerMonth += assetIncomePerMonth;
+        cat.count += 1;
+      } else {
+        categoryMap.set(asset.type, { value: assetValue, incomePerMonth: assetIncomePerMonth, count: 1 });
+      }
     }
 
     const totalIncomePerYear = totalIncomePerMonth * 12;
@@ -60,37 +71,18 @@ export function usePortfolioStats(): {
       yieldPercent,
     };
 
+    // Convert categoryMap to CategoryStats array
     const categories: CategoryStats[] = [];
-    for (const [type, categoryAssets] of categoryMap) {
-      let catValue = 0;
-      let catIncomePerMonth = 0;
-      for (const asset of categoryAssets) {
-        const price = asset.currentPrice ?? asset.averagePrice ?? 0;
-        catValue += price * asset.quantity;
-
-        let paymentPerUnit: number;
-        if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
-          paymentPerUnit = asset.paymentPerUnit;
-        } else {
-          const history = historyByAsset.get(asset.id!) ?? [];
-          paymentPerUnit = calcFactPaymentPerUnit(history, asset.frequencyPerYear, now);
-        }
-
-        catIncomePerMonth += calcAssetIncomePerMonth(
-          asset.quantity,
-          paymentPerUnit,
-          asset.frequencyPerYear,
-        );
-      }
-      const catIncomePerYear = catIncomePerMonth * 12;
+    for (const [type, cat] of categoryMap) {
+      const catIncomePerYear = cat.incomePerMonth * 12;
       categories.push({
         type,
-        assetCount: categoryAssets.length,
-        totalIncomePerMonth: catIncomePerMonth,
+        assetCount: cat.count,
+        totalIncomePerMonth: cat.incomePerMonth,
         totalIncomePerYear: catIncomePerYear,
-        totalValue: catValue,
-        yieldPercent: catValue > 0 ? calcYieldPercent(catIncomePerYear, catValue) : 0,
-        portfolioSharePercent: totalValue > 0 ? (catValue / totalValue) * 100 : 0,
+        totalValue: cat.value,
+        yieldPercent: cat.value > 0 ? calcYieldPercent(catIncomePerYear, cat.value) : 0,
+        portfolioSharePercent: totalValue > 0 ? (cat.value / totalValue) * 100 : 0,
       });
     }
     categories.sort((a, b) => b.totalIncomePerMonth - a.totalIncomePerMonth);

@@ -94,6 +94,52 @@ describe('income-calculator', () => {
     });
   });
 
+  describe('NaN/Infinity guards', () => {
+    it('calcAssetIncomePerYear returns 0 for NaN paymentAmount', () => {
+      expect(calcAssetIncomePerYear(800, NaN, 1)).toBe(0);
+    });
+
+    it('calcAssetIncomePerYear returns 0 for NaN quantity', () => {
+      expect(calcAssetIncomePerYear(NaN, 186, 1)).toBe(0);
+    });
+
+    it('calcAssetIncomePerYear returns 0 for NaN frequency', () => {
+      expect(calcAssetIncomePerYear(800, 186, NaN)).toBe(0);
+    });
+
+    it('calcFactPaymentPerUnit returns 0 for frequencyPerYear=0', () => {
+      const history = [{ amount: 36.9, date: new Date('2025-09-01') }];
+      expect(calcFactPaymentPerUnit(history, 0, new Date('2026-03-16'))).toBe(0);
+    });
+
+    it('calcFactPaymentPerUnit returns 0 for negative frequency', () => {
+      const history = [{ amount: 36.9, date: new Date('2025-09-01') }];
+      expect(calcFactPaymentPerUnit(history, -1, new Date('2026-03-16'))).toBe(0);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('calcAssetIncomePerYear returns 0 for Infinity quantity', () => {
+      expect(calcAssetIncomePerYear(Infinity, 186, 1)).toBe(0);
+    });
+
+    it('calcAssetIncomePerMonth returns 0 for NaN inputs', () => {
+      expect(calcAssetIncomePerMonth(NaN, 186, 1)).toBe(0);
+    });
+
+    it('calcFactPaymentPerUnit handles single payment with freq=2 (halved)', () => {
+      // Only 1 of 2 expected payments in window — returns sum/2
+      const history = [{ amount: 36.9, date: new Date('2025-09-01') }];
+      const result = calcFactPaymentPerUnit(history, 2, new Date('2026-03-16'));
+      expect(result).toBe(18.45);
+    });
+
+    it('calcYieldPercent returns finite number for large values', () => {
+      const result = calcYieldPercent(1e15, 1e16);
+      expect(isFinite(result)).toBe(true);
+    });
+  });
+
   describe('calcFactPaymentPerUnit', () => {
     it('for yearly (freq=1): sum of last 12 months / 1', () => {
       const history = [

@@ -132,4 +132,15 @@ LKOH,Лукойл,акция,10,6750,498,1`;
   it('returns empty array for empty input', () => {
     expect(parseCSV('')).toEqual([]);
   });
+
+  it('handles quoted fields with commas in CSV', () => {
+    const csv = `Тикер,Название,Тип,Количество,Ср. цена
+SBER,"Сбербанк, привилегированная",Акция,800,317.63
+GAZP,Газпром,Акция,200,150.00`;
+    const rows = parseCSV(csv);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].name).toBe('Сбербанк, привилегированная');
+    expect(rows[0].quantity).toBe(800);
+    expect(rows[1].name).toBe('Газпром');
+  });
 });

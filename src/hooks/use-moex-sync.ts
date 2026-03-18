@@ -18,7 +18,9 @@ export function useMoexSync() {
     setError(null);
     try {
       const result = await syncAllAssets();
-      setLastSyncAt(new Date());
+      if (result.synced > 0) {
+        setLastSyncAt(new Date());
+      }
       if (result.failed > 0) {
         setError(`Ошибки: ${result.errors.join(', ')}`);
       }

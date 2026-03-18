@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AssetFieldProps {
   label: string;
@@ -25,6 +25,10 @@ export function AssetField({
 }: AssetFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [value, editing]);
 
   const startEditing = () => {
     setDraft(value.replace(/[^\d.,]/g, ''));

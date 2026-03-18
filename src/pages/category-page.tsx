@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
@@ -19,22 +20,26 @@ export function CategoryPage() {
 
   const catStats = categories.find((c) => c.type === assetType);
 
-  const now = new Date();
-  const historyByAsset = new Map<number, PaymentRecord[]>();
-  for (const h of (allHistory ?? [])) {
-    const arr = historyByAsset.get(h.assetId) ?? [];
-    arr.push({ amount: h.amount, date: new Date(h.date) });
-    historyByAsset.set(h.assetId, arr);
-  }
+  const { historyByAsset, categoryHistory, now } = useMemo(() => {
+    const now = new Date();
+    const historyByAsset = new Map<number, PaymentRecord[]>();
+    for (const h of (allHistory ?? [])) {
+      const arr = historyByAsset.get(h.assetId) ?? [];
+      arr.push({ amount: h.amount, date: new Date(h.date) });
+      historyByAsset.set(h.assetId, arr);
+    }
 
-  const categoryAssetIds = new Set(assets.map((a) => a.id!));
-  const assetMap = new Map(assets.map((a) => [a.id!, a.quantity]));
-  const categoryHistory = (allHistory ?? [])
-    .filter((h) => categoryAssetIds.has(h.assetId))
-    .map((h) => ({
-      amount: h.amount * (assetMap.get(h.assetId) ?? 1),
-      date: new Date(h.date),
-    }));
+    const categoryAssetIds = new Set(assets.map((a) => a.id!));
+    const assetMap = new Map(assets.map((a) => [a.id!, a.quantity]));
+    const categoryHistory = (allHistory ?? [])
+      .filter((h) => categoryAssetIds.has(h.assetId))
+      .map((h) => ({
+        amount: h.amount * (assetMap.get(h.assetId) ?? 1),
+        date: new Date(h.date),
+      }));
+
+    return { historyByAsset, categoryHistory, now };
+  }, [assets, allHistory]);
 
   const backButton = (
     <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">

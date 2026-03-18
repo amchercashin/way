@@ -3,7 +3,8 @@ export function calcAssetIncomePerYear(
   paymentAmount: number,
   frequencyPerYear: number,
 ): number {
-  return quantity * paymentAmount * frequencyPerYear;
+  const result = quantity * paymentAmount * frequencyPerYear;
+  return isFinite(result) ? result : 0;
 }
 
 export function calcAssetIncomePerMonth(
@@ -91,5 +92,6 @@ export function calcFactPaymentPerUnit(
     .filter((p) => p.date > twelveMonthsAgo && p.date <= now)
     .reduce((acc, p) => acc + p.amount, 0);
   if (sum === 0) return 0;
+  if (frequencyPerYear <= 0) return 0;
   return sum / frequencyPerYear;
 }

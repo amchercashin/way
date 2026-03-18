@@ -110,9 +110,11 @@ export async function syncAllAssets(): Promise<SyncResult> {
     }
   }
 
-  await db
-    .table('settings')
-    .put({ key: 'lastSyncAt', value: new Date().toISOString() });
+  if (result.synced > 0) {
+    await db
+      .table('settings')
+      .put({ key: 'lastSyncAt', value: new Date().toISOString() });
+  }
 
   return result;
 }
@@ -261,7 +263,7 @@ async function enrichBond(
 
   const frequencyPerYear =
     bondData.couponPeriod > 0
-      ? Math.round(365 / bondData.couponPeriod)
+      ? Math.min(Math.round(365 / bondData.couponPeriod), 52)
       : 2;
 
   await updateMoexAssetFields(ra.asset, {

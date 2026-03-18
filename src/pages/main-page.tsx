@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
@@ -23,11 +23,13 @@ export function MainPage() {
   const allHistory = useAllPaymentHistory();
   const assets = useLiveQuery(() => db.assets.toArray(), [], []);
 
-  const assetMap = new Map(assets.map((a) => [a.id!, a.quantity]));
-  const portfolioHistory = (allHistory ?? []).map((h) => ({
-    amount: h.amount * (assetMap.get(h.assetId) ?? 1),
-    date: new Date(h.date),
-  }));
+  const portfolioHistory = useMemo(() => {
+    const assetMap = new Map(assets.map((a) => [a.id!, a.quantity]));
+    return (allHistory ?? []).map((h) => ({
+      amount: h.amount * (assetMap.get(h.assetId) ?? 1),
+      date: new Date(h.date),
+    }));
+  }, [assets, allHistory]);
 
   const autoSyncDone = useRef(false);
   useEffect(() => {

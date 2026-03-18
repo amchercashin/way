@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { MainPage } from '@/pages/main-page';
 import { CategoryPage } from '@/pages/category-page';
 import { AssetDetailPage } from '@/pages/asset-detail-page';
@@ -13,20 +14,22 @@ import { BackupPage } from '@/pages/backup-page';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/category/:type" element={<CategoryPage />} />
-        <Route path="/asset/:id" element={<AssetDetailPage />} />
-        <Route path="/add-asset" element={<AddAssetPage />} />
-        <Route path="/import" element={<ImportPage />} />
-        <Route path="/import/ai" element={<ImportAIPage />} />
-        <Route path="/import/file" element={<ImportFilePage />} />
-        <Route path="/import/sber" element={<ImportSberPage />} />
-        <Route path="/import/preview" element={<ImportPreviewPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/backup" element={<BackupPage />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/category/:type" element={<CategoryPage />} />
+          <Route path="/asset/:id" element={<AssetDetailPage />} />
+          <Route path="/add-asset" element={<AddAssetPage />} />
+          <Route path="/import" element={<ImportPage />} />
+          <Route path="/import/ai" element={<ImportAIPage />} />
+          <Route path="/import/file" element={<ImportFilePage />} />
+          <Route path="/import/sber" element={<ImportSberPage />} />
+          <Route path="/import/preview" element={<ImportPreviewPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/backup" element={<BackupPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

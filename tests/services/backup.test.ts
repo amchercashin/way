@@ -68,6 +68,57 @@ describe('backup', () => {
     expect(assets[0].importedQuantity).toBe(800);
   });
 
+  it('rejects invalid JSON', async () => {
+    await expect(importAllData('not json')).rejects.toThrow('Невалидный формат');
+  });
+
+  it('rejects JSON without assets array', async () => {
+    await expect(importAllData(JSON.stringify({ foo: 'bar' }))).rejects.toThrow('Невалидный формат');
+  });
+
+  it('rejects JSON with non-array assets', async () => {
+    await expect(importAllData(JSON.stringify({ assets: 'string' }))).rejects.toThrow('Невалидный формат');
+  });
+
+  it('preserves existing data when import validation fails', async () => {
+    const now = new Date();
+    await db.assets.add({
+      type: 'stock', ticker: 'KEEP', name: 'Keep Me',
+      quantity: 1, quantitySource: 'manual',
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'manual', createdAt: now, updatedAt: now,
+    });
+
+    await expect(importAllData('not json')).rejects.toThrow();
+    expect(await db.assets.count()).toBe(1);
+    const kept = (await db.assets.toArray())[0];
+    expect(kept.ticker).toBe('KEEP');
+  });
+
+  it('rehydrates Date fields from ISO strings on import', async () => {
+    const now = new Date();
+    await db.assets.add({
+      type: 'stock', ticker: 'SBER', name: 'Сбербанк',
+      quantity: 800, quantitySource: 'manual',
+      paymentPerUnitSource: 'fact', frequencyPerYear: 1, frequencySource: 'manual',
+      dataSource: 'manual', createdAt: now, updatedAt: now,
+    });
+    await db.paymentHistory.add({
+      assetId: 1, amount: 34.84, date: new Date('2025-07-18'),
+      type: 'dividend', dataSource: 'moex',
+    });
+
+    const json = await exportAllData();
+    await importAllData(json);
+
+    const history = await db.paymentHistory.toArray();
+    expect(history[0].date).toBeInstanceOf(Date);
+    expect(history[0].date.getTime()).toBe(new Date('2025-07-18').getTime());
+
+    const assets = await db.assets.toArray();
+    expect(assets[0].createdAt).toBeInstanceOf(Date);
+  });
+
   it('import clears existing data before restoring', async () => {
     await db.assets.add({
       type: 'stock', name: 'Old', quantity: 1,

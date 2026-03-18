@@ -281,10 +281,30 @@ describe('syncAllAssets', () => {
     expect(result.errors).toHaveLength(1);
   });
 
-  it('saves lastSyncAt timestamp', async () => {
-    await syncAllAssets();
+  it('saves lastSyncAt timestamp when at least one asset synced', async () => {
+    await db.assets.add({
+      type: 'stock', ticker: 'SBER', moexSecid: 'SBER', moexBoardId: 'TQBR', moexMarket: 'shares',
+      name: 'Сбербанк', quantity: 100, dataSource: 'manual',
+      createdAt: new Date(), updatedAt: new Date(), ...ASSET_DEFAULTS,
+    });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 300, prevPrice: 298 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue(null);
+
+    const result = await syncAllAssets();
+    expect(result.synced).toBe(1);
+
     const lastSync = await getLastSyncAt();
     expect(lastSync).not.toBeNull();
+  });
+
+  it('does not save lastSyncAt when no assets synced', async () => {
+    const result = await syncAllAssets();
+    expect(result.synced).toBe(0);
+
+    const lastSync = await getLastSyncAt();
+    expect(lastSync).toBeNull();
   });
 
   it('resolves by ISIN when ticker resolution fails', async () => {

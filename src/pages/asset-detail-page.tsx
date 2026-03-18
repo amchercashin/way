@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
@@ -18,53 +19,60 @@ export function AssetDetailPage() {
   const { portfolio } = usePortfolioStats();
   const history = usePaymentHistory(assetId);
 
-  if (!asset) {
-    return <AppShell title="Загрузка..."><div /></AppShell>;
-  }
+  const computed = useMemo(() => {
+    if (!asset) return null;
+    const now = new Date();
+    const historyRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
 
-  const now = new Date();
-  const historyRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
+    let paymentPerUnit: number;
+    if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
+      paymentPerUnit = asset.paymentPerUnit;
+    } else {
+      paymentPerUnit = calcFactPaymentPerUnit(historyRecords, asset.frequencyPerYear, now);
+    }
 
-  let paymentPerUnit: number;
-  if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
-    paymentPerUnit = asset.paymentPerUnit;
-  } else {
-    paymentPerUnit = calcFactPaymentPerUnit(historyRecords, asset.frequencyPerYear, now);
-  }
+    const incomePerMonth = calcAssetIncomePerMonth(asset.quantity, paymentPerUnit, asset.frequencyPerYear);
 
-  const incomePerMonth = calcAssetIncomePerMonth(asset.quantity, paymentPerUnit, asset.frequencyPerYear);
+    const value = (asset.currentPrice ?? asset.averagePrice) != null
+      ? (asset.currentPrice ?? asset.averagePrice)! * asset.quantity
+      : null;
+    const yieldPct = (value != null)
+      ? calcYieldPercent(incomePerMonth * 12, value)
+      : null;
+    const sharePercent = (value != null && portfolio.totalValue > 0)
+      ? (value / portfolio.totalValue) * 100
+      : null;
 
-  const value = (asset.currentPrice ?? asset.averagePrice) != null
-    ? (asset.currentPrice ?? asset.averagePrice)! * asset.quantity
-    : null;
-  const yieldPct = (value != null)
-    ? calcYieldPercent(incomePerMonth * 12, value)
-    : null;
-  const sharePercent = (value != null && portfolio.totalValue > 0)
-    ? (value / portfolio.totalValue) * 100
-    : null;
+    const isManual =
+      asset.paymentPerUnitSource === 'manual' ||
+      asset.quantitySource === 'manual' ||
+      asset.frequencySource === 'manual';
 
-  const isManual =
-    asset.paymentPerUnitSource === 'manual' ||
-    asset.quantitySource === 'manual' ||
-    asset.frequencySource === 'manual';
+    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords };
+  }, [asset, history, portfolio.totalValue]);
 
-  const handleSaveQuantity = (v: string) => {
+  const handleSaveQuantity = useCallback((v: string) => {
     const num = parseInt(v);
     if (num > 0) updateAsset(assetId, { quantity: num, quantitySource: 'manual' });
-  };
+  }, [assetId]);
 
-  const handleSavePaymentPerUnit = (v: string) => {
+  const handleSavePaymentPerUnit = useCallback((v: string) => {
     const num = parseFloat(v.replace(',', '.').replace(/[^\d.]/g, ''));
     if (isNaN(num) || num < 0) return;
     updateAsset(assetId, { paymentPerUnit: num, paymentPerUnitSource: 'manual' });
-  };
+  }, [assetId]);
 
-  const handleSaveFrequency = (v: string) => {
+  const handleSaveFrequency = useCallback((v: string) => {
     const num = parseInt(v);
     if (isNaN(num) || num < 1 || num > 12) return;
     updateAsset(assetId, { frequencyPerYear: num, frequencySource: 'manual' });
-  };
+  }, [assetId]);
+
+  if (!asset || !computed) {
+    return <AppShell title="Загрузка..."><div /></AppShell>;
+  }
+
+  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords } = computed;
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 

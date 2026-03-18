@@ -121,17 +121,41 @@ export function parseMDTable(text: string): ImportAssetRow[] {
   return rows;
 }
 
+function splitCSVLine(line: string): string[] {
+  const cells: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
 export function parseCSV(text: string): ImportAssetRow[] {
   const lines = text.trim().split('\n').filter((l) => l.trim());
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map((c) => c.trim());
+  const headers = splitCSVLine(lines[0]);
   const colMap = mapHeaders(headers);
   if (colMap.name === undefined) return [];
 
   const rows: ImportAssetRow[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const cells = lines[i].split(',').map((c) => c.trim());
+    const cells = splitCSVLine(lines[i]);
     const row = cellsToRow(cells, colMap);
     if (row) rows.push(row);
   }
