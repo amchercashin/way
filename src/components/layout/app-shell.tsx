@@ -15,7 +15,7 @@ export function AppShell({ title, leftAction, rightAction, children }: AppShellP
   const defaultLeft = (
     <button
       onClick={() => setDrawerOpen(true)}
-      className="text-gray-400 text-lg"
+      className="text-[var(--way-ash)] text-lg"
       aria-label="Открыть меню"
     >
       ☰
@@ -24,10 +24,10 @@ export function AppShell({ title, leftAction, rightAction, children }: AppShellP
 
   return (
     <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-      <div className="min-h-screen bg-[#0d1117] text-white">
-        <header className="flex items-center justify-between px-5 pt-4 pb-2">
+      <div className="min-h-screen bg-[var(--way-void)] text-[var(--way-text)]">
+        <header className="flex items-center justify-between px-5 pb-2" style={{ paddingTop: 'max(38px, env(safe-area-inset-top))' }}>
           <div>{leftAction ?? <SheetTrigger asChild>{defaultLeft}</SheetTrigger>}</div>
-          {title && <h1 className="text-base font-semibold">{title}</h1>}
+          {title && <h1 className="text-sm font-medium text-[var(--way-text)]">{title}</h1>}
           <div>{rightAction ?? <div className="w-5" />}</div>
         </header>
         <main className="px-5 pb-8">{children}</main>

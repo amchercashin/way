@@ -69,7 +69,7 @@ export function AssetDetailPage() {
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
@@ -85,7 +85,7 @@ export function AssetDetailPage() {
       <AssetField
         label="Количество"
         value={`${asset.quantity} шт`}
-        sourceLabel={asset.quantitySource === 'import' ? 'import' : 'ручной'}
+        sourceLabel={asset.quantitySource === 'import' ? 'импорт' : 'ручной'}
         isManualSource={asset.quantitySource === 'manual'}
         onSave={handleSaveQuantity}
         resetLabel={asset.importedQuantity != null && asset.quantitySource === 'manual' ? 'Вернуться к импорту' : undefined}
@@ -98,7 +98,7 @@ export function AssetDetailPage() {
       <AssetField
         label="Выплата на шт."
         value={paymentPerUnit > 0 ? `₽ ${paymentPerUnit}` : '— Укажите'}
-        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'ф' : 'р'}
+        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'факт' : 'ручной'}
         isManualSource={asset.paymentPerUnitSource === 'manual'}
         subtitle={asset.paymentPerUnitSource === 'fact' ? 'расчёт из истории выплат' : undefined}
         onSave={handleSavePaymentPerUnit}

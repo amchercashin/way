@@ -33,7 +33,7 @@ export function ImportFilePage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
@@ -49,29 +49,29 @@ export function ImportFilePage() {
           />
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl
-              text-gray-500 text-sm hover:border-[#4ecca3] hover:text-[#4ecca3] transition-colors"
+            className="w-full py-8 border-2 border-dashed border-[rgba(200,180,140,0.08)] rounded-xl
+              text-[var(--way-ash)] text-sm hover:border-[var(--way-gold)] hover:text-[var(--way-gold)] transition-colors"
           >
             📂 Выбрать файл (.csv, .md, .txt)
           </button>
         </div>
 
-        <div className="text-center text-gray-600 text-xs">или вставьте текст</div>
+        <div className="text-center text-[var(--way-muted)] text-xs">или вставьте текст</div>
 
         <textarea
           value={text}
           onChange={(e) => { setText(e.target.value); setError(null); }}
           placeholder="Вставьте CSV или Markdown-таблицу..."
-          className="w-full h-48 bg-[#1a1a2e] text-white text-sm p-3 rounded-lg
-            border border-transparent focus:border-[#4ecca3] outline-none resize-none"
+          className="w-full h-48 bg-[var(--way-stone)] text-[var(--way-text)] text-sm p-3 rounded-lg
+            border border-transparent focus:border-[var(--way-gold)] outline-none resize-none"
         />
 
-        {error && <div className="text-red-400 text-xs">{error}</div>}
+        {error && <div className="text-[var(--destructive)] text-xs">{error}</div>}
 
         <Button
           onClick={handleParse}
           disabled={!text.trim()}
-          className="w-full bg-[#4ecca3] text-black font-semibold hover:bg-[#3dbb92]"
+          className="w-full border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold"
         >
           Импортировать
         </Button>

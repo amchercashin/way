@@ -37,7 +37,7 @@ export function CategoryPage() {
     }));
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">
       ‹
     </button>
   );
@@ -69,7 +69,7 @@ export function CategoryPage() {
 
       <Link
         to={`/add-asset?type=${assetType}`}
-        className="block text-center py-3 border border-dashed border-gray-700 rounded-xl text-gray-600 text-sm mt-3 active:border-[#4ecca3] active:text-[#4ecca3]"
+        className="block text-center py-3 border border-dashed border-[var(--way-shadow)] rounded-xl text-[var(--way-ash)] text-sm mt-3 active:border-[var(--way-gold)] active:text-[var(--way-gold)]"
       >
         + Добавить
       </Link>

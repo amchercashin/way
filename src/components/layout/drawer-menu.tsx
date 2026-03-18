@@ -1,43 +1,47 @@
 import { Link } from 'react-router-dom';
 import { SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { BarChart3, Download, Settings, Save } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface DrawerMenuProps {
   onClose: () => void;
 }
 
-const MENU_SECTIONS = [
+const MENU_SECTIONS: {
+  title: string;
+  items: { label: string; path: string; icon: LucideIcon }[];
+}[] = [
   {
     title: 'Просмотр',
     items: [
-      { label: '📊 Мой доход', path: '/' },
-      { label: '📅 Календарь выплат', path: '/calendar' },
+      { label: 'Мой доход', path: '/', icon: BarChart3 },
     ],
   },
   {
     title: 'Управление',
     items: [
-      { label: '📥 Импорт данных', path: '/import' },
+      { label: 'Импорт данных', path: '/import', icon: Download },
     ],
   },
   {
     title: 'Прочее',
     items: [
-      { label: '⚙️ Настройки', path: '/settings' },
-      { label: '💾 Экспорт/Бэкап', path: '/backup' },
+      { label: 'Настройки', path: '/settings', icon: Settings },
+      { label: 'Экспорт / Бэкап', path: '/backup', icon: Save },
     ],
   },
 ];
 
 export function DrawerMenu({ onClose }: DrawerMenuProps) {
   return (
-    <SheetContent side="left" className="bg-[#0d1117] border-r-[#1a1a2e] w-64">
+    <SheetContent side="left" className="bg-[var(--way-void)] border-r-[var(--way-stone)] w-64">
       <SheetHeader>
-        <SheetTitle className="text-[#4ecca3] text-lg font-bold">CashFlow</SheetTitle>
+        <SheetTitle className="font-serif text-lg font-light text-[var(--way-gold)]">Путь</SheetTitle>
       </SheetHeader>
       <nav className="mt-6">
         {MENU_SECTIONS.map((section) => (
           <div key={section.title} className="mb-6">
-            <div className="text-[10px] uppercase tracking-widest text-gray-600 mb-2 px-2">
+            <div className="text-[8px] uppercase tracking-[0.3em] text-[var(--way-shadow)] font-mono mb-2 px-2">
               {section.title}
             </div>
             {section.items.map((item) => (
@@ -45,8 +49,9 @@ export function DrawerMenu({ onClose }: DrawerMenuProps) {
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
-                className="block px-2 py-2 text-sm text-gray-300 hover:text-white hover:bg-[#1a1a2e] rounded-lg"
+                className="flex items-center gap-3 px-2 py-2 text-sm text-[var(--way-text)] hover:bg-[var(--way-stone)] transition-colors rounded-lg"
               >
+                <item.icon size={16} strokeWidth={1.2} className="text-[var(--way-ash)]" />
                 {item.label}
               </Link>
             ))}

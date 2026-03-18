@@ -9,8 +9,8 @@ interface StatBlocksProps {
 }
 
 function statColor(raw: number | null, accent: boolean): string {
-  if (raw == null) return 'text-gray-600';
-  return accent ? 'text-[#4ecca3]' : 'text-white';
+  if (raw == null) return 'text-[var(--way-muted)]';
+  return accent ? 'text-[var(--way-gold)]' : 'text-[var(--way-text)]';
 }
 
 export function StatBlocks({ incomePerMonth, totalValue, yieldPercent, portfolioSharePercent, isManualIncome }: StatBlocksProps) {
@@ -26,20 +26,20 @@ export function StatBlocks({ incomePerMonth, totalValue, yieldPercent, portfolio
       {stats.map((stat, index) => (
         <div
           key={stat.label}
-          className="bg-[#1a1a2e] rounded-xl p-3 text-center"
+          className="bg-[rgba(200,180,140,0.03)] border border-[rgba(200,180,140,0.04)] rounded-lg p-3 text-center"
         >
-          <div className="text-[10px] uppercase tracking-wider text-gray-500">{stat.label}</div>
-          <div className={`text-[15px] font-semibold mt-1 ${stat.color}`}>
+          <div className="font-mono text-[8px] uppercase tracking-wider text-[var(--way-shadow)]">{stat.label}</div>
+          <div className={`font-mono text-[14px] font-medium mt-1 ${stat.color}`}>
             {stat.value}
           </div>
           {index === 0 && isManualIncome != null && (
             <div className="flex justify-center mt-1">
-              <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+              <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
                 isManualIncome
-                  ? 'bg-[#431407] text-[#fb923c]'
-                  : 'bg-[#14532d] text-[#4ade80]'
+                  ? 'bg-[rgba(90,85,72,0.15)] text-[var(--way-ash)]'
+                  : 'bg-[rgba(200,180,140,0.1)] text-[var(--way-gold)]'
               }`}>
-                {isManualIncome ? 'р' : 'ф'}
+                {isManualIncome ? 'ручной' : 'факт'}
               </span>
             </div>
           )}

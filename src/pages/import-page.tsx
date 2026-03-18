@@ -10,7 +10,7 @@ export function ImportPage() {
   const { syncing, sync } = useMoexSync();
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
@@ -22,8 +22,8 @@ export function ImportPage() {
             onClick={() => setMode(m)}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
               mode === m
-                ? 'bg-[#4ecca3] text-black'
-                : 'bg-[#1a1a2e] text-gray-400'
+                ? 'border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent'
+                : 'bg-[var(--way-stone)] text-[var(--way-ash)]'
             }`}
           >
             {m === 'update' ? '⟳ Обновить' : '+ Добавить'}
@@ -31,7 +31,7 @@ export function ImportPage() {
         ))}
       </div>
 
-      <p className="text-gray-500 text-xs mb-6">
+      <p className="text-[var(--way-ash)] text-xs mb-6">
         {mode === 'update'
           ? 'Обновит существующие позиции по тикеру и добавит новые.'
           : 'Добавит только новые тикеры. Существующие позиции не изменит.'}
@@ -82,13 +82,13 @@ function MethodButton({ icon, label, desc, onClick, disabled }: {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center gap-3 bg-[#1a1a2e] rounded-xl p-4 text-left
-        hover:bg-[#252545] transition-colors disabled:opacity-50"
+      className="w-full flex items-center gap-3 bg-[var(--way-stone)] rounded-xl p-4 text-left
+        hover:bg-[var(--way-stone)] transition-colors disabled:opacity-50"
     >
       <span className="text-xl">{icon}</span>
       <div>
-        <div className="text-sm text-white font-medium">{label}</div>
-        <div className="text-[11px] text-gray-500">{desc}</div>
+        <div className="text-sm text-[var(--way-text)] font-medium">{label}</div>
+        <div className="text-[11px] text-[var(--way-ash)]">{desc}</div>
       </div>
     </button>
   );

@@ -63,21 +63,21 @@ export function AddAssetPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
     <AppShell leftAction={backButton} title="Добавить актив">
       <div className="space-y-4">
         <div>
-          <Label className="text-gray-400 text-xs">Тип актива</Label>
+          <Label className="text-[var(--way-ash)] text-xs">Тип актива</Label>
           <Select value={type} onValueChange={(v) => setType(v as AssetType)}>
-            <SelectTrigger className="bg-[#1a1a2e] border-none text-white mt-1">
+            <SelectTrigger className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1a2e] border-gray-700">
+            <SelectContent className="bg-[var(--way-stone)] border-[rgba(200,180,140,0.08)]">
               {Object.entries(ASSET_TYPE_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key} className="text-white">
+                <SelectItem key={key} value={key} className="text-[var(--way-text)]">
                   {label}
                 </SelectItem>
               ))}
@@ -86,9 +86,9 @@ export function AddAssetPage() {
         </div>
 
         <div>
-          <Label className="text-gray-400 text-xs">Название</Label>
+          <Label className="text-[var(--way-ash)] text-xs">Название</Label>
           <Input
-            className="bg-[#1a1a2e] border-none text-white mt-1"
+            className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
             placeholder={isBirzha ? 'Сбербанк' : 'Квартира на Ленина'}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -97,9 +97,9 @@ export function AddAssetPage() {
 
         {isBirzha && (
           <div>
-            <Label className="text-gray-400 text-xs">Тикер</Label>
+            <Label className="text-[var(--way-ash)] text-xs">Тикер</Label>
             <Input
-              className="bg-[#1a1a2e] border-none text-white mt-1"
+              className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
               placeholder="SBER"
               value={ticker}
               onChange={(e) => setTicker(e.target.value.toUpperCase())}
@@ -109,10 +109,10 @@ export function AddAssetPage() {
 
         {isBirzha && (
           <div>
-            <Label className="text-gray-400 text-xs">Количество</Label>
+            <Label className="text-[var(--way-ash)] text-xs">Количество</Label>
             <Input
               type="number"
-              className="bg-[#1a1a2e] border-none text-white mt-1"
+              className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
               placeholder="800"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
@@ -122,10 +122,10 @@ export function AddAssetPage() {
 
         {isBirzha && (
           <div>
-            <Label className="text-gray-400 text-xs">Цена покупки (средняя)</Label>
+            <Label className="text-[var(--way-ash)] text-xs">Цена покупки (средняя)</Label>
             <Input
               type="number"
-              className="bg-[#1a1a2e] border-none text-white mt-1"
+              className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
               placeholder="298.60"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -135,10 +135,10 @@ export function AddAssetPage() {
 
         {!isBirzha && (
           <div>
-            <Label className="text-gray-400 text-xs">Оценочная стоимость актива (₽)</Label>
+            <Label className="text-[var(--way-ash)] text-xs">Оценочная стоимость актива (₽)</Label>
             <Input
               type="number"
-              className="bg-[#1a1a2e] border-none text-white mt-1"
+              className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
               placeholder="5000000"
               value={assetValue}
               onChange={(e) => setAssetValue(e.target.value)}
@@ -147,12 +147,12 @@ export function AddAssetPage() {
         )}
 
         <div>
-          <Label className="text-gray-400 text-xs">
+          <Label className="text-[var(--way-ash)] text-xs">
             {isBirzha ? 'Размер выплаты на 1 шт (₽)' : 'Размер дохода за период (₽)'}
           </Label>
           <Input
             type="number"
-            className="bg-[#1a1a2e] border-none text-white mt-1"
+            className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1"
             placeholder={isBirzha ? '186' : '45000'}
             value={paymentAmount}
             onChange={(e) => setPaymentAmount(e.target.value)}
@@ -160,14 +160,14 @@ export function AddAssetPage() {
         </div>
 
         <div>
-          <Label className="text-gray-400 text-xs">Частота выплат</Label>
+          <Label className="text-[var(--way-ash)] text-xs">Частота выплат</Label>
           <Select value={frequency} onValueChange={setFrequency}>
-            <SelectTrigger className="bg-[#1a1a2e] border-none text-white mt-1">
+            <SelectTrigger className="bg-[var(--way-stone)] border-none text-[var(--way-text)] mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1a2e] border-gray-700">
+            <SelectContent className="bg-[var(--way-stone)] border-[rgba(200,180,140,0.08)]">
               {FREQUENCIES.map((f) => (
-                <SelectItem key={f.value} value={f.value} className="text-white">
+                <SelectItem key={f.value} value={f.value} className="text-[var(--way-text)]">
                   {f.label}
                 </SelectItem>
               ))}
@@ -178,7 +178,7 @@ export function AddAssetPage() {
         <Button
           onClick={handleSubmit}
           disabled={!name || !paymentAmount || (isBirzha && !quantity)}
-          className="w-full bg-[#4ecca3] text-black font-semibold hover:bg-[#3dbb92] mt-4"
+          className="w-full border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold mt-4"
         >
           Добавить
         </Button>

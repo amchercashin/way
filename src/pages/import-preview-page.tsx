@@ -8,10 +8,10 @@ import type { ImportAssetRow } from '@/services/import-parser';
 import type { ImportRecord } from '@/models/types';
 
 const STATUS_STYLES = {
-  added: { bg: 'bg-[#4ecca322]', border: 'border-[#4ecca3]', label: 'Новый', text: 'text-[#4ecca3]' },
-  changed: { bg: 'bg-[#e9c46a22]', border: 'border-[#e9c46a]', label: 'Обновлён', text: 'text-[#e9c46a]' },
-  unchanged: { bg: 'bg-[#88888811]', border: 'border-gray-800', label: 'Без изменений', text: 'text-gray-500' },
-  conflict: { bg: 'bg-[#e9456022]', border: 'border-[#e94560]', label: 'Конфликт', text: 'text-[#e94560]' },
+  added: { bg: 'bg-[rgba(200,180,140,0.1)]', border: 'border-[rgba(200,180,140,0.08)]', label: 'Новый', text: 'text-[var(--way-gold)]' },
+  changed: { bg: 'bg-[rgba(139,115,85,0.12)]', border: 'border-[rgba(139,115,85,0.15)]', label: 'Обновлён', text: 'text-[var(--way-earth)]' },
+  unchanged: { bg: 'bg-[rgba(90,85,72,0.1)]', border: 'border-[rgba(200,180,140,0.08)]', label: 'Без изменений', text: 'text-[var(--way-ash)]' },
+  conflict: { bg: 'bg-[rgba(184,65,58,0.15)]', border: 'border-[rgba(184,65,58,0.2)]', label: 'Конфликт', text: 'text-[var(--destructive)]' },
 };
 
 export function ImportPreviewPage() {
@@ -36,7 +36,7 @@ export function ImportPreviewPage() {
   if (!state) {
     return (
       <AppShell title="Ошибка">
-        <div className="text-gray-500 text-sm text-center py-12">Нет данных для предпросмотра.</div>
+        <div className="text-[var(--way-ash)] text-sm text-center py-12">Нет данных для предпросмотра.</div>
       </AppShell>
     );
   }
@@ -57,7 +57,7 @@ export function ImportPreviewPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   if (!diff) {
@@ -71,16 +71,16 @@ export function ImportPreviewPage() {
     <AppShell leftAction={backButton} title="Предпросмотр">
       <div className="flex flex-wrap gap-3 text-xs mb-4">
         {diff.summary.added > 0 && (
-          <span className="text-[#4ecca3]">+{diff.summary.added} новых</span>
+          <span className="text-[var(--way-gold)]">+{diff.summary.added} новых</span>
         )}
         {diff.summary.changed > 0 && (
-          <span className="text-[#e9c46a]">~{diff.summary.changed} обновлено</span>
+          <span className="text-[var(--way-earth)]">~{diff.summary.changed} обновлено</span>
         )}
         {diff.summary.unchanged > 0 && (
-          <span className="text-gray-500">={diff.summary.unchanged} без изменений</span>
+          <span className="text-[var(--way-ash)]">={diff.summary.unchanged} без изменений</span>
         )}
         {diff.summary.conflicts > 0 && (
-          <span className="text-[#e94560]">⚠{diff.summary.conflicts} конфликтов</span>
+          <span className="text-[var(--destructive)]">⚠{diff.summary.conflicts} конфликтов</span>
         )}
       </div>
 
@@ -99,14 +99,14 @@ export function ImportPreviewPage() {
         <Button
           variant="outline"
           onClick={() => navigate(-1)}
-          className="flex-1 border-gray-700 text-gray-400"
+          className="flex-1 border-[rgba(200,180,140,0.08)] text-[var(--way-ash)]"
         >
           Отмена
         </Button>
         <Button
           onClick={handleApply}
           disabled={applying || actionableCount === 0}
-          className="flex-1 bg-[#4ecca3] text-black font-semibold hover:bg-[#3dbb92]"
+          className="flex-1 border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold"
         >
           {applying ? 'Применяю...' : `Применить (${actionableCount})`}
         </Button>
@@ -128,11 +128,11 @@ function DiffItemRow({ item, resolution, onToggle }: {
   return (
     <div className={`${style.bg} border ${style.border} rounded-lg p-3`}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-white text-sm font-medium">{displayName}</span>
+        <span className="text-[var(--way-text)] text-sm font-medium">{displayName}</span>
         <span className={`text-[10px] ${style.text}`}>{style.label}</span>
       </div>
 
-      <div className="text-gray-400 text-[11px]">
+      <div className="text-[var(--way-ash)] text-[11px]">
         {item.imported.quantity} шт
         {item.imported.currentPrice != null && ` · ₽${item.imported.currentPrice}`}
         {item.imported.averagePrice != null && item.imported.currentPrice == null && ` · ₽${item.imported.averagePrice}`}
@@ -141,7 +141,7 @@ function DiffItemRow({ item, resolution, onToggle }: {
       </div>
 
       {item.changes.length > 0 && (
-        <div className="mt-1 text-[10px] text-gray-500">
+        <div className="mt-1 text-[10px] text-[var(--way-ash)]">
           {item.changes.map((c) => (
             <span key={c.field} className="mr-2">
               {c.field}: {String(c.oldValue ?? '—')} → {String(c.newValue ?? '—')}
@@ -153,7 +153,7 @@ function DiffItemRow({ item, resolution, onToggle }: {
       {item.status === 'conflict' && onToggle && (
         <button
           onClick={onToggle}
-          className="mt-2 text-[11px] px-2 py-1 rounded bg-[#1a1a2e]"
+          className="mt-2 text-[11px] px-2 py-1 rounded bg-[var(--way-stone)]"
         >
           {resolution === 'import'
             ? '✓ Использовать импорт'

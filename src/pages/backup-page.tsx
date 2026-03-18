@@ -38,27 +38,27 @@ export function BackupPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
     <AppShell leftAction={backButton} title="Экспорт / Бэкап">
       <div className="space-y-6">
         <div>
-          <div className="text-gray-400 text-xs mb-2">Экспорт</div>
-          <Button onClick={handleExport} className="w-full bg-[#4ecca3] text-black font-semibold hover:bg-[#3dbb92]">
+          <div className="text-[var(--way-ash)] text-xs mb-2">Экспорт</div>
+          <Button onClick={handleExport} className="w-full border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold">
             Скачать бэкап (JSON)
           </Button>
         </div>
         <div>
-          <div className="text-gray-400 text-xs mb-2">Восстановление</div>
+          <div className="text-[var(--way-ash)] text-xs mb-2">Восстановление</div>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
-          <Button variant="outline" onClick={() => fileRef.current?.click()} className="w-full border-gray-700 text-gray-300">
+          <Button variant="outline" onClick={() => fileRef.current?.click()} className="w-full border-[rgba(200,180,140,0.08)] text-[var(--way-text)]">
             Загрузить бэкап
           </Button>
         </div>
-        {status && <div className="text-[#4ecca3] text-xs text-center">{status}</div>}
-        {error && <div className="text-red-400 text-xs text-center">{error}</div>}
+        {status && <div className="text-[var(--way-gold)] text-xs text-center">{status}</div>}
+        {error && <div className="text-[var(--destructive)] text-xs text-center">{error}</div>}
       </div>
     </AppShell>
   );

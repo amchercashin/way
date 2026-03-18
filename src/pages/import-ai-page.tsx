@@ -41,7 +41,7 @@ export function ImportAIPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
@@ -49,33 +49,33 @@ export function ImportAIPage() {
       <div className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-gray-400 text-xs">Промт для AI</span>
-            <button onClick={handleCopy} className="text-[#4ecca3] text-xs">
+            <span className="text-[var(--way-ash)] text-xs">Промт для AI</span>
+            <button onClick={handleCopy} className="text-[var(--way-gold)] text-xs">
               {copied ? '✓ Скопировано' : '📋 Копировать'}
             </button>
           </div>
-          <pre className="bg-[#1a1a2e] p-3 rounded-lg text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed">
+          <pre className="bg-[var(--way-stone)] p-3 rounded-lg text-[11px] text-[var(--way-text)] whitespace-pre-wrap leading-relaxed">
             {AI_PROMPT}
           </pre>
         </div>
 
         <div>
-          <span className="text-gray-400 text-xs block mb-1">Результат от AI</span>
+          <span className="text-[var(--way-ash)] text-xs block mb-1">Результат от AI</span>
           <textarea
             value={text}
             onChange={(e) => { setText(e.target.value); setError(null); }}
             placeholder="Вставьте сюда Markdown-таблицу от ChatGPT, Claude и др..."
-            className="w-full h-48 bg-[#1a1a2e] text-white text-sm p-3 rounded-lg
-              border border-transparent focus:border-[#4ecca3] outline-none resize-none"
+            className="w-full h-48 bg-[var(--way-stone)] text-[var(--way-text)] text-sm p-3 rounded-lg
+              border border-transparent focus:border-[var(--way-gold)] outline-none resize-none"
           />
         </div>
 
-        {error && <div className="text-red-400 text-xs">{error}</div>}
+        {error && <div className="text-[var(--destructive)] text-xs">{error}</div>}
 
         <Button
           onClick={handleParse}
           disabled={!text.trim()}
-          className="w-full bg-[#4ecca3] text-black font-semibold hover:bg-[#3dbb92]"
+          className="w-full border border-[rgba(200,180,140,0.2)] text-[var(--way-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold"
         >
           Распознать и импортировать
         </Button>

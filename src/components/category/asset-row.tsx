@@ -27,32 +27,30 @@ export function AssetRow({ asset, paymentPerUnit }: AssetRowProps) {
   return (
     <Link
       to={`/asset/${asset.id}`}
-      className="block bg-[#1a1a2e] rounded-xl p-3 mb-1.5 active:bg-[#222244] transition-colors"
+      className="block py-3 border-b border-[rgba(200,180,140,0.04)] transition-colors active:bg-[var(--way-stone)]"
     >
       <div className="flex justify-between items-center">
         <div>
-          <span className="text-sm font-semibold text-white">{asset.ticker ?? asset.name}</span>
+          <span className="text-[13px] font-medium text-[var(--way-text)]">{asset.ticker ?? asset.name}</span>
           {asset.ticker && (
-            <span className="text-xs text-gray-600 ml-2">{asset.name}</span>
+            <span className="text-[11px] text-[var(--way-muted)] ml-2">{asset.name}</span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-[#4ecca3]">{formatCurrency(incomePerMonth)}</span>
-          <span className={`text-[9px] px-1 py-0.5 rounded font-semibold ${
+          <span className="font-mono text-[12px] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</span>
+          <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
             isManual
-              ? 'bg-[#431407] text-[#fb923c]'
-              : 'bg-[#14532d] text-[#4ade80]'
+              ? 'bg-[rgba(90,85,72,0.15)] text-[var(--way-ash)]'
+              : 'bg-[rgba(200,180,140,0.1)] text-[var(--way-gold)]'
           }`}>
-            {isManual ? 'р' : 'ф'}
+            {isManual ? 'ручной' : 'факт'}
           </span>
         </div>
       </div>
-      <div className="flex justify-between text-[11px] text-gray-600 mt-1">
+      <div className="flex justify-between font-mono text-[9px] text-[var(--way-muted)] mt-1">
+        <span>{asset.quantity} шт · {formatCurrency(value)}</span>
         <span>
-          {asset.quantity} шт · {formatCurrency(value)}
-        </span>
-        <span>
-          <span className="bg-[#e9c46a22] text-[#e9c46a] px-1.5 py-0.5 rounded text-[10px]">
+          <span className="bg-[rgba(139,115,85,0.12)] text-[var(--way-earth)] px-1.5 py-0.5 rounded text-[9px]">
             {formatFrequency(asset.frequencyPerYear)}
           </span>
           {' '}

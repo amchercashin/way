@@ -23,26 +23,26 @@ export function ExpectedPayment({
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#1a2e1a] to-[#1a1a2e] border border-[#4ecca333] rounded-xl p-3.5 mt-3">
-      <div className="text-[#4ecca3] text-xs font-semibold mb-2">Ожидаемая выплата</div>
+    <div className="border border-[rgba(200,180,140,0.08)] rounded-lg p-3.5 mt-3">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--way-gold)] mb-2">Ожидаемая выплата</div>
       <div className="space-y-1 text-xs">
         <div className="flex justify-between">
-          <span className="text-gray-400">Размер</span>
-          <span className="text-white">
+          <span className="font-mono text-[9px] text-[var(--way-muted)]">Размер</span>
+          <span className="font-mono text-[13px] text-[var(--way-text)]">
             ₽{paymentPerUnit} × {quantity} = ₽{Math.round(totalAmount).toLocaleString('ru-RU')}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-400">Отсечка (ожид.)</span>
-          <span className="text-white">{formatDate(nextExpectedCutoffDate)}</span>
+          <span className="font-mono text-[9px] text-[var(--way-muted)]">Отсечка (ожид.)</span>
+          <span className="font-mono text-[13px] text-[var(--way-text)]">{formatDate(nextExpectedCutoffDate)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-400">Выплата (ожид.)</span>
-          <span className="text-white">{formatDate(nextExpectedDate)}</span>
+          <span className="font-mono text-[9px] text-[var(--way-muted)]">Выплата (ожид.)</span>
+          <span className="font-mono text-[13px] text-[var(--way-text)]">{formatDate(nextExpectedDate)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-400">Зачисление (ожид.)</span>
-          <span className="text-white">{formatDate(nextExpectedCreditDate)}</span>
+          <span className="font-mono text-[9px] text-[var(--way-muted)]">Зачисление (ожид.)</span>
+          <span className="font-mono text-[13px] text-[var(--way-text)]">{formatDate(nextExpectedCreditDate)}</span>
         </div>
       </div>
     </div>

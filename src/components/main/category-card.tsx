@@ -17,23 +17,23 @@ export function CategoryCard({ type, assetCount, incomePerMonth, portfolioShareP
   return (
     <Link
       to={`/category/${type}`}
-      className="flex items-center justify-between bg-[#1a1a2e] rounded-xl p-3.5 mb-2 active:bg-[#222244] transition-colors"
+      className="flex items-center justify-between py-3 border-b border-[rgba(200,180,140,0.04)] transition-colors active:bg-[var(--way-stone)]"
     >
       <div className="flex items-center gap-2.5">
-        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+        <div className="w-[3px] h-[22px] rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
         <div>
-          <div className="text-sm font-medium text-white">{label}</div>
-          <div className="text-[11px] text-gray-600">
+          <div className="text-[13px] text-[var(--way-text)]">{label}</div>
+          <div className="font-mono text-[9px] text-[var(--way-muted)]">
             {assetCount} {assetCount === 1 ? 'позиция' : assetCount < 5 ? 'позиции' : 'позиций'}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <div className="text-right">
-          <div className="text-sm font-semibold text-[#4ecca3]">{formatCurrency(incomePerMonth)}</div>
-          <div className="text-[11px] text-gray-600">{formatPercent(portfolioSharePercent)}</div>
+          <div className="font-mono text-[12px] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</div>
+          <div className="font-mono text-[9px] text-[var(--way-muted)]">{formatPercent(portfolioSharePercent)}</div>
         </div>
-        <span className="text-gray-700">›</span>
+        <span className="text-[var(--way-shadow)]">›</span>
       </div>
     </Link>
   );

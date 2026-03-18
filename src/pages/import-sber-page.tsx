@@ -31,13 +31,13 @@ export function ImportSberPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   return (
     <AppShell leftAction={backButton} title="Отчёт Сбера">
       <div className="space-y-4">
-        <p className="text-gray-400 text-xs">
+        <p className="text-[var(--way-ash)] text-xs">
           Загрузите HTML-отчёт брокера из Сбербанк Онлайн или email.
           Будут импортированы позиции портфеля с текущими ценами.
         </p>
@@ -53,14 +53,14 @@ export function ImportSberPage() {
           <Button
             onClick={() => fileRef.current?.click()}
             variant="outline"
-            className="w-full py-8 border-2 border-dashed border-gray-700 rounded-xl
-              text-gray-500 text-sm hover:border-[#4ecca3] hover:text-[#4ecca3] transition-colors"
+            className="w-full py-8 border-2 border-dashed border-[rgba(200,180,140,0.08)] rounded-xl
+              text-[var(--way-ash)] text-sm hover:border-[var(--way-gold)] hover:text-[var(--way-gold)] transition-colors"
           >
             {fileName ? fileName : '📂 Выбрать HTML-файл отчёта'}
           </Button>
         </div>
 
-        {error && <div className="text-red-400 text-xs">{error}</div>}
+        {error && <div className="text-[var(--destructive)] text-xs">{error}</div>}
       </div>
     </AppShell>
   );

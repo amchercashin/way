@@ -51,7 +51,7 @@ export function MainPage() {
     <button
       onClick={() => sync()}
       disabled={syncing}
-      className="text-gray-400 text-base disabled:opacity-50"
+      className="text-[var(--way-ash)] text-base disabled:opacity-50"
       aria-label="Обновить данные MOEX"
     >
       <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
@@ -69,29 +69,30 @@ export function MainPage() {
       />
 
       {lastSyncAt && (
-        <div className="text-center text-gray-600 text-[10px] -mt-2 mb-2">
+        <div className="text-center text-[var(--way-muted)] text-[10px] -mt-2 mb-2">
           MOEX: {formatSyncTime(lastSyncAt)}
         </div>
       )}
 
       {error && (
-        <div className="text-center text-red-400 text-[10px] mb-2">{error}</div>
+        <div className="text-center text-[var(--destructive)] text-[10px] mb-2">{error}</div>
       )}
 
       <div className="mt-4">
         {categories.length === 0 && (
-          <div className="text-center text-gray-600 text-sm py-12">
+          <div className="text-center text-[var(--way-muted)] text-sm py-12">
             Пока нет активов. Добавьте первый актив через меню ☰
           </div>
         )}
-        {categories.map((cat) => (
-          <CategoryCard
-            key={cat.type}
-            type={cat.type}
-            assetCount={cat.assetCount}
-            incomePerMonth={cat.totalIncomePerMonth}
-            portfolioSharePercent={cat.portfolioSharePercent}
-          />
+        {categories.map((cat, i) => (
+          <div key={cat.type} style={{ animation: `way-fade-slide-right 0.5s ease-out ${0.7 + i * 0.15}s both` }}>
+            <CategoryCard
+              type={cat.type}
+              assetCount={cat.assetCount}
+              incomePerMonth={cat.totalIncomePerMonth}
+              portfolioSharePercent={cat.portfolioSharePercent}
+            />
+          </div>
         ))}
       </div>
 

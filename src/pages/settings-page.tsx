@@ -23,7 +23,7 @@ export function SettingsPage() {
   };
 
   const backButton = (
-    <button onClick={() => navigate(-1)} className="text-gray-400 text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => navigate(-1)} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
   );
 
   if (!settings) return <AppShell leftAction={backButton} title="Настройки"><div /></AppShell>;
@@ -41,11 +41,11 @@ export function SettingsPage() {
           value={settings.autoMoexSync ? 'Вкл' : 'Выкл'}
           onToggle={() => toggle('autoMoexSync', settings.autoMoexSync ? 'false' : 'true')}
         />
-        <div className="border-t border-gray-800 pt-6 mt-8">
-          <div className="text-red-400 text-xs uppercase tracking-widest mb-3">Опасная зона</div>
+        <div className="border-t border-[rgba(200,180,140,0.08)] pt-6 mt-8">
+          <div className="text-[var(--destructive)] text-xs uppercase tracking-widest mb-3">Опасная зона</div>
           <button
             onClick={handleClear}
-            className="w-full py-3 rounded-lg border border-red-900 text-red-400 text-sm hover:bg-red-900/20 transition-colors"
+            className="w-full py-3 rounded-lg border border-red-900 text-[var(--destructive)] text-sm hover:bg-red-900/20 transition-colors"
           >
             Удалить все данные
           </button>
@@ -60,8 +60,8 @@ function SettingRow({ label, value, onToggle }: {
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-gray-300 text-sm">{label}</span>
-      <button onClick={onToggle} className="bg-[#1a1a2e] text-[#4ecca3] text-sm px-3 py-1.5 rounded-lg">
+      <span className="text-[var(--way-text)] text-sm">{label}</span>
+      <button onClick={onToggle} className="bg-[var(--way-stone)] text-[var(--way-gold)] text-sm px-3 py-1.5 rounded-lg">
         {value}
       </button>
     </div>
