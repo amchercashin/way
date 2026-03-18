@@ -12,12 +12,12 @@ export const ASSET_TYPE_LABELS: Record<AssetType, string> = {
 };
 
 export const ASSET_TYPE_COLORS: Record<AssetType, string> = {
-  stock: '#e9c46a',
-  bond: '#7b68ee',
-  fund: '#e76f51',
-  realestate: '#e94560',
-  deposit: '#2a9d8f',
-  other: '#888888',
+  stock: '#c8b48c',
+  bond: '#8b7355',
+  fund: '#a09080',
+  realestate: '#7a6a5a',
+  deposit: '#6b8070',
+  other: '#5a5548',
 };
 
 export interface Asset {
