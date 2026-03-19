@@ -44,7 +44,22 @@ export function PaymentHistoryChart({
     return map;
   }, [history]);
 
-  const years = useMemo(() => [...byYear.keys()].sort((a, b) => a - b), [byYear]);
+  // Build continuous year range: first data year → current year (fill gaps with zero)
+  const years = useMemo(() => {
+    const dataYears = [...byYear.keys()].sort((a, b) => a - b);
+    if (dataYears.length === 0) return [];
+    const firstYear = dataYears[0];
+    const lastYear = Math.max(dataYears[dataYears.length - 1], currentYear);
+    const range: number[] = [];
+    for (let y = firstYear; y <= lastYear; y++) {
+      range.push(y);
+      // Ensure every year has an entry in byYear (even if zero)
+      if (!byYear.has(y)) {
+        byYear.set(y, { total: 0, payments: [] });
+      }
+    }
+    return range;
+  }, [byYear, currentYear]);
 
   // No-history fallback: single bar with calculated annual
   const isNoHistory = history.length === 0;
