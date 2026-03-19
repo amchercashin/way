@@ -8,6 +8,8 @@ import { ExpectedPayment } from '@/components/asset-detail/expected-payment';
 import { useAsset, updateAsset } from '@/hooks/use-assets';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { usePaymentHistory } from '@/hooks/use-payment-history';
+import { useHoldingsByAsset } from '@/hooks/use-holdings';
+import { useAccounts } from '@/hooks/use-accounts';
 import { calcFactPaymentPerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
 import { formatFrequency } from '@/lib/utils';
 
@@ -18,6 +20,8 @@ export function AssetDetailPage() {
   const asset = useAsset(assetId);
   const { portfolio } = usePortfolioStats();
   const history = usePaymentHistory(assetId);
+  const holdings = useHoldingsByAsset(assetId);
+  const accounts = useAccounts();
 
   const computed = useMemo(() => {
     if (!asset) return null;
@@ -31,17 +35,19 @@ export function AssetDetailPage() {
       paymentPerUnit = calcFactPaymentPerUnit(historyRecords, asset.frequencyPerYear, now);
     }
 
-    // TODO: quantity moved to Holding — using 0 until Task 4 wires holdings
-    const quantity = 0;
-    const incomePerMonth = calcAssetIncomePerMonth(quantity, paymentPerUnit, asset.frequencyPerYear);
+    const totalQuantity = holdings.reduce((sum, h) => sum + h.quantity, 0);
+    const weightedAvgPrice = totalQuantity > 0
+      ? holdings.reduce((sum, h) => sum + (h.averagePrice ?? 0) * h.quantity, 0) / totalQuantity
+      : undefined;
 
-    const value = asset.currentPrice != null
-      ? asset.currentPrice * quantity
-      : null;
-    const yieldPct = (value != null)
+    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, paymentPerUnit, asset.frequencyPerYear);
+
+    const price = asset.currentPrice ?? weightedAvgPrice ?? 0;
+    const value = price * totalQuantity;
+    const yieldPct = value > 0
       ? calcYieldPercent(incomePerMonth * 12, value)
       : null;
-    const sharePercent = (value != null && portfolio.totalValue > 0)
+    const sharePercent = (value > 0 && portfolio.totalValue > 0)
       ? (value / portfolio.totalValue) * 100
       : null;
 
@@ -49,8 +55,8 @@ export function AssetDetailPage() {
       asset.paymentPerUnitSource === 'manual' ||
       asset.frequencySource === 'manual';
 
-    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, quantity };
-  }, [asset, history, portfolio.totalValue]);
+    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, totalQuantity };
+  }, [asset, history, holdings, portfolio.totalValue]);
 
   const handleSavePaymentPerUnit = useCallback((v: string) => {
     const num = parseFloat(v.replace(',', '.').replace(/[^\d.]/g, ''));
@@ -68,7 +74,7 @@ export function AssetDetailPage() {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
-  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, quantity } = computed;
+  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, totalQuantity } = computed;
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
@@ -115,13 +121,36 @@ export function AssetDetailPage() {
 
       <ExpectedPayment
         paymentPerUnit={paymentPerUnit}
-        quantity={quantity}
+        quantity={totalQuantity}
         nextExpectedDate={asset.nextExpectedDate}
         nextExpectedCutoffDate={asset.nextExpectedCutoffDate}
         nextExpectedCreditDate={asset.nextExpectedCreditDate}
       />
 
-      <PaymentHistoryChart history={historyRecords} quantity={quantity} />
+      {holdings.length > 0 && (
+        <div className="mt-4 px-1">
+          <div className="text-[10px] uppercase tracking-widest text-[var(--way-ash)] mb-2 font-mono">
+            По счетам
+          </div>
+          {holdings.map((h) => {
+            const account = accounts.find(a => a.id === h.accountId);
+            return (
+              <button
+                key={h.id}
+                onClick={() => navigate('/data', { state: { highlightAccountId: h.accountId, highlightAssetId: h.assetId } })}
+                className="flex justify-between items-center w-full py-1.5 px-2 -mx-2 rounded-md text-sm hover:bg-[var(--way-stone)] transition-colors"
+              >
+                <span className="text-[var(--way-text)]">{account?.name ?? 'Счёт'}</span>
+                <span className="text-[var(--way-ash)] tabular-nums">
+                  {h.quantity} шт.{h.averagePrice != null ? ` · ${h.averagePrice.toFixed(0)}₽` : ''}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <PaymentHistoryChart history={historyRecords} quantity={totalQuantity} />
     </AppShell>
   );
 }
