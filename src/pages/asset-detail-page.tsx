@@ -107,7 +107,7 @@ export function AssetDetailPage() {
       />
 
       <AssetField
-        label="Частота"
+        label="Выплат в год"
         value={formatFrequency(asset.frequencyPerYear)}
         sourceLabel={asset.frequencySource === 'moex' ? 'moex' : 'ручной'}
         isManualSource={asset.frequencySource === 'manual'}
@@ -150,7 +150,11 @@ export function AssetDetailPage() {
         </div>
       )}
 
-      <PaymentHistoryChart history={historyRecords} quantity={totalQuantity} />
+      <PaymentHistoryChart
+        history={historyRecords}
+        paymentPerUnit={paymentPerUnit}
+        frequencyPerYear={asset.frequencyPerYear}
+      />
     </AppShell>
   );
 }

@@ -54,43 +54,62 @@ describe('income-calculator', () => {
     });
   });
 
-  describe('calcCAGR (calendar-year)', () => {
-    it('calculates CAGR from first to last full calendar year', () => {
+  describe('calcCAGR (calendar-year, to last full year)', () => {
+    it('calculates CAGR from first data year to last full year', () => {
+      // Data in 2021, 2023, 2025; now=2026 → last full year = 2025
       const history = [
         { amount: 10, date: new Date('2021-07-01') },
-        { amount: 12, date: new Date('2022-07-01') },
-        { amount: 15, date: new Date('2023-07-01') },
+        { amount: 12, date: new Date('2023-07-01') },
+        { amount: 15, date: new Date('2025-07-01') },
       ];
+      // CAGR = (15/10)^(1/4) - 1 = 10.67%
       const result = calcCAGR(history, new Date('2026-03-16'));
-      expect(result).toBeCloseTo(22.47, 0);
+      expect(result).toBeCloseTo(10.67, 0);
     });
     it('returns null for payments in only one year', () => {
       const history = [
         { amount: 10, date: new Date('2023-01-01') },
         { amount: 20, date: new Date('2023-06-01') },
       ];
-      expect(calcCAGR(history, new Date('2026-03-16'))).toBeNull();
+      expect(calcCAGR(history, new Date('2024-03-16'))).toBeNull();
     });
     it('returns null when first year income is 0', () => {
       const history = [
         { amount: 0, date: new Date('2021-07-01') },
-        { amount: 15, date: new Date('2023-07-01') },
+        { amount: 15, date: new Date('2025-07-01') },
       ];
       expect(calcCAGR(history, new Date('2026-03-16'))).toBeNull();
     });
-    it('excludes current year from last_full_year', () => {
+    it('excludes current year from calculation', () => {
       const history = [
         { amount: 10, date: new Date('2025-07-01') },
         { amount: 20, date: new Date('2026-01-15') },
       ];
       expect(calcCAGR(history, new Date('2026-03-16'))).toBeNull();
     });
-    it('handles gaps between years', () => {
+    it('returns null when last full year has zero income', () => {
+      // Data only in 2022, now=2026 → last full year=2025, income=0 → null
+      const history = [
+        { amount: 10, date: new Date('2022-06-01') },
+      ];
+      expect(calcCAGR(history, new Date('2026-03-16'))).toBeNull();
+    });
+    it('returns null when data stops before last full year', () => {
+      // Data in 2020 and 2022, now=2026 → last full year=2025, income=0 → null
       const history = [
         { amount: 10, date: new Date('2020-06-01') },
-        { amount: 20, date: new Date('2024-06-01') },
+        { amount: 20, date: new Date('2022-06-01') },
       ];
-      expect(calcCAGR(history, new Date('2026-03-16'))).toBeCloseTo(18.92, 0);
+      expect(calcCAGR(history, new Date('2026-03-16'))).toBeNull();
+    });
+    it('handles data spanning to last full year', () => {
+      // Data in 2020 and 2025, now=2026 → span=5
+      const history = [
+        { amount: 10, date: new Date('2020-06-01') },
+        { amount: 20, date: new Date('2025-06-01') },
+      ];
+      // CAGR = (20/10)^(1/5) - 1 = 14.87%
+      expect(calcCAGR(history, new Date('2026-03-16'))).toBeCloseTo(14.87, 0);
     });
   });
 

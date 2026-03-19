@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatCurrencyFull, formatPercent } from '@/lib/utils';
+import { formatCurrency, formatCurrencyFull, formatPercent, formatCompact } from '@/lib/utils';
 
 describe('formatCurrency', () => {
   it('returns dash for null', () => {
@@ -56,5 +56,28 @@ describe('formatPercent', () => {
 
   it('formats positive percent', () => {
     expect(formatPercent(8.85)).toBe('8.9%');
+  });
+});
+
+describe('formatCompact', () => {
+  it('returns integer string for values under 1000', () => {
+    expect(formatCompact(0)).toBe('0');
+    expect(formatCompact(52)).toBe('52');
+    expect(formatCompact(120)).toBe('120');
+    expect(formatCompact(999)).toBe('999');
+  });
+
+  it('formats thousands with K suffix, dropping .0', () => {
+    expect(formatCompact(1000)).toBe('1K');
+    expect(formatCompact(2000)).toBe('2K');
+    expect(formatCompact(85000)).toBe('85K');
+    expect(formatCompact(142000)).toBe('142K');
+  });
+
+  it('keeps one decimal when significant', () => {
+    expect(formatCompact(1050)).toBe('1.1K');
+    expect(formatCompact(1200)).toBe('1.2K');
+    expect(formatCompact(1949)).toBe('1.9K');
+    expect(formatCompact(3400)).toBe('3.4K');
   });
 });

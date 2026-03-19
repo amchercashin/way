@@ -56,12 +56,13 @@ export function calcCAGR(
     byYear.set(year, (byYear.get(year) ?? 0) + p.amount);
   }
   const years = [...byYear.keys()].sort((a, b) => a - b);
-  if (years.length < 2) return null;
+  if (years.length === 0) return null;
   const firstYear = years[0];
-  const lastYear = years[years.length - 1];
+  const lastYear = currentYear - 1; // always last full calendar year
+  if (lastYear <= firstYear) return null;
   const incomeFirst = byYear.get(firstYear)!;
-  const incomeLast = byYear.get(lastYear)!;
-  if (incomeFirst <= 0) return null;
+  const incomeLast = byYear.get(lastYear) ?? 0;
+  if (incomeFirst <= 0 || incomeLast <= 0) return null;
   const span = lastYear - firstYear;
   return (Math.pow(incomeLast / incomeFirst, 1 / span) - 1) * 100;
 }

@@ -26,12 +26,13 @@ export function formatPercent(value: number | null | undefined): string {
   return `${(Math.round(value * 10) / 10).toFixed(1)}%`;
 }
 
+export function formatCompact(value: number): string {
+  if (value < 1000) return String(Math.round(value));
+  const k = value / 1000;
+  const rounded = Math.round(k * 10) / 10;
+  return rounded % 1 === 0 ? `${rounded}K` : `${rounded.toFixed(1)}K`;
+}
+
 export function formatFrequency(perYear: number): string {
-  const labels: Record<number, string> = {
-    1: '1×/год',
-    2: '2×/год',
-    4: '4×/год (кварт.)',
-    12: 'ежемес.',
-  };
-  return labels[perYear] ?? `${perYear}×/год`;
+  return `${perYear}/год`;
 }

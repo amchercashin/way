@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
-import { PaymentHistoryChart } from '@/components/shared/payment-history-chart';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { useMoexSync } from '@/hooks/use-moex-sync';
 import { getAppSettings } from '@/services/app-settings';
-import { useAllPaymentHistory } from '@/hooks/use-payment-history';
 
 function formatSyncTime(date: Date): string {
   const d = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
@@ -18,16 +16,6 @@ export function MainPage() {
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const { portfolio, categories } = usePortfolioStats();
   const { syncing, lastSyncAt, error, sync } = useMoexSync();
-  const allHistory = useAllPaymentHistory();
-
-  const portfolioHistory = useMemo(() => {
-    // TODO: quantity moved to Holding — using 1 as multiplier until Task 4
-    return (allHistory ?? []).map((h) => ({
-      amount: h.amount,
-      date: new Date(h.date),
-    }));
-  }, [allHistory]);
-
   const autoSyncDone = useRef(false);
   useEffect(() => {
     if (autoSyncDone.current) return;
@@ -95,7 +83,6 @@ export function MainPage() {
         ))}
       </div>
 
-      <PaymentHistoryChart history={portfolioHistory} quantity={1} />
     </AppShell>
   );
 }
