@@ -138,7 +138,11 @@ export function AssetDetailPage() {
         nextExpectedCreditDate={asset.nextExpectedCreditDate}
       />
 
-      <PaymentHistoryChart history={historyRecords} quantity={asset.quantity} />
+      <PaymentHistoryChart
+        history={historyRecords}
+        paymentPerUnit={paymentPerUnit}
+        frequencyPerYear={asset.frequencyPerYear}
+      />
     </AppShell>
   );
 }
