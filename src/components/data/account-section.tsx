@@ -2,6 +2,12 @@ import { useState } from 'react';
 import type { Account, Holding } from '@/models/account';
 import type { Asset } from '@/models/types';
 import { formatCurrency } from '@/lib/utils';
+import { updateHolding } from '@/hooks/use-holdings';
+import { updateAsset } from '@/hooks/use-assets';
+import { updateAccount } from '@/hooks/use-accounts';
+import { InlineCell } from './inline-cell';
+import { TypeCombobox } from './type-combobox';
+import { AddAssetSheet } from './add-asset-sheet';
 
 interface AccountSectionProps {
   account: Account;
@@ -11,6 +17,7 @@ interface AccountSectionProps {
 
 export function AccountSection({ account, holdings, assets }: AccountSectionProps) {
   const [expanded, setExpanded] = useState(true);
+  const [addAssetOpen, setAddAssetOpen] = useState(false);
 
   // Compute total value
   const totalValue = holdings.reduce((sum, h) => {
@@ -25,6 +32,9 @@ export function AccountSection({ account, holdings, assets }: AccountSectionProp
   const statusColor = hasManual
     ? 'bg-[#5a5a2d] text-[#baba6b]'
     : 'bg-[#2d5a2d] text-[#6bba6b]';
+
+  // Collect all unique types for combobox suggestions
+  const allTypes = [...new Set(assets.map(a => a.type))];
 
   // Group holdings by asset type
   const typeGroups = new Map<string, { asset: Asset; holding: Holding }[]>();
@@ -45,7 +55,15 @@ export function AccountSection({ account, holdings, assets }: AccountSectionProp
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[var(--way-text)] text-xs flex-shrink-0">{expanded ? '▾' : '▸'}</span>
-          <span className="font-semibold text-[15px] text-[var(--way-text)] truncate">{account.name}</span>
+          <span
+            className="font-semibold text-[15px] text-[var(--way-text)] truncate"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InlineCell
+              value={account.name}
+              onSave={(v) => account.id != null && updateAccount(account.id, { name: v })}
+            />
+          </span>
           {statusLabel && (
             <span className={`${statusColor} px-1.5 py-0.5 rounded text-[10px] flex-shrink-0`}>
               {statusLabel}
@@ -82,7 +100,19 @@ export function AccountSection({ account, holdings, assets }: AccountSectionProp
               <div key={type}>
                 {/* Type sub-header */}
                 <div className="flex justify-between items-center px-3 py-1.5 bg-[var(--way-void)]">
-                  <span className="text-[var(--way-ash)] text-[11px] uppercase tracking-wider">{type}</span>
+                  <span className="text-[var(--way-ash)] text-[11px] uppercase tracking-wider" onClick={(e) => e.stopPropagation()}>
+                    <TypeCombobox
+                      value={type}
+                      existingTypes={allTypes}
+                      onSave={(newType) => {
+                        for (const { asset } of items) {
+                          if (asset.id != null) {
+                            updateAsset(asset.id, { type: newType });
+                          }
+                        }
+                      }}
+                    />
+                  </span>
                   <span className="text-[var(--way-muted)] text-[11px]">{formatCurrency(groupValue)}</span>
                 </div>
 
@@ -101,12 +131,48 @@ export function AccountSection({ account, holdings, assets }: AccountSectionProp
                   return (
                     <div key={holding.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 px-3 py-2 border-t border-[var(--way-void)] text-[13px]">
                       <div className="min-w-0">
-                        <div className="font-medium text-[var(--way-text)] truncate">{asset.ticker ?? asset.name}</div>
-                        {asset.ticker && <div className="text-[var(--way-muted)] text-[11px] truncate">{asset.name}</div>}
+                        {asset.ticker ? (
+                          <>
+                            <div className="font-medium text-[var(--way-text)] truncate">{asset.ticker}</div>
+                            <div className="text-[var(--way-muted)] text-[11px] truncate">
+                              <InlineCell
+                                value={asset.name}
+                                onSave={(v) => asset.id != null && updateAsset(asset.id, { name: v })}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="font-medium text-[var(--way-text)] truncate">
+                            <InlineCell
+                              value={asset.name}
+                              onSave={(v) => asset.id != null && updateAsset(asset.id, { name: v })}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <span className="text-right text-[var(--way-text)] tabular-nums w-14">{holding.quantity}</span>
+                      <span className="text-right text-[var(--way-text)] tabular-nums w-14">
+                        <InlineCell
+                          value={String(holding.quantity)}
+                          type="number"
+                          onSave={(v) => {
+                            const num = parseFloat(v);
+                            if (!isNaN(num) && holding.id != null) {
+                              updateHolding(holding.id, { quantity: num, quantitySource: 'manual' });
+                            }
+                          }}
+                        />
+                      </span>
                       <span className="text-right text-[var(--way-ash)] tabular-nums w-16">
-                        {holding.averagePrice != null ? `${holding.averagePrice.toFixed(0)}\u20BD` : '\u2014'}
+                        <InlineCell
+                          value={holding.averagePrice != null ? holding.averagePrice.toFixed(0) : ''}
+                          type="number"
+                          onSave={(v) => {
+                            const num = parseFloat(v);
+                            if (holding.id != null) {
+                              updateHolding(holding.id, { averagePrice: v === '' ? undefined : (isNaN(num) ? undefined : num) });
+                            }
+                          }}
+                        />
                       </span>
                       <span className="text-right text-[var(--way-ash)] tabular-nums w-16">
                         {formatCurrency(rowValue)}
@@ -120,12 +186,22 @@ export function AccountSection({ account, holdings, assets }: AccountSectionProp
 
           {/* Add asset button */}
           <div className="px-3 py-2">
-            <button className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-muted)] py-1.5 rounded-md text-xs hover:bg-[var(--way-stone)] transition-colors">
+            <button
+              onClick={() => setAddAssetOpen(true)}
+              className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-muted)] py-1.5 rounded-md text-xs hover:bg-[var(--way-stone)] transition-colors"
+            >
               + Добавить актив
             </button>
           </div>
         </div>
       )}
+
+      <AddAssetSheet
+        open={addAssetOpen}
+        onClose={() => setAddAssetOpen(false)}
+        accountId={account.id!}
+        existingTypes={allTypes}
+      />
     </div>
   );
 }
