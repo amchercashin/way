@@ -25,8 +25,7 @@ export function PaymentHistoryChart({
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
+  const currentYear = new Date().getFullYear();
 
   // Group history by year (per-unit amounts — no quantity multiplication)
   const byYear = useMemo(() => {
@@ -71,7 +70,10 @@ export function PaymentHistoryChart({
   const maxValue = Math.max(...displayValues, 1);
 
   // CAGR from per-unit history (excludes current year, needs >=2 full years)
-  const cagr = isNoHistory ? null : calcCAGR(history, now);
+  const cagr = useMemo(
+    () => (isNoHistory ? null : calcCAGR(history, new Date())),
+    [history, isNoHistory],
+  );
 
   const barOpacity = (i: number) => {
     const min = 0.15;
@@ -116,7 +118,7 @@ export function PaymentHistoryChart({
     // No-history fallback panel
     if (isNoHistory && paymentPerUnit != null && frequencyPerYear != null) {
       return (
-        <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-fade-in_0.2s_ease]">
+        <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-panel-in_0.2s_ease]">
           <div className="flex justify-between items-baseline mb-1.5">
             <span className="font-mono text-[11px] text-[var(--way-gold)] font-medium">{selectedYear}</span>
             <span className="font-mono text-[10px] text-[#b0a898]">{formatCompact(fallbackAnnual!)} ₽ / ед.</span>
@@ -132,7 +134,7 @@ export function PaymentHistoryChart({
     if (!yearData) return null;
 
     return (
-      <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-fade-in_0.2s_ease]">
+      <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-panel-in_0.2s_ease]">
         <div className="flex justify-between items-baseline mb-1.5">
           <span className="font-mono text-[11px] text-[var(--way-gold)] font-medium">
             {selectedYear}
