@@ -1,17 +1,18 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Asset, PaymentHistory, ImportRecord } from '@/models/types';
+import type { Account, Holding } from '@/models/account';
 
 const FREQUENCY_DEFAULTS: Record<string, number> = {
-  stock: 1,
-  bond: 2,
-  fund: 12,
-  realestate: 12,
-  deposit: 12,
-  other: 12,
+  'Акции': 1, 'Облигации': 2, 'Фонды': 12,
+  'Недвижимость': 12, 'Вклады': 12, 'Крипта': 12,
+  // Keep old enum keys for v4 upgrade function
+  stock: 1, bond: 2, fund: 12, realestate: 12, deposit: 12, other: 12,
 };
 
 class CashFlowDB extends Dexie {
+  accounts!: EntityTable<Account, 'id'>;
   assets!: EntityTable<Asset, 'id'>;
+  holdings!: EntityTable<Holding, 'id'>;
   paymentHistory!: EntityTable<PaymentHistory, 'id'>;
   importRecords!: EntityTable<ImportRecord, 'id'>;
 
@@ -79,6 +80,20 @@ class CashFlowDB extends Dexie {
           asset.quantitySource = ds === 'import' ? 'import' : 'manual';
           asset.importedQuantity = ds === 'import' ? asset.quantity : undefined;
         });
+      });
+    this.version(5)
+      .stores({
+        accounts: '++id',
+        assets: '++id, type, ticker, isin',
+        holdings: '++id, accountId, assetId, &[accountId+assetId]',
+        paymentHistory: '++id, [assetId+date]',
+        importRecords: '++id, date',
+        settings: 'key',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('assets').clear();
+        await tx.table('paymentHistory').clear();
+        await tx.table('importRecords').clear();
       });
   }
 }
