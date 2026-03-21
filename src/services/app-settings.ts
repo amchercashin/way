@@ -2,7 +2,6 @@ import { db } from '@/db/database';
 
 export interface AppSettings {
   defaultPeriod: 'month' | 'year';
-  autoMoexSync: boolean;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
@@ -10,7 +9,6 @@ export async function getAppSettings(): Promise<AppSettings> {
   const map = new Map(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
   return {
     defaultPeriod: (map.get('defaultPeriod') ?? 'month') as 'month' | 'year',
-    autoMoexSync: map.get('autoMoexSync') !== 'false',
   };
 }
 

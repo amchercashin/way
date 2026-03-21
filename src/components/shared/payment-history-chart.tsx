@@ -3,8 +3,12 @@ import { formatCompact } from '@/lib/utils';
 import type { PaymentRecord } from '@/services/income-calculator';
 import { calcCAGR } from '@/services/income-calculator';
 
+export interface ChartPaymentRecord extends PaymentRecord {
+  excluded?: boolean;
+}
+
 interface PaymentHistoryChartProps {
-  history: PaymentRecord[];
+  history: ChartPaymentRecord[];
   paymentPerUnit?: number;
   frequencyPerYear?: number;
 }
@@ -25,12 +29,12 @@ export function PaymentHistoryChart({
 
   // Group history by year (per-unit amounts — no quantity multiplication)
   const byYear = useMemo(() => {
-    const map = new Map<number, { total: number; payments: { date: Date; amount: number }[] }>();
+    const map = new Map<number, { total: number; payments: { date: Date; amount: number; excluded?: boolean }[] }>();
     for (const p of history) {
       const year = p.date.getFullYear();
       const entry = map.get(year) ?? { total: 0, payments: [] };
-      entry.total += p.amount;
-      entry.payments.push({ date: p.date, amount: p.amount });
+      if (!p.excluded) entry.total += p.amount;
+      entry.payments.push({ date: p.date, amount: p.amount, excluded: p.excluded });
       map.set(year, entry);
     }
     // Sort payments within each year by date
@@ -81,9 +85,10 @@ export function PaymentHistoryChart({
   const maxValue = Math.max(...displayValues, 1);
 
   // CAGR from per-unit history (excludes current year, needs >=2 full years)
+  const activeHistory = useMemo(() => history.filter(p => !p.excluded), [history]);
   const cagr = useMemo(
-    () => (isNoHistory ? null : calcCAGR(history, new Date())),
-    [history, isNoHistory],
+    () => (isNoHistory ? null : calcCAGR(activeHistory, new Date())),
+    [activeHistory, isNoHistory],
   );
 
   const barOpacity = (i: number) => {
@@ -158,7 +163,7 @@ export function PaymentHistoryChart({
           </span>
         </div>
         {yearData.payments.map((p, i) => (
-          <div key={i} className="flex justify-between font-mono text-[9px] mb-0.5">
+          <div key={i} className={`flex justify-between font-mono text-[9px] mb-0.5${p.excluded ? ' opacity-40 line-through' : ''}`}>
             <span className="text-[#4a4540]">{formatShortDate(p.date)}</span>
             <span className="text-[#b0a898]">{formatCompact(p.amount)} ₽</span>
           </div>

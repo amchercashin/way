@@ -11,18 +11,11 @@ describe('app-settings', () => {
   it('returns defaults when no settings exist', async () => {
     const settings = await getAppSettings();
     expect(settings.defaultPeriod).toBe('month');
-    expect(settings.autoMoexSync).toBe(true);
   });
 
   it('persists and reads a setting', async () => {
     await updateAppSetting('defaultPeriod', 'year');
     const settings = await getAppSettings();
     expect(settings.defaultPeriod).toBe('year');
-  });
-
-  it('persists autoMoexSync as boolean-like string', async () => {
-    await updateAppSetting('autoMoexSync', 'false');
-    const settings = await getAppSettings();
-    expect(settings.autoMoexSync).toBe(false);
   });
 });

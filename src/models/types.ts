@@ -43,6 +43,7 @@ export interface PaymentHistory {
   date: Date;
   type: 'dividend' | 'coupon' | 'rent' | 'interest' | 'distribution' | 'other';
   dataSource: DataSource;
+  excluded?: boolean;
 }
 
 export interface ImportRecord {

@@ -8,6 +8,7 @@ import type { ImportDiff } from '@/services/import-diff';
 import type { ImportRecord } from '@/models/types';
 import { ImportPreview } from './import-preview';
 import { Landmark, Bot, FileText, ArrowLeft, Copy, Check } from 'lucide-react';
+import { useSyncContext } from '@/contexts/sync-context';
 
 interface ImportFlowProps {
   open: boolean;
@@ -74,6 +75,7 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
   const [aiText, setAiText] = useState('');
   const [csvText, setCsvText] = useState('');
   const [copied, setCopied] = useState(false);
+  const { triggerSync } = useSyncContext();
 
   const reset = useCallback(() => {
     setStep('method');
@@ -194,6 +196,7 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
       const name = accountId === null ? editableName.trim() || suggestedName : undefined;
       await applyImportDiff(diff, importSource, name);
       handleClose();
+      triggerSync();
     } catch {
       setError('Ошибка при применении импорта');
       setApplying(false);

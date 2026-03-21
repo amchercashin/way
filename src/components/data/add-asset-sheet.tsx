@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { db } from '@/db/database';
 import { addHolding } from '@/hooks/use-holdings';
 import { getTypeSuggestions, getDefaultFrequency } from '@/models/account';
+import { useSyncContext } from '@/contexts/sync-context';
 import type { Asset } from '@/models/types';
 
 interface AddAssetSheetProps {
@@ -13,6 +14,7 @@ interface AddAssetSheetProps {
 }
 
 export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAssetSheetProps) {
+  const { syncAsset } = useSyncContext();
   const [name, setName] = useState('');
   const [type, setType] = useState('Акции');
   const [ticker, setTicker] = useState('');
@@ -46,7 +48,6 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
         currentPrice: price,
         paymentPerUnitSource: 'fact',
         frequencyPerYear: freq,
-        frequencySource: 'manual',
         dataSource: 'manual',
         createdAt: now,
         updatedAt: now,
@@ -68,6 +69,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
     setQuantity('');
     setAvgPrice('');
     onClose();
+    syncAsset(assetId); // fire-and-forget
   };
 
   const inputCls =
@@ -78,6 +80,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
       <SheetContent side="bottom" className="bg-[var(--way-void)] border-t-[var(--way-shadow)]">
         <SheetHeader>
           <SheetTitle className="text-[var(--way-text)]">Добавить актив</SheetTitle>
+          <SheetDescription className="sr-only">Добавление нового актива в счёт</SheetDescription>
         </SheetHeader>
         <div className="mt-4 space-y-3">
           <div>

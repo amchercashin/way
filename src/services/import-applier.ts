@@ -91,7 +91,7 @@ async function createAsset(row: ImportAssetRow): Promise<number> {
     securityCategory: row.securityCategory, issueInfo: row.issueInfo,
     paymentPerUnit: row.lastPaymentAmount ?? undefined,
     paymentPerUnitSource: row.lastPaymentAmount ? 'manual' : 'fact',
-    frequencyPerYear: freq, frequencySource: 'manual',
+    frequencyPerYear: freq,
     dataSource: 'import', createdAt: now, updatedAt: now,
   } as any) as number;
 }
@@ -113,7 +113,6 @@ async function updateAssetFields(assetId: number, row: ImportAssetRow): Promise<
   }
   if (row.frequencyPerYear != null) {
     updates.frequencyPerYear = row.frequencyPerYear;
-    updates.frequencySource = 'manual';
   }
   await db.assets.update(assetId, updates);
 }

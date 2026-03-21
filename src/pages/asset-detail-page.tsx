@@ -26,7 +26,9 @@ export function AssetDetailPage() {
   const computed = useMemo(() => {
     if (!asset) return null;
     const now = new Date();
-    const historyRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
+    const activeHistory = history.filter((h) => !h.excluded);
+    const historyRecords = activeHistory.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
+    const allHistoryRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date), excluded: h.excluded }));
 
     let paymentPerUnit: number;
     if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
@@ -55,7 +57,7 @@ export function AssetDetailPage() {
       asset.paymentPerUnitSource === 'manual' ||
       asset.frequencySource === 'manual';
 
-    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, totalQuantity };
+    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity };
   }, [asset, history, holdings, portfolio.totalValue]);
 
   const handleSavePaymentPerUnit = useCallback((v: string) => {
@@ -74,7 +76,7 @@ export function AssetDetailPage() {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
-  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, historyRecords, totalQuantity } = computed;
+  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity } = computed;
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
@@ -97,7 +99,14 @@ export function AssetDetailPage() {
         value={paymentPerUnit > 0 ? `₽ ${paymentPerUnit}` : '— Укажите'}
         sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'факт' : 'ручной'}
         isManualSource={asset.paymentPerUnitSource === 'manual'}
-        subtitle={asset.paymentPerUnitSource === 'fact' ? 'расчёт из истории выплат' : undefined}
+        subtitle={
+          <button
+            onClick={() => navigate('/payments', { state: { highlightAssetId: assetId } })}
+            className="text-[var(--way-gold)] hover:underline"
+          >
+            {asset.paymentPerUnitSource === 'fact' ? 'расчёт из истории выплат →' : 'история выплат →'}
+          </button>
+        }
         onSave={handleSavePaymentPerUnit}
         resetLabel={asset.paymentPerUnitSource === 'manual' ? 'Вернуться к расчёту на основе факта' : undefined}
         onReset={asset.paymentPerUnitSource === 'manual' ? () => updateAsset(assetId, {
@@ -151,7 +160,7 @@ export function AssetDetailPage() {
       )}
 
       <PaymentHistoryChart
-        history={historyRecords}
+        history={allHistoryRecords}
         paymentPerUnit={paymentPerUnit}
         frequencyPerYear={asset.frequencyPerYear}
       />

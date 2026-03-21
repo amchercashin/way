@@ -9,6 +9,7 @@ import {
   fetchCouponHistory,
   fetchBatchStockPrices,
   fetchBatchBondData,
+  calcDividendFrequency,
   chunk,
 } from './moex-api';
 
@@ -52,14 +53,17 @@ interface ResolvedAsset {
   market: 'shares' | 'bonds';
 }
 
+function isSyncable(asset: Asset): boolean {
+  return !!(asset.ticker || asset.isin || asset.moexSecid)
+    && ['Акции', 'Облигации', 'Фонды'].includes(asset.type);
+}
+
 export async function syncAllAssets(): Promise<SyncResult> {
   const assets = await db.assets.toArray();
   const result: SyncResult = { synced: 0, failed: 0, skipped: 0, errors: [] };
 
   // Filter syncable assets
-  const syncable = assets.filter(
-    (a) => (a.ticker || a.isin || a.moexSecid) && ['Акции', 'Облигации', 'Фонды'].includes(a.type),
-  );
+  const syncable = assets.filter(isSyncable);
   result.skipped = assets.length - syncable.length;
 
   // Phase 1: Resolve — resolve secid/boardId/market with concurrency=5
@@ -122,6 +126,30 @@ export async function syncAllAssets(): Promise<SyncResult> {
 export async function getLastSyncAt(): Promise<Date | null> {
   const setting = await db.table('settings').get('lastSyncAt');
   return setting ? new Date(setting.value) : null;
+}
+
+export async function syncSingleAsset(assetId: number): Promise<{ success: boolean; error?: string }> {
+  const asset = await db.assets.get(assetId);
+  if (!asset || !isSyncable(asset)) return { success: false };
+
+  try {
+    // Phase 1: Resolve
+    const ra = await resolveAndCache(asset);
+    if (!ra) return { success: false, error: 'Не найден на MOEX' };
+
+    // Phase 2: Batch prices (single asset)
+    const priceData = await fetchGroupPrices({
+      market: ra.market,
+      boardId: ra.boardId,
+      secids: [ra.secid],
+    });
+
+    // Phase 3: Enrich
+    await enrichAsset(ra, priceData.get(ra.secid));
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 // ============ Phase 1: Resolve ============
@@ -241,8 +269,22 @@ async function enrichStock(
   const divInfo = await fetchDividends(ra.secid);
   if (divInfo) {
     await writePaymentHistory(ra.asset.id!, divInfo.history, 'dividend');
+
+    // Recalculate frequency from non-excluded DB records
+    const dbRecords = await db.paymentHistory
+      .where('[assetId+date]')
+      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+      .toArray();
+    const activeDates = dbRecords
+      .filter(r => !r.excluded)
+      .map(r => r.date)
+      .sort((a, b) => a.getTime() - b.getTime());
+    const frequencyPerYear = activeDates.length >= 2
+      ? calcDividendFrequency(activeDates)
+      : divInfo.summary.frequencyPerYear;
+
     await updateMoexAssetFields(ra.asset, {
-      frequencyPerYear: divInfo.summary.frequencyPerYear,
+      frequencyPerYear,
       nextExpectedCutoffDate: divInfo.summary.nextExpectedCutoffDate ?? undefined,
     });
   }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { addAccount } from '@/hooks/use-accounts';
 
 interface AddAccountSheetProps {
@@ -24,6 +24,7 @@ export function AddAccountSheet({ open, onClose, onImport }: AddAccountSheetProp
       <SheetContent side="bottom" className="bg-[var(--way-void)] border-t-[var(--way-shadow)]">
         <SheetHeader>
           <SheetTitle className="text-[var(--way-text)]">Добавить счёт</SheetTitle>
+          <SheetDescription className="sr-only">Создание нового брокерского счёта</SheetDescription>
         </SheetHeader>
         <div className="mt-4 space-y-4">
           {/* Empty account */}

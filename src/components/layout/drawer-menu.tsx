@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { BarChart3, Database, Settings, Save } from 'lucide-react';
+import { BarChart3, Database, CalendarDays, Settings, Save } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface DrawerMenuProps {
@@ -21,6 +21,7 @@ const MENU_SECTIONS: {
     title: 'Управление',
     items: [
       { label: 'Данные', path: '/data', icon: Database },
+      { label: 'Выплаты', path: '/payments', icon: CalendarDays },
     ],
   },
   {

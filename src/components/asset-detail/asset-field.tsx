@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 
 interface AssetFieldProps {
   label: string;
   value: string;
   sourceLabel?: string;
   isManualSource?: boolean;
-  subtitle?: string;
+  subtitle?: ReactNode;
   editable?: boolean;
   onSave?: (newValue: string) => void;
   resetLabel?: string;

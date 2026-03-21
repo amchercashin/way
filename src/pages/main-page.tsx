@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
-import { useMoexSync } from '@/hooks/use-moex-sync';
+import { useSyncContext } from '@/contexts/sync-context';
 import { getAppSettings } from '@/services/app-settings';
 
 function formatSyncTime(date: Date): string {
@@ -15,15 +15,7 @@ function formatSyncTime(date: Date): string {
 export function MainPage() {
   const [mode, setMode] = useState<'month' | 'year'>('month');
   const { portfolio, categories } = usePortfolioStats();
-  const { syncing, lastSyncAt, error, sync } = useMoexSync();
-  const autoSyncDone = useRef(false);
-  useEffect(() => {
-    if (autoSyncDone.current) return;
-    autoSyncDone.current = true;
-    getAppSettings().then((s) => {
-      if (s.autoMoexSync) sync();
-    });
-  }, []);
+  const { syncing, lastSyncAt, error, triggerSync } = useSyncContext();
 
   useEffect(() => {
     getAppSettings().then((s) => setMode(s.defaultPeriod));
@@ -36,7 +28,7 @@ export function MainPage() {
 
   const refreshButton = (
     <button
-      onClick={() => sync()}
+      onClick={() => triggerSync()}
       disabled={syncing}
       className="text-[var(--way-ash)] text-base disabled:opacity-50"
       aria-label="Обновить данные MOEX"

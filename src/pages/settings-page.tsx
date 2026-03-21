@@ -36,11 +36,6 @@ export function SettingsPage() {
           value={settings.defaultPeriod === 'month' ? 'Месяц' : 'Год'}
           onToggle={() => toggle('defaultPeriod', settings.defaultPeriod === 'month' ? 'year' : 'month')}
         />
-        <SettingRow
-          label="Автообновление MOEX"
-          value={settings.autoMoexSync ? 'Вкл' : 'Выкл'}
-          onToggle={() => toggle('autoMoexSync', settings.autoMoexSync ? 'false' : 'true')}
-        />
         <div className="border-t border-[rgba(200,180,140,0.08)] pt-6 mt-8">
           <div className="text-[var(--destructive)] text-xs uppercase tracking-widest mb-3">Опасная зона</div>
           <button
