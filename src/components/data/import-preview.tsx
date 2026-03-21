@@ -112,7 +112,7 @@ function DiffRow({ item }: { item: DiffItem }) {
       </div>
       <div className="flex gap-3 text-right flex-shrink-0 ml-2">
         {/* Quantity */}
-        <DiffValue oldVal={oldQty} newVal={newQty} status={item.status} />
+        <DiffValue oldVal={oldQty} newVal={newQty} status={item.status} suffix=" шт" />
         {/* Price */}
         <DiffValue oldVal={oldPrice} newVal={newPrice} status={item.status} suffix="₽" />
       </div>

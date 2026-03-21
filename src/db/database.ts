@@ -5,6 +5,7 @@ import type { Account, Holding } from '@/models/account';
 const FREQUENCY_DEFAULTS: Record<string, number> = {
   'Акции': 1, 'Облигации': 2, 'Фонды': 12,
   'Недвижимость': 12, 'Вклады': 12, 'Крипта': 12,
+  'Валюта': 0, 'Прочее': 0,
   // Keep old enum keys for v4 upgrade function
   stock: 1, bond: 2, fund: 12, realestate: 12, deposit: 12, other: 12,
 };

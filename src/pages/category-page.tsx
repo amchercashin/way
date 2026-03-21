@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppShell } from '@/components/layout/app-shell';
 import { StatBlocks } from '@/components/shared/stat-blocks';
@@ -71,13 +71,6 @@ export function CategoryPage() {
         }
         return <AssetRow key={asset.id} asset={asset} paymentPerUnit={paymentPerUnit} totalQuantity={quantityByAsset.get(asset.id!) ?? 0} />;
       })}
-
-      <Link
-        to={`/add-asset?type=${encodeURIComponent(decodedType)}`}
-        className="block text-center py-3 border border-dashed border-[var(--way-shadow)] rounded-xl text-[var(--way-ash)] text-sm mt-3 active:border-[var(--way-gold)] active:text-[var(--way-gold)]"
-      >
-        + Добавить
-      </Link>
 
     </AppShell>
   );

@@ -10,6 +10,9 @@ const PAYMENT_TYPE_MAP: Record<string, PaymentHistory['type']> = {
   'Недвижимость': 'rent',
   'Вклады': 'interest',
   'Фонды': 'distribution',
+  'Крипта': 'other',
+  'Валюта': 'other',
+  'Прочее': 'other',
 };
 
 interface AssetPaymentsProps {
@@ -20,6 +23,7 @@ interface AssetPaymentsProps {
 
 export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsProps) {
   const [addFormOpen, setAddFormOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(!isHighlighted && payments.length === 0);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,45 +44,57 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
       className={`border-t border-[var(--way-shadow)]/30${isHighlighted ? ' animate-highlight-pulse' : ''}`}
     >
       {/* Asset header */}
-      <div className="flex justify-between items-center px-3 py-2 bg-[var(--way-void)]">
-        <span className="text-[var(--way-text)] text-[13px] font-medium truncate">
-          {label}
-        </span>
+      <div
+        className="flex justify-between items-center px-3 py-2 bg-[var(--way-void)] cursor-pointer select-none"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[var(--way-muted)] text-[10px]">{collapsed ? '▸' : '▾'}</span>
+          <span className="text-[var(--way-text)] text-[13px] font-medium truncate">
+            {label}
+          </span>
+          {collapsed && sorted.length > 0 && (
+            <span className="text-[var(--way-muted)] text-[11px] flex-shrink-0">({sorted.length})</span>
+          )}
+        </div>
         <button
-          onClick={() => setAddFormOpen(!addFormOpen)}
+          onClick={(e) => { e.stopPropagation(); setAddFormOpen(!addFormOpen); }}
           className="text-[var(--way-muted)] text-[11px] hover:text-[var(--way-gold)] transition-colors flex-shrink-0"
         >
           + выплата
         </button>
       </div>
 
-      {/* Add form */}
-      {addFormOpen && (
-        <AddPaymentForm
-          assetId={asset.id!}
-          paymentType={paymentType}
-          onAdd={async (p) => {
-            await addPayment(p);
-            setAddFormOpen(false);
-          }}
-          onCancel={() => setAddFormOpen(false)}
-        />
-      )}
+      {/* Content (collapsible) */}
+      {!collapsed && (
+        <>
+          {addFormOpen && (
+            <AddPaymentForm
+              assetId={asset.id!}
+              paymentType={paymentType}
+              onAdd={async (p) => {
+                await addPayment(p);
+                setAddFormOpen(false);
+              }}
+              onCancel={() => setAddFormOpen(false)}
+            />
+          )}
 
-      {/* Payment rows */}
-      {sorted.length > 0 ? (
-        sorted.map((p) => (
-          <PaymentRow
-            key={p.id}
-            payment={p}
-            onToggleExcluded={toggleExcluded}
-            onDelete={deletePayment}
-          />
-        ))
-      ) : (
-        <div className="px-3 py-2 text-[var(--way-muted)] text-[11px] font-mono">
-          Нет выплат
-        </div>
+          {sorted.length > 0 ? (
+            sorted.map((p) => (
+              <PaymentRow
+                key={p.id}
+                payment={p}
+                onToggleExcluded={toggleExcluded}
+                onDelete={deletePayment}
+              />
+            ))
+          ) : (
+            <div className="px-3 py-2 text-[var(--way-muted)] text-[11px] font-mono">
+              Нет выплат
+            </div>
+          )}
+        </>
       )}
     </div>
   );

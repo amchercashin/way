@@ -80,7 +80,7 @@ export function AssetField({
         <div>
           <div className="flex justify-between items-center">
             <span
-              className={`font-mono text-[14px] text-[var(--way-text)] ${editable ? 'cursor-pointer' : ''}`}
+              className={`font-mono text-[14px] text-[var(--way-text)] ${editable ? 'cursor-pointer border-b border-dashed border-[var(--way-shadow)] hover:border-[var(--way-gold)] transition-colors' : ''}`}
               onClick={() => editable && startEditing()}
             >
               {value}

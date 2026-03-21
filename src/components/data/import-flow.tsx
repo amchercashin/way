@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { parseSberHTML, extractAgreementNumber } from '@/services/sber-html-parser';
-import { parseMDTable, parseCSV } from '@/services/import-parser';
+import { parseMDTable } from '@/services/import-parser';
 import { computeImportDiff } from '@/services/import-diff';
 import { applyImportDiff } from '@/services/import-applier';
 import type { ImportDiff } from '@/services/import-diff';
 import type { ImportRecord } from '@/models/types';
 import { ImportPreview } from './import-preview';
-import { Landmark, Bot, FileText, ArrowLeft, Copy, Check } from 'lucide-react';
+import { Landmark, Bot, ArrowLeft, Copy, Check } from 'lucide-react';
 import { useSyncContext } from '@/contexts/sync-context';
 
 interface ImportFlowProps {
@@ -17,7 +17,7 @@ interface ImportFlowProps {
   accountName?: string;       // current name for existing account
 }
 
-type Step = 'method' | 'sber' | 'ai' | 'csv' | 'preview';
+type Step = 'method' | 'ai' | 'preview';
 
 const AI_PROMPT = `Преобразуй данные из отчёта брокера в Markdown-таблицу:
 
@@ -73,8 +73,8 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
   const [applying, setApplying] = useState(false);
   const [importSource, setImportSource] = useState<ImportRecord['source']>('sber_html');
   const [aiText, setAiText] = useState('');
-  const [csvText, setCsvText] = useState('');
   const [copied, setCopied] = useState(false);
+  const sberFileRef = useRef<HTMLInputElement>(null);
   const { triggerSync } = useSyncContext();
 
   const reset = useCallback(() => {
@@ -86,7 +86,6 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
     setApplying(false);
     setImportSource('sber_html');
     setAiText('');
-    setCsvText('');
     setCopied(false);
   }, []);
 
@@ -154,40 +153,6 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
     }
   };
 
-  // --- CSV / Markdown ---
-  const parseCsvOrMd = async (text: string) => {
-    setError(null);
-    try {
-      let rows = parseMDTable(text);
-      let source: ImportRecord['source'] = 'markdown';
-      if (rows.length === 0) {
-        rows = parseCSV(text);
-        source = 'csv';
-      }
-      if (rows.length === 0) {
-        setError('Не удалось распознать данные. Проверьте формат таблицы.');
-        return;
-      }
-      setDefaultName('Новый счёт');
-      setImportSource(source);
-      await goToPreview(rows);
-    } catch {
-      setError('Ошибка при разборе данных');
-    }
-  };
-
-  const handleCsvFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    await parseCsvOrMd(text);
-    e.target.value = '';
-  };
-
-  const handleCsvTextParse = async () => {
-    await parseCsvOrMd(csvText);
-  };
-
   // --- Apply ---
   const handleApply = async () => {
     if (!diff) return;
@@ -229,43 +194,18 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
                 icon={Landmark}
                 label="Отчёт Сбера"
                 desc="HTML-отчёт брокера"
-                onClick={() => setStep('sber')}
+                onClick={() => sberFileRef.current?.click()}
               />
               <MethodButton
                 icon={Bot}
-                label="Через AI"
+                label="Markdown / через AI"
                 desc="Промт для ChatGPT/Claude → вставьте таблицу"
                 onClick={() => setStep('ai')}
               />
-              <MethodButton
-                icon={FileText}
-                label="CSV / Markdown"
-                desc="Загрузите файл или вставьте текст"
-                onClick={() => setStep('csv')}
-              />
             </div>
           )}
-
-          {/* Step: Sber HTML upload */}
-          {step === 'sber' && (
-            <div className="space-y-3">
-              <BackButton onClick={() => { setStep('method'); setError(null); }} />
-              <p className="text-sm text-[var(--way-ash)]">
-                Загрузите HTML-отчёт брокера Сбер
-              </p>
-              <label className="block w-full border border-dashed border-[var(--way-shadow)] rounded-lg p-6 text-center cursor-pointer hover:bg-[var(--way-stone)] transition-colors">
-                <span className="text-sm text-[var(--way-text)]">Выбрать файл .html</span>
-                <input
-                  type="file"
-                  accept=".html,.htm"
-                  onChange={handleSberUpload}
-                  className="hidden"
-                />
-              </label>
-              {error && (
-                <p className="text-sm text-red-400">{error}</p>
-              )}
-            </div>
+          {step === 'method' && error && (
+            <p className="text-sm text-red-400 mt-2">{error}</p>
           )}
 
           {/* Step: AI import */}
@@ -315,51 +255,6 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
             </div>
           )}
 
-          {/* Step: CSV / Markdown */}
-          {step === 'csv' && (
-            <div className="space-y-3">
-              <BackButton onClick={() => { setStep('method'); setError(null); }} />
-              <p className="text-sm text-[var(--way-ash)]">
-                Загрузите файл или вставьте текст в формате CSV / Markdown
-              </p>
-
-              <label className="block w-full border border-dashed border-[var(--way-shadow)] rounded-lg p-6 text-center cursor-pointer hover:bg-[var(--way-stone)] transition-colors">
-                <span className="text-sm text-[var(--way-text)]">Выбрать файл .csv, .md, .txt</span>
-                <input
-                  type="file"
-                  accept=".csv,.md,.txt"
-                  onChange={handleCsvFileUpload}
-                  className="hidden"
-                />
-              </label>
-
-              <div className="flex items-center gap-2 text-xs text-[var(--way-ash)]">
-                <div className="flex-1 h-px bg-[var(--way-shadow)]" />
-                или вставьте текст
-                <div className="flex-1 h-px bg-[var(--way-shadow)]" />
-              </div>
-
-              <textarea
-                value={csvText}
-                onChange={(e) => setCsvText(e.target.value)}
-                placeholder="Вставьте CSV или Markdown-таблицу..."
-                className="w-full bg-[var(--way-stone)] border border-[var(--way-shadow)] rounded-lg px-3 py-2 text-sm text-[var(--way-text)] placeholder:text-[var(--way-shadow)] outline-none focus:border-[var(--way-gold)] min-h-[120px] resize-y font-mono"
-              />
-
-              <button
-                onClick={handleCsvTextParse}
-                disabled={!csvText.trim()}
-                className="w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:border-[var(--way-gold)] border border-[var(--way-shadow)] transition-colors"
-              >
-                Распознать
-              </button>
-
-              {error && (
-                <p className="text-sm text-red-400">{error}</p>
-              )}
-            </div>
-          )}
-
           {/* Step: preview */}
           {step === 'preview' && diff && (
             <div className="space-y-3">
@@ -398,6 +293,13 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
             </div>
           )}
         </div>
+        <input
+          ref={sberFileRef}
+          type="file"
+          accept=".html,.htm"
+          onChange={handleSberUpload}
+          className="hidden"
+        />
       </SheetContent>
     </Sheet>
   );

@@ -24,6 +24,8 @@ export const KNOWN_TYPE_CONFIG: Record<string, { label: string; color: string; d
   'Вклады': { label: 'Вклады', color: '#6b8070', defaultFrequency: 12 },
   'Недвижимость': { label: 'Недвижимость', color: '#7a6a5a', defaultFrequency: 12 },
   'Крипта': { label: 'Крипта', color: '#5a5548', defaultFrequency: 12 },
+  'Валюта': { label: 'Валюта', color: '#5a7080', defaultFrequency: 0 },
+  'Прочее': { label: 'Прочее', color: '#6a6560', defaultFrequency: 0 },
 };
 
 export function getTypeSuggestions(existingTypes: string[]): string[] {

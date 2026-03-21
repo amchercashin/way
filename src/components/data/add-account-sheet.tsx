@@ -35,7 +35,7 @@ export function AddAccountSheet({ open, onClose, onImport }: AddAccountSheetProp
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              placeholder="Например: Сбер / ИИС"
+              placeholder="Сбер / Недвижимость / Вклады / Прочее"
               className="w-full bg-[var(--way-stone)] border border-[var(--way-shadow)] rounded-lg px-3 py-2 text-sm text-[var(--way-text)] placeholder:text-[var(--way-muted)] outline-none focus:border-[var(--way-gold)]"
               autoFocus
             />

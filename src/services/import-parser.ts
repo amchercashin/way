@@ -22,6 +22,8 @@ const TYPE_MAP: Record<string, string> = {
   недвижимость: 'Недвижимость', realestate: 'Недвижимость',
   вклад: 'Вклады', deposit: 'Вклады',
   прочее: 'Прочее', other: 'Прочее',
+  валюта: 'Валюта', currency: 'Валюта',
+  крипта: 'Крипта', crypto: 'Крипта',
 };
 
 export function parseTypeLabel(label: string): string {

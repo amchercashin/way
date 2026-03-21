@@ -13,6 +13,8 @@ interface AddAssetSheetProps {
   existingTypes: string[];
 }
 
+const EXCHANGE_TYPES = new Set(['Акции', 'Облигации', 'Фонды', 'Крипта']);
+
 export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAssetSheetProps) {
   const { syncAsset } = useSyncContext();
   const [name, setName] = useState('');
@@ -22,6 +24,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
   const [avgPrice, setAvgPrice] = useState('');
 
   const suggestions = getTypeSuggestions(existingTypes);
+  const isExchangeType = EXCHANGE_TYPES.has(type);
 
   const handleAdd = async () => {
     const trimmedName = name.trim();
@@ -31,7 +34,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
 
     // Find existing asset by ticker
     let assetId: number;
-    const trimmedTicker = ticker.trim().toUpperCase();
+    const trimmedTicker = isExchangeType ? ticker.trim().toUpperCase() : '';
     const existing = trimmedTicker
       ? await db.assets.where('ticker').equals(trimmedTicker).first()
       : undefined;
@@ -104,17 +107,19 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-xs text-[var(--way-ash)] block mb-1">Тикер</label>
-              <input
-                type="text"
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-                placeholder="SBER"
-                className={inputCls}
-              />
-            </div>
+          <div className={`grid ${isExchangeType ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+            {isExchangeType && (
+              <div>
+                <label className="text-xs text-[var(--way-ash)] block mb-1">Тикер *</label>
+                <input
+                  type="text"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value)}
+                  placeholder="SBER"
+                  className={inputCls}
+                />
+              </div>
+            )}
             <div>
               <label className="text-xs text-[var(--way-ash)] block mb-1">Кол-во</label>
               <input
@@ -127,7 +132,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
               />
             </div>
             <div>
-              <label className="text-xs text-[var(--way-ash)] block mb-1">Цена пок.</label>
+              <label className="text-xs text-[var(--way-ash)] block mb-1">Цена покупки</label>
               <input
                 type="text"
                 inputMode="decimal"
@@ -140,7 +145,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
           </div>
           <button
             onClick={handleAdd}
-            disabled={!name.trim()}
+            disabled={!name.trim() || (isExchangeType && !ticker.trim())}
             className="w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2.5 rounded-lg text-sm font-medium hover:bg-[var(--way-shadow)] transition-colors disabled:opacity-40"
           >
             Добавить

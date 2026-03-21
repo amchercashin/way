@@ -68,7 +68,7 @@ export function AssetDetailPage() {
 
   const handleSaveFrequency = useCallback((v: string) => {
     const num = parseInt(v);
-    if (isNaN(num) || num < 1 || num > 12) return;
+    if (isNaN(num) || num < 1) return;
     updateAsset(assetId, { frequencyPerYear: num, frequencySource: 'manual' });
   }, [assetId]);
 
@@ -94,10 +94,37 @@ export function AssetDetailPage() {
         isManualIncome={isManual}
       />
 
+      <div
+        className="bg-[var(--way-stone)] rounded-lg p-3 mb-2 cursor-pointer hover:border-[var(--way-gold)] border border-transparent transition-colors"
+        onClick={() => navigate('/data', {
+          state: holdings.length > 0
+            ? { highlightAccountId: holdings[0].accountId, highlightAssetId: assetId }
+            : undefined
+        })}
+      >
+        <div className="font-mono text-[10px] text-[var(--way-ash)] mb-1">Количество</div>
+        <div className="font-mono text-[14px] text-[var(--way-text)]">
+          {totalQuantity} шт.
+        </div>
+        {holdings.length > 1 && (
+          <div className="mt-1.5 space-y-0.5">
+            {holdings.map((h) => {
+              const account = accounts.find(a => a.id === h.accountId);
+              return (
+                <div key={h.id} className="flex justify-between text-[11px]">
+                  <span className="text-[var(--way-muted)]">{account?.name ?? 'Счёт'}</span>
+                  <span className="text-[var(--way-ash)] tabular-nums">{h.quantity} шт.</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <AssetField
         label="Выплата на шт."
         value={paymentPerUnit > 0 ? `₽ ${paymentPerUnit}` : '— Укажите'}
-        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'факт' : 'ручной'}
+        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'последний факт' : 'ручной'}
         isManualSource={asset.paymentPerUnitSource === 'manual'}
         subtitle={
           <button
@@ -108,7 +135,7 @@ export function AssetDetailPage() {
           </button>
         }
         onSave={handleSavePaymentPerUnit}
-        resetLabel={asset.paymentPerUnitSource === 'manual' ? 'Вернуться к расчёту на основе факта' : undefined}
+        resetLabel={asset.paymentPerUnitSource === 'manual' ? 'Последний факт' : undefined}
         onReset={asset.paymentPerUnitSource === 'manual' ? () => updateAsset(assetId, {
           paymentPerUnitSource: 'fact',
           paymentPerUnit: undefined,
@@ -135,29 +162,6 @@ export function AssetDetailPage() {
         nextExpectedCutoffDate={asset.nextExpectedCutoffDate}
         nextExpectedCreditDate={asset.nextExpectedCreditDate}
       />
-
-      {holdings.length > 0 && (
-        <div className="mt-4 px-1">
-          <div className="text-[10px] uppercase tracking-widest text-[var(--way-ash)] mb-2 font-mono">
-            По счетам
-          </div>
-          {holdings.map((h) => {
-            const account = accounts.find(a => a.id === h.accountId);
-            return (
-              <button
-                key={h.id}
-                onClick={() => navigate('/data', { state: { highlightAccountId: h.accountId, highlightAssetId: h.assetId } })}
-                className="flex justify-between items-center w-full py-1.5 px-2 -mx-2 rounded-md text-sm hover:bg-[var(--way-stone)] transition-colors"
-              >
-                <span className="text-[var(--way-text)]">{account?.name ?? 'Счёт'}</span>
-                <span className="text-[var(--way-ash)] tabular-nums">
-                  {h.quantity} шт.{h.averagePrice != null ? ` · ${h.averagePrice.toFixed(0)}₽` : ''}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       <PaymentHistoryChart
         history={allHistoryRecords}

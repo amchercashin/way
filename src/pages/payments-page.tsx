@@ -31,24 +31,22 @@ export function PaymentsPage() {
     return map;
   }, [allPayments]);
 
-  // Group assets by type, only include assets with payments or in highlight
+  // Group assets by type — show all assets
   const typeGroups = useMemo(() => {
     const map = new Map<string, typeof assets>();
     for (const asset of assets) {
-      const payments = paymentsByAsset.get(asset.id!) ?? [];
-      if (payments.length === 0 && asset.id !== highlightState?.highlightAssetId) continue;
       const group = map.get(asset.type) ?? [];
       group.push(asset);
       map.set(asset.type, group);
     }
     return map;
-  }, [assets, paymentsByAsset, highlightState?.highlightAssetId]);
+  }, [assets]);
 
   return (
     <AppShell title="Выплаты">
       {typeGroups.size === 0 ? (
         <div className="text-center text-[var(--way-muted)] font-mono text-sm py-12">
-          Нет данных о выплатах
+          Нет активов
         </div>
       ) : (
         <div className="space-y-4">
