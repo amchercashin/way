@@ -5,8 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
+const base = process.env.BASE_URL ?? '/';
+
 export default defineConfig({
-  base: process.env.BASE_URL ?? '/',
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -19,13 +21,15 @@ export default defineConfig({
         theme_color: '#0d1117',
         background_color: '#0d1117',
         display: 'standalone',
-        start_url: '/',
+        scope: base,
+        start_url: base,
         icons: [
-          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: `${base}icon.svg`, sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        navigateFallback: 'index.html',
       },
     }),
   ],
