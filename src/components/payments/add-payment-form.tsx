@@ -46,13 +46,13 @@ export function AddPaymentForm({ assetId, paymentType, onAdd, onCancel }: AddPay
       />
       <button
         onClick={handleSubmit}
-        className="text-[#6bba6b] text-xs hover:text-green-300 transition-colors"
+        className="text-[#6bba6b] text-[length:var(--way-text-body)] hover:text-green-300 transition-colors"
       >
         ✓
       </button>
       <button
         onClick={onCancel}
-        className="text-[var(--way-muted)] text-xs hover:text-[var(--way-ash)] transition-colors"
+        className="text-[var(--way-muted)] text-[length:var(--way-text-body)] hover:text-[var(--way-ash)] transition-colors"
       >
         ×
       </button>

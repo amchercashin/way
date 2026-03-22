@@ -44,7 +44,7 @@ export function DataPage() {
 
         <button
           onClick={() => setAddAccountOpen(true)}
-          className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-text)] py-3 rounded-xl text-sm hover:bg-[var(--way-stone)] transition-colors"
+          className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-text)] py-3 rounded-xl text-[length:var(--way-text-body)] hover:bg-[var(--way-stone)] transition-colors"
         >
           + Добавить счёт
         </button>

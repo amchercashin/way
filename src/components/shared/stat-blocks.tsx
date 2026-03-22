@@ -28,13 +28,13 @@ export function StatBlocks({ incomePerMonth, totalValue, yieldPercent, portfolio
           key={stat.label}
           className="bg-[rgba(200,180,140,0.03)] border border-[rgba(200,180,140,0.04)] rounded-lg p-3 text-center"
         >
-          <div className="font-mono text-[8px] uppercase tracking-wider text-[var(--way-shadow)]">{stat.label}</div>
-          <div className={`font-mono text-[14px] font-medium mt-1 ${stat.color}`}>
+          <div className="font-mono text-[length:var(--way-text-caption)] uppercase tracking-wider text-[var(--way-shadow)]">{stat.label}</div>
+          <div className={`font-mono text-[length:var(--way-text-heading)] font-medium mt-1 ${stat.color}`}>
             {stat.value}
           </div>
           {index === 0 && isManualIncome != null && (
             <div className="flex justify-center mt-1">
-              <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
+              <span className={`font-mono text-[length:var(--way-text-caption)] px-1.5 py-0.5 rounded ${
                 isManualIncome
                   ? 'bg-[rgba(90,85,72,0.15)] text-[var(--way-ash)]'
                   : 'bg-[rgba(200,180,140,0.1)] text-[var(--way-gold)]'

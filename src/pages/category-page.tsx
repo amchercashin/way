@@ -43,7 +43,7 @@ export function CategoryPage() {
   }, [allHistory]);
 
   const backButton = (
-    <button onClick={() => withViewTransition(() => navigate(-1))} className="text-[var(--way-ash)] text-lg" aria-label="Назад">
+    <button onClick={() => withViewTransition(() => navigate(-1))} className="text-[var(--way-ash)] text-[length:var(--way-text-nav)] min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Назад">
       ‹
     </button>
   );

@@ -93,7 +93,7 @@ export function TypeCombobox({ value, existingTypes, onSave, className = '' }: T
             <button
               key={s}
               onMouseDown={(e) => { e.preventDefault(); handleSelect(s); }}
-              className="w-full text-left px-2 py-1.5 text-sm text-[var(--way-text)] hover:bg-[var(--way-void)] transition-colors"
+              className="w-full text-left px-2 py-1.5 text-[length:var(--way-text-heading)] text-[var(--way-text)] hover:bg-[var(--way-void)] transition-colors"
             >
               {s}
             </button>

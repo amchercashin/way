@@ -29,7 +29,7 @@ export function AddAccountSheet({ open, onClose, onImport }: AddAccountSheetProp
         <div className="mt-4 space-y-4 px-4">
           {/* Empty account */}
           <div>
-            <label className="text-xs text-[var(--way-ash)] block mb-1">Название</label>
+            <label className="text-[length:var(--way-text-body)] text-[var(--way-ash)] block mb-1">Название</label>
             <input
               type="text"
               value={name}
@@ -42,13 +42,13 @@ export function AddAccountSheet({ open, onClose, onImport }: AddAccountSheetProp
             <button
               onClick={handleAdd}
               disabled={!name.trim()}
-              className="mt-2 w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2 rounded-lg text-sm hover:bg-[var(--way-shadow)] transition-colors disabled:opacity-40"
+              className="mt-2 w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2 rounded-lg text-[length:var(--way-text-body)] hover:bg-[var(--way-shadow)] transition-colors disabled:opacity-40"
             >
               Создать пустой
             </button>
           </div>
 
-          <div className="flex items-center gap-2 text-[var(--way-muted)] text-xs">
+          <div className="flex items-center gap-2 text-[var(--way-muted)] text-[length:var(--way-text-body)]">
             <div className="flex-1 border-t border-[var(--way-shadow)]" />
             <span>или</span>
             <div className="flex-1 border-t border-[var(--way-shadow)]" />
@@ -57,7 +57,7 @@ export function AddAccountSheet({ open, onClose, onImport }: AddAccountSheetProp
           {/* Import */}
           <button
             onClick={() => { onClose(); onImport?.(); }}
-            className="w-full border border-[var(--way-shadow)] text-[var(--way-text)] py-2 rounded-lg text-sm hover:bg-[var(--way-stone)] transition-colors"
+            className="w-full border border-[var(--way-shadow)] text-[var(--way-text)] py-2 rounded-lg text-[length:var(--way-text-body)] hover:bg-[var(--way-stone)] transition-colors"
           >
             Из импорта
           </button>

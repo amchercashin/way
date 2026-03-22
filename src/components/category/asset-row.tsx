@@ -31,14 +31,14 @@ export function AssetRow({ asset, paymentPerUnit, totalQuantity }: AssetRowProps
     >
       <div className="flex justify-between items-center">
         <div>
-          <span className="text-[13px] font-medium text-[var(--way-text)]">{asset.ticker ?? asset.name}</span>
+          <span className="text-[length:var(--way-text-heading)] font-medium text-[var(--way-text)]">{asset.ticker ?? asset.name}</span>
           {asset.ticker && (
-            <span className="text-[11px] text-[var(--way-muted)] ml-2">{asset.name}</span>
+            <span className="text-[length:var(--way-text-body)] text-[var(--way-muted)] ml-2">{asset.name}</span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[12px] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</span>
-          <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
+          <span className="font-mono text-[length:var(--way-text-body)] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</span>
+          <span className={`font-mono text-[length:var(--way-text-caption)] px-1.5 py-0.5 rounded ${
             isManual
               ? 'bg-[rgba(90,85,72,0.15)] text-[var(--way-ash)]'
               : 'bg-[rgba(200,180,140,0.1)] text-[var(--way-gold)]'
@@ -47,14 +47,14 @@ export function AssetRow({ asset, paymentPerUnit, totalQuantity }: AssetRowProps
           </span>
         </div>
       </div>
-      <div className="flex justify-between font-mono text-[9px] text-[var(--way-muted)] mt-1">
+      <div className="flex justify-between font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)] mt-1">
         <span>{totalQuantity} шт · {formatCurrency(value)}</span>
         <span>
-          <span className="bg-[rgba(139,115,85,0.12)] text-[var(--way-earth)] px-1.5 py-0.5 rounded text-[9px]">
+          <span className="bg-[rgba(139,115,85,0.12)] text-[var(--way-earth)] px-1.5 py-0.5 rounded text-[length:var(--way-text-caption)]">
             {formatFrequency(asset.frequencyPerYear)}
           </span>
           {' '}
-          {formatCurrency(incomePerYear)}/год
+          <span className="text-[length:var(--way-text-caption)]">{formatCurrency(incomePerYear)}/год</span>
         </span>
       </div>
     </TransitionLink>

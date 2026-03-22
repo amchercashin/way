@@ -86,9 +86,9 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
         className={`w-full bg-[var(--way-stone)] px-3 py-3 flex items-center justify-between cursor-pointer rounded-t-xl ${!expanded ? 'rounded-b-xl' : ''}`}
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[var(--way-text)] text-xs flex-shrink-0">{expanded ? '▾' : '▸'}</span>
+          <span className="text-[var(--way-text)] text-[length:var(--way-text-caption)] flex-shrink-0">{expanded ? '▾' : '▸'}</span>
           <span
-            className="font-semibold text-[15px] text-[var(--way-text)] truncate"
+            className="font-semibold text-[length:var(--way-text-heading)] text-[var(--way-text)] truncate"
             onClick={(e) => e.stopPropagation()}
           >
             <InlineCell
@@ -97,15 +97,15 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
             />
           </span>
           {statusLabel && (
-            <span className={`${statusColor} px-1.5 py-0.5 rounded text-[10px] flex-shrink-0`}>
+            <span className={`${statusColor} px-1.5 py-0.5 rounded text-[length:var(--way-text-caption)] flex-shrink-0`}>
               {statusLabel}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-          <span className="text-[var(--way-ash)] text-[13px]">{formatCurrency(totalValue)}</span>
+          <span className="text-[var(--way-ash)] text-[length:var(--way-text-body)]">{formatCurrency(totalValue)}</span>
           <span
-            className="border border-[var(--way-shadow)] text-[var(--way-ash)] px-2 py-0.5 rounded text-[11px]"
+            className="border border-[var(--way-shadow)] text-[var(--way-ash)] px-2 py-0.5 rounded text-[length:var(--way-text-body)] min-h-[36px] flex items-center justify-center"
             onClick={(e) => { e.stopPropagation(); onImport(); }}
           >
             Импорт
@@ -113,7 +113,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
           <div className="relative" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-              className="border border-[var(--way-shadow)] text-[var(--way-ash)] px-2 py-0.5 rounded text-[11px]"
+              className="border border-[var(--way-shadow)] text-[var(--way-ash)] px-2 py-0.5 rounded text-[length:var(--way-text-body)] min-h-[36px] flex items-center justify-center"
             >
               ⋯
             </button>
@@ -150,7 +150,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
               <div key={type}>
                 {/* Type sub-header */}
                 <div className="flex justify-between items-center px-3 py-1.5 bg-[var(--way-void)]">
-                  <span className="text-[var(--way-ash)] text-[11px] uppercase tracking-wider" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-[var(--way-ash)] text-[length:var(--way-text-body)] uppercase tracking-wider" onClick={(e) => e.stopPropagation()}>
                     <TypeCombobox
                       value={type}
                       existingTypes={allTypes}
@@ -163,11 +163,11 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                       }}
                     />
                   </span>
-                  <span className="text-[var(--way-muted)] text-[11px]">{formatCurrency(groupValue)}</span>
+                  <span className="text-[var(--way-muted)] text-[length:var(--way-text-body)]">{formatCurrency(groupValue)}</span>
                 </div>
 
                 {/* Table header */}
-                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-2 px-3 py-1 text-[11px] text-[var(--way-muted)]">
+                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-2 px-3 py-1 text-[length:var(--way-text-body)] text-[var(--way-muted)]">
                   <span>Тикер</span>
                   <span className="text-right w-14">Кол-во</span>
                   <span className="text-right w-16">Цена пок.</span>
@@ -184,13 +184,13 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                     <div
                       key={holding.id}
                       ref={isHighlighted ? highlightRowRef : undefined}
-                      className={`grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-2 px-3 py-2 border-t border-[var(--way-void)] text-[13px]${isHighlighted ? ' animate-highlight-pulse' : ''}`}
+                      className={`grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-2 px-3 py-2 border-t border-[var(--way-void)] text-[length:var(--way-text-heading)]${isHighlighted ? ' animate-highlight-pulse' : ''}`}
                     >
                       <div className="min-w-0">
                         {asset.ticker ? (
                           <>
                             <div className="font-medium text-[var(--way-text)] truncate">{asset.ticker}</div>
-                            <div className="text-[var(--way-muted)] text-[11px] truncate">
+                            <div className="text-[var(--way-muted)] text-[length:var(--way-text-body)] truncate">
                               <InlineCell
                                 value={asset.name}
                                 onSave={(v) => asset.id != null && updateAsset(asset.id, { name: v })}
@@ -239,7 +239,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                             await deleteHolding(holding.id!);
                           }
                         }}
-                        className="text-[var(--way-muted)] hover:text-red-400 transition-colors text-xs ml-1 w-4"
+                        className="text-[var(--way-muted)] hover:text-red-400 transition-colors text-[length:var(--way-text-body)] ml-1 w-4 min-h-[36px] flex items-center justify-center"
                       >
                         ×
                       </button>
@@ -254,7 +254,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
           <div className="px-3 py-2">
             <button
               onClick={() => setAddAssetOpen(true)}
-              className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-muted)] py-1.5 rounded-md text-xs hover:bg-[var(--way-stone)] transition-colors"
+              className="w-full border border-dashed border-[var(--way-shadow)] text-[var(--way-muted)] py-1.5 rounded-md text-[length:var(--way-text-body)] hover:bg-[var(--way-stone)] transition-colors"
             >
               + Добавить актив
             </button>

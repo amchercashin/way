@@ -26,10 +26,10 @@ export function TypeSection({ type, assets, paymentsByAsset, highlightAssetId }:
         className="w-full bg-[var(--way-stone)] px-3 py-3 flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <span className="text-[var(--way-text)] text-xs">{expanded ? '▾' : '▸'}</span>
-          <span className="font-semibold text-[15px] text-[var(--way-text)]">{type}</span>
+          <span className="text-[var(--way-text)] text-[length:var(--way-text-body)]">{expanded ? '▾' : '▸'}</span>
+          <span className="font-semibold text-[length:var(--way-text-heading)] text-[var(--way-text)]">{type}</span>
         </div>
-        <span className="text-[var(--way-ash)] text-[11px]">
+        <span className="text-[var(--way-ash)] text-[length:var(--way-text-body)]">
           {assets.length} {assets.length === 1 ? 'актив' : 'активов'} · {totalPayments} выплат
         </span>
       </button>

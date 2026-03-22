@@ -45,8 +45,8 @@ function MethodButton({ icon: Icon, label, desc, onClick }: {
     >
       <Icon className="w-5 h-5 text-[var(--way-ash)] shrink-0" />
       <div>
-        <div className="text-sm font-medium text-[var(--way-text)]">{label}</div>
-        <div className="text-xs text-[var(--way-ash)]">{desc}</div>
+        <div className="text-[length:var(--way-text-heading)] font-medium text-[var(--way-text)]">{label}</div>
+        <div className="text-[length:var(--way-text-body)] text-[var(--way-ash)]">{desc}</div>
       </div>
     </button>
   );
@@ -56,7 +56,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 text-xs text-[var(--way-ash)] hover:text-[var(--way-text)] transition-colors mb-3"
+      className="flex items-center gap-1 text-[length:var(--way-text-body)] text-[var(--way-ash)] hover:text-[var(--way-text)] transition-colors mb-3"
     >
       <ArrowLeft className="w-3.5 h-3.5" />
       Назад
@@ -205,14 +205,14 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
             </div>
           )}
           {step === 'method' && error && (
-            <p className="text-sm text-red-400 mt-2">{error}</p>
+            <p className="text-[length:var(--way-text-body)] text-red-400 mt-2">{error}</p>
           )}
 
           {/* Step: AI import */}
           {step === 'ai' && (
             <div className="space-y-3">
               <BackButton onClick={() => { setStep('method'); setError(null); }} />
-              <p className="text-sm text-[var(--way-ash)]">
+              <p className="text-[length:var(--way-text-body)] text-[var(--way-ash)]">
                 Скопируйте промт, отправьте в ChatGPT или Claude вместе с отчётом, затем вставьте ответ
               </p>
 
@@ -244,13 +244,13 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
               <button
                 onClick={handleAiParse}
                 disabled={!aiText.trim()}
-                className="w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:border-[var(--way-gold)] border border-[var(--way-shadow)] transition-colors"
+                className="w-full bg-[var(--way-stone)] text-[var(--way-text)] py-2.5 rounded-lg text-[length:var(--way-text-body)] font-medium disabled:opacity-40 hover:border-[var(--way-gold)] border border-[var(--way-shadow)] transition-colors"
               >
                 Распознать
               </button>
 
               {error && (
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-[length:var(--way-text-body)] text-red-400">{error}</p>
               )}
             </div>
           )}
@@ -261,7 +261,7 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
               {/* Editable name for new accounts */}
               {accountId === null && (
                 <div>
-                  <label className="text-xs text-[var(--way-ash)] block mb-1">Название счёта</label>
+                  <label className="text-[length:var(--way-text-body)] text-[var(--way-ash)] block mb-1">Название счёта</label>
                   <input
                     type="text"
                     value={editableName}
@@ -273,19 +273,19 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
 
               <ImportPreview diff={diff} />
 
-              {error && <p className="text-sm text-red-400">{error}</p>}
+              {error && <p className="text-[length:var(--way-text-body)] text-red-400">{error}</p>}
 
               <div className="flex gap-2">
                 <button
                   onClick={handleClose}
-                  className="flex-1 bg-[var(--way-stone)] text-[var(--way-ash)] py-2.5 rounded-lg text-sm"
+                  className="flex-1 bg-[var(--way-stone)] text-[var(--way-ash)] py-2.5 rounded-lg text-[length:var(--way-text-body)]"
                 >
                   Отмена
                 </button>
                 <button
                   onClick={handleApply}
                   disabled={applying}
-                  className="flex-[2] bg-[#2d5a2d] text-[#6be06b] py-2.5 rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="flex-[2] bg-[#2d5a2d] text-[#6be06b] py-2.5 rounded-lg text-[length:var(--way-text-body)] font-medium disabled:opacity-50"
                 >
                   {applying ? 'Применяю...' : 'Применить'}
                 </button>

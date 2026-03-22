@@ -23,6 +23,15 @@
     --way-text: #b0a898;
     --way-muted: #4a4540;
 
+    /* Fluid typography tokens */
+    --way-text-display: clamp(36px, 11vw, 52px);
+    --way-text-nav:     clamp(20px, 5.5vw, 24px);
+    --way-text-title:   clamp(16px, 4.5vw, 20px);
+    --way-text-heading: clamp(14px, 3.8vw, 16px);
+    --way-text-body:    clamp(12px, 3.4vw, 14px);
+    --way-text-caption: clamp(11px, 3.2vw, 13px);
+    --way-text-micro:   clamp(10px, 2.7vw, 11px);
+
     --background: #0c0b09;
     --foreground: #b0a898;
     --card: #1a1815;

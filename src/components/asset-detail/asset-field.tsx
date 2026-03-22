@@ -44,7 +44,7 @@ export function AssetField({
 
   return (
     <div className="bg-[var(--way-stone)] rounded-lg p-3 mb-2">
-      <div className="font-mono text-[10px] text-[var(--way-ash)] mb-1">{label}</div>
+      <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-ash)] mb-1">{label}</div>
       {editing ? (
         <div>
           <div className="flex gap-2">
@@ -65,7 +65,7 @@ export function AssetField({
           </div>
           {resetLabel && onReset && (
             <button
-              className="w-full mt-2 border border-[rgba(200,180,140,0.08)] text-[var(--way-ash)] hover:text-[var(--way-gold)] py-1 rounded-lg text-[11px] font-mono transition-colors"
+              className="w-full mt-2 border border-[rgba(200,180,140,0.08)] text-[var(--way-ash)] hover:text-[var(--way-gold)] py-1 rounded-lg text-[length:var(--way-text-caption)] font-mono transition-colors"
               onMouseDown={(e) => {
                 e.preventDefault();
                 setEditing(false);
@@ -80,13 +80,13 @@ export function AssetField({
         <div>
           <div className="flex justify-between items-center">
             <span
-              className={`font-mono text-[14px] text-[var(--way-text)] ${editable ? 'cursor-pointer border-b border-dashed border-[var(--way-shadow)] hover:border-[var(--way-gold)] transition-colors' : ''}`}
+              className={`font-mono text-[length:var(--way-text-heading)] text-[var(--way-text)] ${editable ? 'cursor-pointer border-b border-dashed border-[var(--way-shadow)] hover:border-[var(--way-gold)] transition-colors' : ''}`}
               onClick={() => editable && startEditing()}
             >
               {value}
             </span>
             {sourceLabel && (
-              <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
+              <span className={`font-mono text-[length:var(--way-text-caption)] px-1.5 py-0.5 rounded ${
                 isManualSource
                   ? 'bg-[rgba(90,85,72,0.15)] text-[var(--way-ash)]'
                   : 'bg-[rgba(200,180,140,0.1)] text-[var(--way-gold)]'
@@ -96,7 +96,7 @@ export function AssetField({
             )}
           </div>
           {subtitle && (
-            <div className="font-mono text-[9px] text-[var(--way-muted)] mt-1">{subtitle}</div>
+            <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)] mt-1">{subtitle}</div>
           )}
         </div>
       )}

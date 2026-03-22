@@ -30,7 +30,7 @@ export function MainPage() {
     <button
       onClick={() => triggerSync()}
       disabled={syncing}
-      className="text-[var(--way-ash)] text-base disabled:opacity-50"
+      className="text-[var(--way-ash)] text-[length:var(--way-text-nav)] min-w-[44px] min-h-[44px] flex items-center justify-center disabled:opacity-50"
       aria-label="Обновить данные MOEX"
     >
       <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
@@ -48,18 +48,18 @@ export function MainPage() {
       />
 
       {lastSyncAt && (
-        <div className="text-center text-[var(--way-muted)] text-[10px] -mt-2 mb-2">
+        <div className="text-center text-[var(--way-muted)] text-[length:var(--way-text-micro)] -mt-2 mb-2">
           MOEX: {formatSyncTime(lastSyncAt)}
         </div>
       )}
 
       {error && (
-        <div className="text-center text-[var(--destructive)] text-[10px] mb-2">{error}</div>
+        <div className="text-center text-[var(--destructive)] text-[length:var(--way-text-micro)] mb-2">{error}</div>
       )}
 
       <div className="mt-4">
         {categories.length === 0 && (
-          <div className="text-center text-[var(--way-muted)] text-sm py-12">
+          <div className="text-center text-[var(--way-muted)] text-[length:var(--way-text-body)] py-12">
             Пока нет активов. Добавьте первый актив через меню ☰
           </div>
         )}

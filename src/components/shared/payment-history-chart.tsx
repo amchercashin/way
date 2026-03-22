@@ -136,10 +136,10 @@ export function PaymentHistoryChart({
       return (
         <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-panel-in_0.2s_ease]">
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="font-mono text-[11px] text-[var(--way-gold)] font-medium">{selectedYear}</span>
-            <span className="font-mono text-[10px] text-[#b0a898]">{formatCompact(fallbackAnnual!)} ₽ / ед.</span>
+            <span className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-gold)] font-medium">{selectedYear}</span>
+            <span className="font-mono text-[length:var(--way-text-caption)] text-[#b0a898]">{formatCompact(fallbackAnnual!)} ₽ / ед.</span>
           </div>
-          <div className="font-mono text-[8px] text-[#3a3530] italic">
+          <div className="font-mono text-[length:var(--way-text-micro)] text-[#3a3530] italic">
             Расчётно: {paymentPerUnit} ₽ × {frequencyLabel(frequencyPerYear)}
           </div>
         </div>
@@ -152,24 +152,24 @@ export function PaymentHistoryChart({
     return (
       <div className="bg-[#252220] border border-[rgba(200,180,140,0.1)] rounded-lg px-3 py-2.5 mt-2.5 animate-[way-panel-in_0.2s_ease]">
         <div className="flex justify-between items-baseline mb-1.5">
-          <span className="font-mono text-[11px] text-[var(--way-gold)] font-medium">
+          <span className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-gold)] font-medium">
             {selectedYear}
             {isCurrentYear && (
-              <span className="text-[9px] text-[var(--way-muted)] font-normal ml-1.5">· неполный</span>
+              <span className="text-[length:var(--way-text-micro)] text-[var(--way-muted)] font-normal ml-1.5">· неполный</span>
             )}
           </span>
-          <span className="font-mono text-[10px] text-[#b0a898]">
+          <span className="font-mono text-[length:var(--way-text-caption)] text-[#b0a898]">
             {formatCompact(yearData.total)} ₽ / ед.
           </span>
         </div>
         {yearData.payments.map((p, i) => (
-          <div key={i} className={`flex justify-between font-mono text-[9px] mb-0.5${p.excluded ? ' opacity-40 line-through' : ''}`}>
+          <div key={i} className={`flex justify-between font-mono text-[length:var(--way-text-caption)] mb-0.5${p.excluded ? ' opacity-40 line-through' : ''}`}>
             <span className="text-[#4a4540]">{formatShortDate(p.date)}</span>
             <span className="text-[#b0a898]">{formatCompact(p.amount)} ₽</span>
           </div>
         ))}
         {isCurrentYear && (
-          <div className="font-mono text-[8px] text-[#3a3530] italic mt-1.5">
+          <div className="font-mono text-[length:var(--way-text-micro)] text-[#3a3530] italic mt-1.5">
             Год не завершён — итого за {selectedYear} обновится
           </div>
         )}
@@ -181,11 +181,11 @@ export function PaymentHistoryChart({
     <div className="bg-[rgba(200,180,140,0.02)] rounded-lg p-4 mt-4">
       {/* Header */}
       <div className="flex justify-between items-baseline mb-3">
-        <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--way-muted)]">
+        <span className="font-mono text-[length:var(--way-text-caption)] uppercase tracking-wider text-[var(--way-muted)]">
           Выплата на единицу, ₽
         </span>
         {cagr != null && (
-          <span className="font-mono text-[10px] text-[var(--way-gold)] tracking-wide">
+          <span className="font-mono text-[length:var(--way-text-micro)] text-[var(--way-gold)] tracking-wide">
             CAGR {cagr > 0 ? '+' : ''}{cagr.toFixed(1)}%
           </span>
         )}
@@ -223,7 +223,7 @@ export function PaymentHistoryChart({
             >
               {/* Value label */}
               <span
-                className="font-mono text-[8px] mb-[3px] whitespace-nowrap shrink-0"
+                className="font-mono text-[length:var(--way-text-micro)] mb-[3px] whitespace-nowrap shrink-0"
                 style={{ color: isCurrentYr ? '#4a4540' : '#b0a898' }}
               >
                 {formatCompact(value)}
@@ -248,7 +248,7 @@ export function PaymentHistoryChart({
 
               {/* Year label */}
               <span
-                className="font-mono text-[9px] mt-1 shrink-0"
+                className="font-mono text-[length:var(--way-text-micro)] mt-1 shrink-0"
                 style={{ color: isCurrentYr ? 'var(--way-gold)' : '#4a4540' }}
               >
                 &apos;{String(year).slice(2)}{isCurrentYr ? '~' : ''}

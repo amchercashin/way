@@ -49,17 +49,17 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
         onClick={() => setCollapsed(!collapsed)}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[var(--way-muted)] text-[10px]">{collapsed ? '▸' : '▾'}</span>
-          <span className="text-[var(--way-text)] text-[13px] font-medium truncate">
+          <span className="text-[var(--way-muted)] text-[length:var(--way-text-caption)]">{collapsed ? '▸' : '▾'}</span>
+          <span className="text-[var(--way-text)] text-[length:var(--way-text-heading)] font-medium truncate">
             {label}
           </span>
           {collapsed && sorted.length > 0 && (
-            <span className="text-[var(--way-muted)] text-[11px] flex-shrink-0">({sorted.length})</span>
+            <span className="text-[var(--way-muted)] text-[length:var(--way-text-body)] flex-shrink-0">({sorted.length})</span>
           )}
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setAddFormOpen(!addFormOpen); }}
-          className="text-[var(--way-muted)] text-[11px] hover:text-[var(--way-gold)] transition-colors flex-shrink-0"
+          className="text-[var(--way-muted)] text-[length:var(--way-text-body)] hover:text-[var(--way-gold)] transition-colors flex-shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
         >
           + выплата
         </button>
@@ -90,7 +90,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
               />
             ))
           ) : (
-            <div className="px-3 py-2 text-[var(--way-muted)] text-[11px] font-mono">
+            <div className="px-3 py-2 text-[var(--way-muted)] text-[length:var(--way-text-body)] font-mono">
               Нет выплат
             </div>
           )}

@@ -45,7 +45,7 @@ export function PaymentsPage() {
   return (
     <AppShell title="Выплаты">
       {typeGroups.size === 0 ? (
-        <div className="text-center text-[var(--way-muted)] font-mono text-sm py-12">
+        <div className="text-center text-[var(--way-muted)] font-mono text-[length:var(--way-text-body)] py-12">
           Нет активов
         </div>
       ) : (

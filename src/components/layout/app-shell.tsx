@@ -15,7 +15,7 @@ export function AppShell({ title, leftAction, rightAction, children }: AppShellP
   const defaultLeft = (
     <button
       onClick={() => setDrawerOpen(true)}
-      className="text-[var(--way-ash)] text-lg"
+      className="text-[var(--way-ash)] text-[length:var(--way-text-nav)] min-w-[44px] min-h-[44px] flex items-center justify-center"
       aria-label="Открыть меню"
     >
       ☰
@@ -27,7 +27,7 @@ export function AppShell({ title, leftAction, rightAction, children }: AppShellP
       <div className="h-[100vh] h-[100dvh] flex flex-col overflow-hidden bg-[var(--way-void)] text-[var(--way-text)]">
         <header className="flex-shrink-0 flex items-center justify-between px-5 pb-2" style={{ paddingTop: 'max(38px, env(safe-area-inset-top))' }}>
           <div>{leftAction ?? <SheetTrigger asChild>{defaultLeft}</SheetTrigger>}</div>
-          {title && <h1 className="text-sm font-medium text-[var(--way-text)]">{title}</h1>}
+          {title && <h1 className="text-[length:var(--way-text-title)] font-medium text-[var(--way-text)]">{title}</h1>}
           <div>{rightAction ?? <div className="w-5" />}</div>
         </header>
         <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none px-5 pb-8">{children}</main>

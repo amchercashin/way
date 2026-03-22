@@ -24,10 +24,10 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="h-[100vh] h-[100dvh] bg-[var(--way-void)] flex items-center justify-center p-6">
           <div className="text-center">
-            <div className="text-[var(--way-ash)] text-sm mb-4">Произошла ошибка</div>
+            <div className="text-[var(--way-ash)] text-[length:var(--way-text-body)] mb-4">Произошла ошибка</div>
             <button
               onClick={() => window.location.reload()}
-              className="text-[var(--way-gold)] border border-[rgba(200,180,140,0.2)] px-4 py-2 rounded-lg text-sm"
+              className="text-[var(--way-gold)] border border-[rgba(200,180,140,0.2)] px-4 py-2 rounded-lg text-[length:var(--way-text-body)]"
             >
               Перезагрузить
             </button>

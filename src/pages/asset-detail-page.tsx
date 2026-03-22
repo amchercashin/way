@@ -82,7 +82,7 @@ export function AssetDetailPage() {
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
   const backButton = (
-    <button onClick={() => withViewTransition(() => navigate(-1))} className="text-[var(--way-ash)] text-lg" aria-label="Назад">‹</button>
+    <button onClick={() => withViewTransition(() => navigate(-1))} className="text-[var(--way-ash)] text-[length:var(--way-text-nav)] min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Назад">‹</button>
   );
 
   return (
@@ -103,8 +103,8 @@ export function AssetDetailPage() {
             : undefined
         }))}
       >
-        <div className="font-mono text-[10px] text-[var(--way-ash)] mb-1">Количество</div>
-        <div className="font-mono text-[14px] text-[var(--way-text)]">
+        <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-ash)] mb-1">Количество</div>
+        <div className="font-mono text-[length:var(--way-text-heading)] text-[var(--way-text)]">
           {totalQuantity} шт.
         </div>
         {holdings.length > 1 && (
@@ -112,7 +112,7 @@ export function AssetDetailPage() {
             {holdings.map((h) => {
               const account = accounts.find(a => a.id === h.accountId);
               return (
-                <div key={h.id} className="flex justify-between text-[11px]">
+                <div key={h.id} className="flex justify-between text-[length:var(--way-text-body)]">
                   <span className="text-[var(--way-muted)]">{account?.name ?? 'Счёт'}</span>
                   <span className="text-[var(--way-ash)] tabular-nums">{h.quantity} шт.</span>
                 </div>

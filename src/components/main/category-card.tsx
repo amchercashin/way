@@ -20,16 +20,16 @@ export function CategoryCard({ type, assetCount, incomePerMonth, portfolioShareP
       <div className="flex items-center gap-2.5">
         <div className="w-[3px] h-[22px] rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
         <div>
-          <div className="text-[13px] text-[var(--way-text)]">{type}</div>
-          <div className="font-mono text-[9px] text-[var(--way-muted)]">
+          <div className="text-[length:var(--way-text-heading)] text-[var(--way-text)]">{type}</div>
+          <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)]">
             {assetCount} {assetCount === 1 ? 'позиция' : assetCount < 5 ? 'позиции' : 'позиций'}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <div className="text-right">
-          <div className="font-mono text-[12px] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</div>
-          <div className="font-mono text-[9px] text-[var(--way-muted)]">{formatPercent(portfolioSharePercent)}</div>
+          <div className="font-mono text-[length:var(--way-text-body)] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</div>
+          <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)]">{formatPercent(portfolioSharePercent)}</div>
         </div>
         <span className="text-[var(--way-shadow)]">›</span>
       </div>

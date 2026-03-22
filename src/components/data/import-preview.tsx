@@ -17,7 +17,7 @@ export function ImportPreview({ diff }: ImportPreviewProps) {
   return (
     <div>
       {/* Summary chips */}
-      <div className="flex gap-2 flex-wrap mb-3 text-xs">
+      <div className="flex gap-2 flex-wrap mb-3 text-[length:var(--way-text-body)]">
         {summary.added > 0 && (
           <span className="bg-[#1a2a1a] border border-[#2d5a2d] text-[#6bba6b] px-2.5 py-1 rounded-full">
             +{summary.added} новых
@@ -58,7 +58,7 @@ export function ImportPreview({ diff }: ImportPreviewProps) {
         {unchanged.length > 0 && !showUnchanged && (
           <button
             onClick={() => setShowUnchanged(true)}
-            className="w-full py-2 text-center text-[var(--way-muted)] text-xs"
+            className="w-full py-2 text-center text-[var(--way-muted)] text-[length:var(--way-text-body)]"
           >
             &#x25B8; {unchanged.length} без изменений
           </button>
@@ -96,13 +96,13 @@ function DiffRow({ item }: { item: DiffItem }) {
 
 
   return (
-    <div className={`${bgColor} ${borderColor} border-l-3 rounded px-2 py-1.5 flex items-center justify-between text-[13px]`}>
+    <div className={`${bgColor} ${borderColor} border-l-3 rounded px-2 py-1.5 flex items-center justify-between text-[length:var(--way-text-heading)]`}>
       <div className="min-w-0">
         <span className={`font-medium ${isRemoved ? 'text-[var(--way-muted)] line-through' : 'text-[var(--way-text)]'}`}>
           {ticker}
         </span>
         {name && ticker !== name && (
-          <span className={`ml-1 text-[11px] ${isRemoved ? 'text-[var(--way-muted)]' : 'text-[var(--way-ash)]'}`}>
+          <span className={`ml-1 text-[length:var(--way-text-body)] ${isRemoved ? 'text-[var(--way-muted)]' : 'text-[var(--way-ash)]'}`}>
             {name}
           </span>
         )}
@@ -125,14 +125,14 @@ function DiffValue({ oldVal, newVal, status, suffix = '' }: {
     return <span className="text-[#6bba6b] font-semibold">{newVal}{suffix}</span>;
   }
   if (status === 'removed') {
-    return <span className="text-[var(--way-muted)] line-through text-xs">{oldVal}{suffix}</span>;
+    return <span className="text-[var(--way-muted)] line-through text-[length:var(--way-text-body)]">{oldVal}{suffix}</span>;
   }
   if (oldVal === newVal || newVal == null) {
     return <span className="text-[var(--way-ash)]">{oldVal ?? '\u2014'}{oldVal != null ? suffix : ''}</span>;
   }
   return (
     <span>
-      <span className="text-[var(--way-muted)] line-through text-[11px]">{oldVal}{suffix}</span>
+      <span className="text-[var(--way-muted)] line-through text-[length:var(--way-text-body)]">{oldVal}{suffix}</span>
       {' '}
       <span className="text-[#baba6b] font-semibold">{newVal}{suffix}</span>
     </span>
