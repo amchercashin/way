@@ -5,6 +5,7 @@ import {
   calcDividendFrequency,
   parseDividendHistory,
   resolveSecurityInfo,
+  resolveSecurityFull,
   fetchStockPrice,
   fetchBondData,
   fetchDividends,
@@ -492,6 +493,78 @@ describe('fetchBatchBondData', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('fail')));
     const result = await fetchBatchBondData(['SU26238RMFS4'], 'TQOB');
     expect(result.size).toBe(0);
+  });
+});
+
+describe('resolveSecurityFull', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('resolves ISIN to full security info', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['secid', 'shortname', 'name', 'isin', 'primary_boardid', 'group', 'type', 'emitent_title', 'is_traded'],
+        data: [
+          ['GAZP', 'Газпром', 'ПАО "Газпром"', 'RU0007661625', 'TQBR', 'stock_shares', 'common_share', 'ПАО "Газпром"', 1],
+        ],
+      },
+    }));
+    const result = await resolveSecurityFull('RU0007661625');
+    expect(result).toEqual({
+      secid: 'GAZP',
+      primaryBoardId: 'TQBR',
+      market: 'shares',
+      shortName: 'Газпром',
+      fullName: 'ПАО "Газпром"',
+      isin: 'RU0007661625',
+      secType: 'common_share',
+      emitter: 'ПАО "Газпром"',
+    });
+  });
+
+  it('resolves fund on TQTF board', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['secid', 'shortname', 'name', 'isin', 'primary_boardid', 'group', 'type', 'emitent_title', 'is_traded'],
+        data: [
+          ['TMOS', 'Тинькофф iMOEX', 'БПИФ "Тинькофф Индекс МосБиржи"', 'RU000A101X76', 'TQTF', 'stock_shares', 'exchange_ppif', 'Тинькофф Капитал', 1],
+        ],
+      },
+    }));
+    const result = await resolveSecurityFull('RU000A101X76');
+    expect(result).toEqual({
+      secid: 'TMOS',
+      primaryBoardId: 'TQTF',
+      market: 'shares',
+      shortName: 'Тинькофф iMOEX',
+      fullName: 'БПИФ "Тинькофф Индекс МосБиржи"',
+      isin: 'RU000A101X76',
+      secType: 'exchange_ppif',
+      emitter: 'Тинькофф Капитал',
+    });
+  });
+
+  it('returns null for unknown ISIN', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: { columns: ['secid', 'shortname', 'name', 'isin', 'primary_boardid', 'group', 'type', 'emitent_title', 'is_traded'], data: [] },
+    }));
+    expect(await resolveSecurityFull('RU000XXXXXXX')).toBeNull();
+  });
+
+  it('returns null for unrecognized board', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      securities: {
+        columns: ['secid', 'shortname', 'name', 'isin', 'primary_boardid', 'group', 'type', 'emitent_title', 'is_traded'],
+        data: [
+          ['XYZZ', 'Unknown', 'Unknown Corp', 'RU000XYZZ', 'ZZZZ', 'unknown_group', 'unknown_type', 'Emitter', 1],
+        ],
+      },
+    }));
+    expect(await resolveSecurityFull('RU000XYZZ')).toBeNull();
+  });
+
+  it('returns null on network error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('timeout')));
+    expect(await resolveSecurityFull('GAZP')).toBeNull();
   });
 });
 

@@ -17,6 +17,17 @@ export interface SecurityInfo {
   market: 'shares' | 'bonds';
 }
 
+export interface MoexSecurityFull {
+  secid: string;
+  primaryBoardId: string;
+  market: 'shares' | 'bonds';
+  shortName?: string;
+  fullName?: string;
+  isin?: string;
+  secType?: string;
+  emitter?: string;
+}
+
 export interface StockPriceResult {
   currentPrice: number | null;
   prevPrice: number | null;
@@ -250,6 +261,41 @@ export async function resolveSecurityInfo(
   if (!market) return null;
 
   return { secid, primaryBoardId: boardId, market };
+}
+
+export async function resolveSecurityFull(
+  query: string,
+): Promise<MoexSecurityFull | null> {
+  const data = await fetchISS('/securities.json', {
+    q: query,
+    'securities.columns': 'secid,shortname,name,isin,primary_boardid,group,type,emitent_title,is_traded',
+  });
+  if (!data?.securities) return null;
+
+  const rows = parseISSBlock(data.securities);
+
+  const exactMatch = rows.find(
+    (r) => r.secid === query && r.is_traded === 1,
+  );
+  const match = exactMatch ?? rows.find((r) => r.is_traded === 1);
+  if (!match) return null;
+
+  const secid = match.secid as string;
+  const boardId = match.primary_boardid as string;
+  const group = match.group as string;
+  const market = resolveMarket(boardId, group);
+  if (!market) return null;
+
+  return {
+    secid,
+    primaryBoardId: boardId,
+    market,
+    shortName: (match.shortname as string) || undefined,
+    fullName: (match.name as string) || undefined,
+    isin: (match.isin as string) || undefined,
+    secType: (match.type as string) || undefined,
+    emitter: (match.emitent_title as string) || undefined,
+  };
 }
 
 export async function fetchStockPrice(
