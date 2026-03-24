@@ -172,7 +172,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
 
                 {/* Table header */}
                 <div className="grid grid-cols-[1fr_5rem_4rem_4rem_1.5rem] gap-x-2 px-3 text-[length:var(--way-text-caption)] text-[var(--way-muted)]">
-                  <span>Тикер</span>
+                  <span>Бумага</span>
                   <span className="text-right">Кол-во</span>
                   <span className="text-right">Цена пок.</span>
                   <span className="text-right">Стоимость</span>
@@ -191,13 +191,11 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                       className={`grid grid-cols-[1fr_5rem_4rem_4rem_1.5rem] gap-x-2 px-3 items-baseline border-t border-[var(--way-void)] text-[length:var(--way-text-body)]${isHighlighted ? ' animate-highlight-pulse' : ''}`}
                     >
                       <div className="min-w-0">
-                        {asset.ticker ? (
-                          <>
-                            <div className="font-medium text-[var(--way-text)] truncate">{asset.ticker}</div>
-                            <div className="text-[var(--way-muted)] text-[length:var(--way-text-micro)] truncate">{asset.name}</div>
-                          </>
-                        ) : (
-                          <div className="font-medium text-[var(--way-text)] truncate">{asset.name}</div>
+                        <div className="font-medium text-[var(--way-text)] truncate">{asset.name}</div>
+                        {(asset.ticker || asset.isin) && (
+                          <div className="text-[var(--way-muted)] text-[length:var(--way-text-micro)] truncate">
+                            {[asset.ticker, asset.isin].filter(Boolean).join(' · ')}
+                          </div>
                         )}
                       </div>
                       <span className="text-right text-[var(--way-text)] tabular-nums">

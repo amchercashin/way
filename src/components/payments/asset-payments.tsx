@@ -38,7 +38,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
 
   const sorted = [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const paymentType = PAYMENT_TYPE_MAP[asset.type] ?? 'other';
-  const label = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
+  const identLine = [asset.ticker, asset.isin].filter(Boolean).join(' · ');
   const syncable = isSyncable(asset);
   const manualCount = payments.filter(p => p.dataSource === 'manual').length;
   const hasManual = manualCount > 0;
@@ -69,36 +69,45 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
     >
       {/* Asset header */}
       <div
-        className="flex justify-between items-center px-3 py-2 bg-[var(--way-void)] cursor-pointer select-none"
+        className="flex justify-between items-start px-3 py-2 bg-[var(--way-void)] cursor-pointer select-none"
         onClick={() => setCollapsed(!collapsed)}
       >
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[var(--way-muted)] text-[length:var(--way-text-caption)]">{collapsed ? '▸' : '▾'}</span>
-          <span className="text-[var(--way-text)] text-[length:var(--way-text-heading)] font-medium truncate">
-            {label}
-          </span>
-          {collapsed && sorted.length > 0 && (
-            <span className="text-[var(--way-muted)] text-[length:var(--way-text-body)] flex-shrink-0">({sorted.length})</span>
-          )}
-          {syncable && payments.length > 0 && (
-            <span className={`text-[length:var(--way-text-micro)] px-1 py-0.5 rounded flex-shrink-0 ${
-              allMoex
-                ? 'bg-[#2d5a2d] text-[#6bba6b]'
-                : 'bg-[#5a5a2d] text-[#baba6b]'
-            }`}>
-              {allMoex ? 'moex' : 'ручной'}
-            </span>
-          )}
-          {syncable && (
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="text-[var(--way-ash)] text-[length:var(--way-text-title)] hover:text-[var(--way-gold)] transition-colors flex-shrink-0 disabled:opacity-50 ml-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center"
-              title="Синхронизировать выплаты с MOEX"
-            >
-              <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
-            </button>
-          )}
+        <div className="flex gap-1.5 min-w-0">
+          <span className="text-[var(--way-muted)] text-[length:var(--way-text-caption)] mt-0.5 flex-shrink-0">{collapsed ? '▸' : '▾'}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--way-text)] text-[length:var(--way-text-body)] font-medium truncate">
+                {asset.name}
+              </span>
+              {collapsed && sorted.length > 0 && (
+                <span className="text-[var(--way-muted)] text-[length:var(--way-text-caption)] flex-shrink-0">({sorted.length})</span>
+              )}
+              {syncable && payments.length > 0 && (
+                <span className={`text-[length:var(--way-text-micro)] px-1 py-0.5 rounded flex-shrink-0 ${
+                  allMoex
+                    ? 'bg-[#2d5a2d] text-[#6bba6b]'
+                    : 'bg-[#5a5a2d] text-[#baba6b]'
+                }`}>
+                  {allMoex ? 'moex' : 'ручной'}
+                </span>
+              )}
+              {syncable && (
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className="text-[var(--way-ash)] text-[length:var(--way-text-title)] hover:text-[var(--way-gold)] transition-colors flex-shrink-0 disabled:opacity-50 ml-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                  title="Синхронизировать выплаты с MOEX"
+                >
+                  <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
+                </button>
+              )}
+            </div>
+            {identLine && (
+              <div className="text-[length:var(--way-text-caption)] text-[var(--way-muted)] mt-0.5">
+                {identLine}
+              </div>
+            )}
+          </div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setAddFormOpen(!addFormOpen); }}
@@ -133,7 +142,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
               />
             ))
           ) : (
-            <div className="px-3 py-2 text-[var(--way-muted)] text-[length:var(--way-text-body)] font-mono">
+            <div className="pl-7 pr-3 py-2 text-[var(--way-muted)] text-[length:var(--way-text-body)] font-mono">
               Нет выплат
             </div>
           )}

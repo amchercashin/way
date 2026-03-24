@@ -9,6 +9,8 @@ import type { ImportRecord } from '@/models/types';
 import { ImportPreview } from './import-preview';
 import { Landmark, Bot, ArrowLeft, Copy, Check } from 'lucide-react';
 import { useSyncContext } from '@/contexts/sync-context';
+import { syncSingleAsset, isSyncable } from '@/services/moex-sync';
+import { db } from '@/db/database';
 
 interface ImportFlowProps {
   open: boolean;
@@ -159,9 +161,19 @@ export function ImportFlow({ open, onClose, accountId, accountName }: ImportFlow
     setApplying(true);
     try {
       const name = accountId === null ? editableName.trim() || suggestedName : undefined;
-      await applyImportDiff(diff, importSource, name);
+      const { newAssetIds } = await applyImportDiff(diff, importSource, name);
       handleClose();
       triggerSync();
+
+      // Sync payments for newly created syncable assets (fire-and-forget)
+      (async () => {
+        for (const id of newAssetIds) {
+          const asset = await db.assets.get(id);
+          if (asset && isSyncable(asset)) {
+            try { await syncSingleAsset(id); } catch { /* ignore */ }
+          }
+        }
+      })();
     } catch {
       setError('Ошибка при применении импорта');
       setApplying(false);
