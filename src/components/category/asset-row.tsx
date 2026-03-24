@@ -5,23 +5,17 @@ import { calcAssetIncomePerMonth } from '@/services/income-calculator';
 
 interface AssetRowProps {
   asset: Asset;
-  paymentPerUnit: number;
+  annualIncome: number;
   totalQuantity: number;
 }
 
-export function AssetRow({ asset, paymentPerUnit, totalQuantity }: AssetRowProps) {
-  const incomePerMonth = calcAssetIncomePerMonth(
-    totalQuantity,
-    paymentPerUnit,
-    asset.frequencyPerYear,
-  );
+export function AssetRow({ asset, annualIncome, totalQuantity }: AssetRowProps) {
+  const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
   const value = asset.currentPrice != null
     ? asset.currentPrice * totalQuantity
     : null;
 
-  const isManual =
-    asset.paymentPerUnitSource === 'manual' ||
-    asset.frequencySource === 'manual';
+  const isManual = asset.paymentPerUnitSource === 'manual';
 
   return (
     <TransitionLink

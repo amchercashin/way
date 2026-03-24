@@ -8,7 +8,7 @@ import { AssetRow } from '@/components/category/asset-row';
 import { useAssetsByType } from '@/hooks/use-assets';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { useAllPaymentHistory } from '@/hooks/use-payment-history';
-import { calcFactPaymentPerUnit, type PaymentRecord } from '@/services/income-calculator';
+import { calcAnnualIncomePerUnit, type PaymentRecord } from '@/services/income-calculator';
 import { db } from '@/db/database';
 
 export function CategoryPage() {
@@ -49,10 +49,7 @@ export function CategoryPage() {
   );
 
   return (
-    <AppShell
-      leftAction={backButton}
-      title={decodedType}
-    >
+    <AppShell leftAction={backButton} title={decodedType}>
       {catStats && (
         <StatBlocks
           incomePerMonth={catStats.totalIncomePerMonth}
@@ -63,16 +60,15 @@ export function CategoryPage() {
       )}
 
       {assets.map((asset) => {
-        let paymentPerUnit: number;
+        let annualIncome: number;
         if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
-          paymentPerUnit = asset.paymentPerUnit;
+          annualIncome = asset.paymentPerUnit;
         } else {
           const history = historyByAsset.get(asset.id!) ?? [];
-          paymentPerUnit = calcFactPaymentPerUnit(history, asset.frequencyPerYear, now);
+          annualIncome = calcAnnualIncomePerUnit(history, asset.frequencyPerYear, now).annualIncome;
         }
-        return <AssetRow key={asset.id} asset={asset} paymentPerUnit={paymentPerUnit} totalQuantity={quantityByAsset.get(asset.id!) ?? 0} />;
+        return <AssetRow key={asset.id} asset={asset} annualIncome={annualIncome} totalQuantity={quantityByAsset.get(asset.id!) ?? 0} />;
       })}
-
     </AppShell>
   );
 }
