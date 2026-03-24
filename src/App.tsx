@@ -7,7 +7,6 @@ import { CategoryPage } from '@/pages/category-page';
 import { AssetDetailPage } from '@/pages/asset-detail-page';
 import { DataPage } from '@/pages/data-page';
 import { SettingsPage } from '@/pages/settings-page';
-import { BackupPage } from '@/pages/backup-page';
 import { PaymentsPage } from '@/pages/payments-page';
 
 export default function App() {
@@ -23,7 +22,6 @@ export default function App() {
             <Route path="/data" element={<DataPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/backup" element={<BackupPage />} />
           </Routes>
         </SyncProvider>
       </BrowserRouter>

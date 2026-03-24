@@ -1,6 +1,6 @@
 import { TransitionLink } from '@/components/ui/transition-link';
 import { SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { BarChart3, Database, CalendarDays, Settings, Save } from 'lucide-react';
+import { BarChart3, Database, CalendarDays, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface DrawerMenuProps {
@@ -28,7 +28,6 @@ const MENU_SECTIONS: {
     title: 'Прочее',
     items: [
       { label: 'Настройки', path: '/settings', icon: Settings },
-      { label: 'Экспорт / Бэкап', path: '/backup', icon: Save },
     ],
   },
 ];
