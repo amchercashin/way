@@ -11,8 +11,7 @@ import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { usePaymentHistory } from '@/hooks/use-payment-history';
 import { useHoldingsByAsset } from '@/hooks/use-holdings';
 import { useAccounts } from '@/hooks/use-accounts';
-import { calcFactPaymentPerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
-import { formatFrequency } from '@/lib/utils';
+import { calcAnnualIncomePerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,11 +30,14 @@ export function AssetDetailPage() {
     const historyRecords = activeHistory.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
     const allHistoryRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date), excluded: h.excluded }));
 
-    let paymentPerUnit: number;
+    let annualIncome: number;
+    let usedPayments: { amount: number; date: Date }[] = [];
     if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
-      paymentPerUnit = asset.paymentPerUnit;
+      annualIncome = asset.paymentPerUnit;
     } else {
-      paymentPerUnit = calcFactPaymentPerUnit(historyRecords, asset.frequencyPerYear, now);
+      const result = calcAnnualIncomePerUnit(historyRecords, asset.frequencyPerYear, now);
+      annualIncome = result.annualIncome;
+      usedPayments = result.usedPayments;
     }
 
     const totalQuantity = holdings.reduce((sum, h) => sum + h.quantity, 0);
@@ -43,7 +45,7 @@ export function AssetDetailPage() {
       ? holdings.reduce((sum, h) => sum + (h.averagePrice ?? 0) * h.quantity, 0) / totalQuantity
       : undefined;
 
-    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, paymentPerUnit, asset.frequencyPerYear);
+    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
 
     const price = asset.currentPrice ?? weightedAvgPrice ?? 0;
     const value = price * totalQuantity;
@@ -54,11 +56,9 @@ export function AssetDetailPage() {
       ? (value / portfolio.totalValue) * 100
       : null;
 
-    const isManual =
-      asset.paymentPerUnitSource === 'manual' ||
-      asset.frequencySource === 'manual';
+    const isManual = asset.paymentPerUnitSource === 'manual';
 
-    return { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity };
+    return { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity };
   }, [asset, history, holdings, portfolio.totalValue]);
 
   const handleSavePaymentPerUnit = useCallback((v: string) => {
@@ -67,17 +67,11 @@ export function AssetDetailPage() {
     updateAsset(assetId, { paymentPerUnit: num, paymentPerUnitSource: 'manual' });
   }, [assetId]);
 
-  const handleSaveFrequency = useCallback((v: string) => {
-    const num = parseInt(v);
-    if (isNaN(num) || num < 1) return;
-    updateAsset(assetId, { frequencyPerYear: num, frequencySource: 'manual' });
-  }, [assetId]);
-
   if (!asset || !computed) {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
-  const { paymentPerUnit, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity } = computed;
+  const { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity } = computed;
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
@@ -123,47 +117,45 @@ export function AssetDetailPage() {
       </div>
 
       <AssetField
-        label="Выплата на шт."
-        value={paymentPerUnit > 0 ? `₽ ${paymentPerUnit}` : '— Укажите'}
-        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'последний факт' : 'ручной'}
+        label="Выплата на шт. / год"
+        value={annualIncome > 0 ? `₽ ${annualIncome.toLocaleString('ru-RU')}` : '— Укажите'}
+        sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'факт' : 'ручной'}
         isManualSource={asset.paymentPerUnitSource === 'manual'}
         subtitle={
-          <button
-            onClick={() => withViewTransition(() => navigate('/payments', { state: { highlightAssetId: assetId } }))}
-            className="text-[var(--way-gold)] hover:underline"
-          >
-            {'история выплат →'}
-          </button>
+          asset.paymentPerUnitSource === 'fact' && usedPayments.length > 0 ? (
+            <div className="space-y-0.5 mt-1">
+              {usedPayments.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => withViewTransition(() => navigate('/payments', { state: { highlightAssetId: assetId } }))}
+                  className="flex justify-between w-full text-[length:var(--way-text-caption)] text-[var(--way-muted)] hover:text-[var(--way-gold)] transition-colors"
+                >
+                  <span>{p.date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                  <span className="flex items-center gap-1">
+                    {p.amount.toLocaleString('ru-RU')} ₽
+                    <span className="text-[var(--way-ash)]">›</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : undefined
         }
         onSave={handleSavePaymentPerUnit}
-        resetLabel={asset.paymentPerUnitSource === 'manual' ? 'Последний факт' : undefined}
+        resetLabel={asset.paymentPerUnitSource === 'manual' ? 'Факт' : undefined}
         onReset={asset.paymentPerUnitSource === 'manual' ? () => updateAsset(assetId, {
           paymentPerUnitSource: 'fact',
           paymentPerUnit: undefined,
         }) : undefined}
       />
 
-      <AssetField
-        label="Выплат в год"
-        value={formatFrequency(asset.frequencyPerYear)}
-        sourceLabel={asset.frequencySource === 'moex' ? 'moex' : 'ручной'}
-        isManualSource={asset.frequencySource === 'manual'}
-        onSave={handleSaveFrequency}
-        resetLabel={asset.moexFrequency != null && asset.frequencySource === 'manual' ? 'Вернуться к MOEX' : undefined}
-        onReset={asset.moexFrequency != null ? () => updateAsset(assetId, {
-          frequencyPerYear: asset.moexFrequency!,
-          frequencySource: 'moex',
-        }) : undefined}
-      />
-
       <PaymentHistoryChart
         history={allHistoryRecords}
-        paymentPerUnit={paymentPerUnit}
-        frequencyPerYear={asset.frequencyPerYear}
+        paymentPerUnit={annualIncome}
       />
 
       <ExpectedPayment
-        paymentPerUnit={paymentPerUnit}
+        annualIncomePerUnit={annualIncome}
+        frequencyPerYear={asset.frequencyPerYear}
         nextExpectedDate={asset.nextExpectedDate}
       />
     </AppShell>
