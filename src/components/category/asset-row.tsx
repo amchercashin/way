@@ -28,11 +28,13 @@ export function AssetRow({ asset, paymentPerUnit, totalQuantity }: AssetRowProps
       to={`/asset/${asset.id}`}
       className="block py-3 border-b border-[rgba(200,180,140,0.04)] transition-colors active:bg-[var(--way-stone)]"
     >
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
-          <span className="text-[length:var(--way-text-heading)] font-medium text-[var(--way-text)]">{asset.ticker ?? asset.name}</span>
-          {asset.ticker && (
-            <span className="text-[length:var(--way-text-body)] text-[var(--way-muted)] ml-2">{asset.name}</span>
+          <div className="text-[length:var(--way-text-body)] font-medium text-[var(--way-text)]">{asset.name}</div>
+          {(asset.ticker || asset.isin) && (
+            <div className="text-[length:var(--way-text-caption)] text-[var(--way-muted)] mt-0.5">
+              {[asset.ticker, asset.isin].filter(Boolean).join(' · ')}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-1.5">

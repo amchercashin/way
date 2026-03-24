@@ -8,9 +8,10 @@ export async function applyImportDiff(
   diff: ImportDiff,
   source: ImportRecord['source'],
   accountName?: string,
-): Promise<{ record: ImportRecord; accountId: number }> {
+): Promise<{ record: ImportRecord; accountId: number; newAssetIds: number[] }> {
   let itemsAdded = 0, itemsChanged = 0, itemsUnchanged = 0, itemsRemoved = 0;
   let accountId = diff.accountId;
+  const newAssetIds: number[] = [];
 
   await db.transaction('rw', [db.accounts, db.assets, db.holdings, db.paymentHistory, db.importRecords], async () => {
     if (accountId == null) {
@@ -27,6 +28,7 @@ export async function applyImportDiff(
             await updateAssetFields(assetId, item.imported!);
           } else {
             assetId = await createAsset(item.imported!);
+            newAssetIds.push(assetId);
           }
           const now = new Date();
           await db.holdings.add({
@@ -78,7 +80,7 @@ export async function applyImportDiff(
     date: new Date(), source, accountId: accountId!,
     itemsAdded, itemsChanged, itemsUnchanged, itemsRemoved,
   } as ImportRecord;
-  return { record, accountId: accountId! };
+  return { record, accountId: accountId!, newAssetIds };
 }
 
 async function createAsset(row: ImportAssetRow): Promise<number> {

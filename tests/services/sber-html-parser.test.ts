@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSberHTML } from '@/services/sber-html-parser';
+import { parseSberHTML, classifySberCategory } from '@/services/sber-html-parser';
 
 const MINIMAL_SBER_HTML = `
 <html>
@@ -156,5 +156,65 @@ describe('sber-html-parser', () => {
     const rows = parseSberHTML(MINIMAL_SBER_HTML);
     expect(rows).toHaveLength(3);
     expect(rows.every((r) => !r.name.startsWith('Итого'))).toBe(true);
+  });
+
+  it('falls back to ISIN when portfolio name differs from reference', () => {
+    const html = MINIMAL_SBER_HTML
+      // Portfolio table has "ПАРУС-ДВН (комб.)" but reference has "ПАРУС-ДВН"
+      .replace(
+        '<td class="l">ПАРУС-ДВН</td><td class="c">RU000A1068X9</td><td class="c">RUB</td>\n    <td>50</td>',
+        '<td class="l">ПАРУС-ДВН (комб.)</td><td class="c">RU000A1068X9</td><td class="c">RUB</td>\n    <td>50</td>',
+      );
+    const rows = parseSberHTML(html);
+    const fund = rows.find((r) => r.name === 'ПАРУС-ДВН (комб.)');
+    expect(fund).toBeDefined();
+    expect(fund!.ticker).toBe('RU000A1068X9');
+    expect(fund!.type).toBe('Фонды');
+    expect(fund!.emitter).toBe('ПАРУС УА');
+  });
+
+  it('converts bond price correctly via ISIN fallback', () => {
+    const html = MINIMAL_SBER_HTML
+      // Portfolio has "ОФЗ-29010" but reference has "ОФЗ 29010"
+      .replace(
+        '<td class="l">ОФЗ 29010</td><td class="c">RU000A0JV4Q1</td><td class="c">RUB</td>\n    <td>100</td><td>1 000</td><td>105.5</td>',
+        '<td class="l">ОФЗ-29010</td><td class="c">RU000A0JV4Q1</td><td class="c">RUB</td>\n    <td>100</td><td>1 000</td><td>105.5</td>',
+      );
+    const rows = parseSberHTML(html);
+    const bond = rows.find((r) => r.name === 'ОФЗ-29010');
+    expect(bond).toBeDefined();
+    expect(bond!.type).toBe('Облигации');
+    // Bond price converted from % of face value: 1000 * 106.2 / 100 = 1062
+    expect(bond!.currentPrice).toBe(1062);
+    expect(bond!.faceValue).toBe(1000);
+  });
+
+  it('classifies "Фонд комбинированного типа" as Фонды', () => {
+    const html = MINIMAL_SBER_HTML
+      .replace('Фонд закрытого типа', 'Фонд комбинированного типа');
+    const rows = parseSberHTML(html);
+    const fund = rows.find((r) => r.name === 'ПАРУС-ДВН');
+    expect(fund!.type).toBe('Фонды');
+  });
+});
+
+describe('classifySberCategory', () => {
+  it.each([
+    ['Обыкновенная акция', 'Акции'],
+    ['Привилегированная акция', 'Акции'],
+    ['Государственная облигация', 'Облигации'],
+    ['Корпоративная облигация', 'Облигации'],
+    ['Облигация', 'Облигации'],
+    ['Муниципальная облигация', 'Облигации'],
+    ['Структурная облигация', 'Облигации'],
+    ['Фонд закрытого типа', 'Фонды'],
+    ['Фонд открытого типа', 'Фонды'],
+    ['Биржевой паевой инвестиционный фонд', 'Фонды'],
+    ['Фонд комбинированного типа', 'Фонды'],
+    ['Инвестиционный пай', 'Фонды'],
+    ['Депозитарная расписка', 'Прочее'],
+    ['', 'Прочее'],
+  ])('classifies "%s" as "%s"', (input, expected) => {
+    expect(classifySberCategory(input)).toBe(expected);
   });
 });

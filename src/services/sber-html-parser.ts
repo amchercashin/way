@@ -18,17 +18,19 @@ interface SecurityInfo {
   issueInfo: string;
 }
 
-const SBER_TYPE_MAP: Record<string, string> = {
-  'обыкновенная акция': 'Акции',
-  'привилегированная акция': 'Акции',
-  'государственная облигация': 'Облигации',
-  'корпоративная облигация': 'Облигации',
-  'облигация': 'Облигации',
-  'муниципальная облигация': 'Облигации',
-  'фонд закрытого типа': 'Фонды',
-  'фонд открытого типа': 'Фонды',
-  'биржевой паевой инвестиционный фонд': 'Фонды',
-};
+const SBER_CATEGORY_RULES: [RegExp, string][] = [
+  [/облигац/, 'Облигации'],
+  [/акци/, 'Акции'],
+  [/фонд|пай|пиф/, 'Фонды'],
+];
+
+export function classifySberCategory(category: string): string {
+  const lower = category.toLowerCase().trim();
+  for (const [pattern, type] of SBER_CATEGORY_RULES) {
+    if (pattern.test(lower)) return type;
+  }
+  return 'Прочее';
+}
 
 function parseSberNumber(s: string): number | undefined {
   if (!s || !s.trim()) return undefined;
@@ -51,9 +53,15 @@ function findTableAfterText(doc: Document, searchText: string): HTMLTableElement
   return null;
 }
 
-function parseSecuritiesReference(table: HTMLTableElement | null): Map<string, SecurityInfo> {
-  const map = new Map<string, SecurityInfo>();
-  if (!table) return map;
+interface SecurityRefLookup {
+  byName: Map<string, SecurityInfo>;
+  byIsin: Map<string, SecurityInfo>;
+}
+
+function parseSecuritiesReference(table: HTMLTableElement | null): SecurityRefLookup {
+  const byName = new Map<string, SecurityInfo>();
+  const byIsin = new Map<string, SecurityInfo>();
+  if (!table) return { byName, byIsin };
 
   const rows = table.querySelectorAll('tr');
   for (const row of rows) {
@@ -71,11 +79,13 @@ function parseSecuritiesReference(table: HTMLTableElement | null): Map<string, S
 
     if (!name || !ticker) continue;
 
-    const type = SBER_TYPE_MAP[securityCategory.toLowerCase()] ?? 'Прочее';
-    map.set(name, { ticker, isin, type, emitter, securityCategory, issueInfo });
+    const type = classifySberCategory(securityCategory);
+    const info = { ticker, isin, type, emitter, securityCategory, issueInfo };
+    byName.set(name, info);
+    if (isin) byIsin.set(isin, info);
   }
 
-  return map;
+  return { byName, byIsin };
 }
 
 function parsePortfolioTable(table: HTMLTableElement): PortfolioPosition[] {
@@ -132,7 +142,7 @@ export function parseSberHTML(html: string): ImportAssetRow[] {
   const positions = parsePortfolioTable(portfolioTable);
 
   return positions.map((pos) => {
-    const info = securityInfo.get(pos.name);
+    const info = securityInfo.byName.get(pos.name) ?? securityInfo.byIsin.get(pos.isin);
     const isBond = info?.type === 'Облигации';
 
     // Bonds: market price is in % of face value -> convert to rubles
