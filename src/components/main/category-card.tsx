@@ -5,11 +5,11 @@ import { formatCurrency, formatPercent } from '@/lib/utils';
 interface CategoryCardProps {
   type: string;
   assetCount: number;
-  incomePerMonth: number | null;
-  portfolioSharePercent: number;
+  income: number | null;
+  yieldPercent: number;
 }
 
-export function CategoryCard({ type, assetCount, incomePerMonth, portfolioSharePercent }: CategoryCardProps) {
+export function CategoryCard({ type, assetCount, income, yieldPercent }: CategoryCardProps) {
   const color = getTypeColor(type);
 
   return (
@@ -28,8 +28,8 @@ export function CategoryCard({ type, assetCount, incomePerMonth, portfolioShareP
       </div>
       <div className="flex items-center gap-2">
         <div className="text-right">
-          <div className="font-mono text-[length:var(--way-text-body)] font-medium text-[var(--way-gold)]">{formatCurrency(incomePerMonth)}</div>
-          <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)]">{formatPercent(portfolioSharePercent)}</div>
+          <div className="font-mono text-[length:var(--way-text-body)] font-medium text-[var(--way-gold)]">{formatCurrency(income)}</div>
+          <div className="font-mono text-[length:var(--way-text-caption)] text-[var(--way-muted)]">{formatPercent(yieldPercent)}</div>
         </div>
         <span className="text-[var(--way-shadow)]">›</span>
       </div>

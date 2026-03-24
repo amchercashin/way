@@ -54,8 +54,8 @@ export function MainPage() {
             <CategoryCard
               type={cat.type}
               assetCount={cat.assetCount}
-              incomePerMonth={cat.totalIncomePerMonth}
-              portfolioSharePercent={cat.portfolioSharePercent}
+              income={mode === 'month' ? cat.totalIncomePerMonth : cat.totalIncomePerYear}
+              yieldPercent={cat.yieldPercent}
             />
           </div>
         ))}
