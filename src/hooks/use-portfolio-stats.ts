@@ -44,7 +44,8 @@ export function usePortfolioStats(): {
     for (const asset of assets) {
       const totalQuantity = quantityByAsset.get(asset.id!) ?? 0;
       const price = asset.currentPrice ?? 0;
-      const assetValue = price * totalQuantity;
+      const nkd = asset.type === 'Облигации' ? (asset.accruedInterest ?? 0) : 0;
+      const assetValue = (price + nkd) * totalQuantity;
       totalValue += assetValue;
 
       const annualIncome = resolveAnnualIncome(asset);

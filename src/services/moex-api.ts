@@ -38,6 +38,7 @@ export interface BondDataResult {
   currentPrice: number | null;
   prevPrice: number | null;
   faceValue: number;
+  accruedInterest: number;
   couponValue: number;
   nextCouponDate: string | null;
   couponPeriod: number;
@@ -330,7 +331,7 @@ export async function fetchBondData(
     {
       'marketdata.columns': 'SECID,LAST,LCURRENTPRICE',
       'securities.columns':
-        'SECID,PREVPRICE,FACEVALUE,COUPONVALUE,NEXTCOUPON,COUPONPERIOD',
+        'SECID,PREVPRICE,FACEVALUE,ACCRUEDINT,COUPONVALUE,NEXTCOUPON,COUPONPERIOD',
     },
   );
   if (!data?.securities) return null;
@@ -343,6 +344,7 @@ export async function fetchBondData(
     currentPrice: (md?.LAST ?? md?.LCURRENTPRICE ?? null) as number | null,
     prevPrice: (sec?.PREVPRICE ?? null) as number | null,
     faceValue: sec.FACEVALUE as number,
+    accruedInterest: (sec.ACCRUEDINT as number) ?? 0,
     couponValue: sec.COUPONVALUE as number,
     nextCouponDate: (sec.NEXTCOUPON as string | null) ?? null,
     couponPeriod: sec.COUPONPERIOD as number,
@@ -461,7 +463,7 @@ export async function fetchBatchBondData(
         securities: secids.join(','),
         'marketdata.columns': 'SECID,LAST,LCURRENTPRICE',
         'securities.columns':
-          'SECID,PREVPRICE,FACEVALUE,COUPONVALUE,NEXTCOUPON,COUPONPERIOD',
+          'SECID,PREVPRICE,FACEVALUE,ACCRUEDINT,COUPONVALUE,NEXTCOUPON,COUPONPERIOD',
       },
     );
     if (!data?.securities) return result;
@@ -479,6 +481,7 @@ export async function fetchBatchBondData(
         currentPrice: (md?.LAST ?? md?.LCURRENTPRICE ?? null) as number | null,
         prevPrice: (sec.PREVPRICE ?? null) as number | null,
         faceValue: sec.FACEVALUE as number,
+        accruedInterest: (sec.ACCRUEDINT as number) ?? 0,
         couponValue: sec.COUPONVALUE as number,
         nextCouponDate: (sec.NEXTCOUPON as string | null) ?? null,
         couponPeriod: sec.COUPONPERIOD as number,

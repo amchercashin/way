@@ -18,6 +18,7 @@ export interface Asset {
   updatedAt: Date;
   currentPrice?: number;
   faceValue?: number;
+  accruedInterest?: number;
 
   // payment per unit with source tracking
   paymentPerUnit?: number;

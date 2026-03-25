@@ -309,6 +309,7 @@ async function enrichBond(
     await db.assets.update(ra.asset.id!, {
       currentPrice: bondData.faceValue * (pricePercent / 100),
       faceValue: bondData.faceValue,
+      accruedInterest: bondData.accruedInterest,
       updatedAt: new Date(),
     });
   }

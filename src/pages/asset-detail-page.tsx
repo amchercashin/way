@@ -48,7 +48,8 @@ export function AssetDetailPage() {
     const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
 
     const price = asset.currentPrice ?? weightedAvgPrice ?? 0;
-    const value = price * totalQuantity;
+    const nkd = asset.type === 'Облигации' ? (asset.accruedInterest ?? 0) : 0;
+    const value = (price + nkd) * totalQuantity;
     const yieldPct = value > 0
       ? calcYieldPercent(incomePerMonth * 12, value)
       : null;

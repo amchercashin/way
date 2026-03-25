@@ -237,8 +237,8 @@ describe('fetchBondData', () => {
   it('returns bond price and coupon info', async () => {
     vi.stubGlobal('fetch', mockFetch({
       securities: {
-        columns: ['SECID', 'PREVPRICE', 'FACEVALUE', 'COUPONVALUE', 'NEXTCOUPON', 'COUPONPERIOD'],
-        data: [['SU26238RMFS4', 61.107, 1000, 35.4, '2026-06-03', 182]],
+        columns: ['SECID', 'PREVPRICE', 'FACEVALUE', 'ACCRUEDINT', 'COUPONVALUE', 'NEXTCOUPON', 'COUPONPERIOD'],
+        data: [['SU26238RMFS4', 61.107, 1000, 23.45, 35.4, '2026-06-03', 182]],
       },
       marketdata: {
         columns: ['SECID', 'LAST', 'LCURRENTPRICE'],
@@ -248,7 +248,7 @@ describe('fetchBondData', () => {
     const result = await fetchBondData('SU26238RMFS4', 'TQOB');
     expect(result).toEqual({
       currentPrice: 61.5, prevPrice: 61.107,
-      faceValue: 1000, couponValue: 35.4,
+      faceValue: 1000, accruedInterest: 23.45, couponValue: 35.4,
       nextCouponDate: '2026-06-03', couponPeriod: 182,
     });
   });
@@ -465,10 +465,10 @@ describe('fetchBatchBondData', () => {
   it('returns Map of bond data for multiple tickers', async () => {
     vi.stubGlobal('fetch', mockFetch({
       securities: {
-        columns: ['SECID', 'PREVPRICE', 'FACEVALUE', 'COUPONVALUE', 'NEXTCOUPON', 'COUPONPERIOD'],
+        columns: ['SECID', 'PREVPRICE', 'FACEVALUE', 'ACCRUEDINT', 'COUPONVALUE', 'NEXTCOUPON', 'COUPONPERIOD'],
         data: [
-          ['SU26238RMFS4', 61.107, 1000, 35.4, '2026-06-03', 182],
-          ['SU29010RMFS4', 105.0, 1000, 44.88, '2026-06-18', 182],
+          ['SU26238RMFS4', 61.107, 1000, 23.45, 35.4, '2026-06-03', 182],
+          ['SU29010RMFS4', 105.0, 1000, 12.5, 44.88, '2026-06-18', 182],
         ],
       },
       marketdata: {
@@ -483,7 +483,7 @@ describe('fetchBatchBondData', () => {
     expect(result.size).toBe(2);
     expect(result.get('SU26238RMFS4')).toEqual({
       currentPrice: 61.5, prevPrice: 61.107,
-      faceValue: 1000, couponValue: 35.4,
+      faceValue: 1000, accruedInterest: 23.45, couponValue: 35.4,
       nextCouponDate: '2026-06-03', couponPeriod: 182,
     });
     expect(result.get('SU29010RMFS4')!.currentPrice).toBe(105.5);

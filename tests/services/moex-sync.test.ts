@@ -103,6 +103,7 @@ describe('syncAllAssets', () => {
         currentPrice: 61.5,
         prevPrice: 61.107,
         faceValue: 1000,
+        accruedInterest: 23.45,
         couponValue: 35.4,
         nextCouponDate: '2026-06-03',
         couponPeriod: 182,
@@ -116,6 +117,7 @@ describe('syncAllAssets', () => {
     const asset = await db.assets.get(assetId);
     expect(asset!.currentPrice).toBe(615); // 1000 * 61.5 / 100
     expect(asset!.faceValue).toBe(1000);
+    expect(asset!.accruedInterest).toBe(23.45);
     expect(asset!.moexFrequency).toBe(2);
     expect(asset!.frequencyPerYear).toBe(2); // 365/182 ≈ 2
     expect(asset!.frequencySource).toBe('moex');
