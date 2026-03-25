@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeroIncome — Концепции редизайна</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Noto+Serif+JP:wght@200;300;400;500;700&family=IBM+Plex+Mono:wght@300;400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #08080c;
+  color: #e0ddd5;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── INTRO SECTION ─── */
+.intro {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 30% 40%, rgba(139,69,19,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 500px at 70% 60%, rgba(120,100,70,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.intro-kanji {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 180px;
+  font-weight: 200;
+  color: rgba(200,180,140,0.06);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
+
+.intro h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(42px, 6vw, 72px);
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  color: #c8b48c;
+  position: relative;
+  z-index: 1;
+}
+
+.intro .subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #6b6458;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.intro .scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #4a4540;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ─── CONCEPT SECTIONS ─── */
+.concept {
+  min-height: 100vh;
+  padding: 80px 40px;
+  position: relative;
+}
+
+.concept-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: #4a4540;
+  margin-bottom: 40px;
+}
+
+.concept-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+
+.concept-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #6b6458;
+  margin-bottom: 40px;
+}
+
+.concept-description {
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #9b9588;
+  margin-bottom: 60px;
+  font-weight: 300;
+}
+
+.concept-description strong {
+  color: #c8b48c;
+  font-weight: 400;
+}
+
+/* ─── PHONE MOCKUP ─── */
+.mockup-area {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.phone {
+  width: 320px;
+  min-height: 580px;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(200,180,140,0.08), 0 40px 80px -20px rgba(0,0,0,0.5);
+}
+
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  z-index: 10;
+}
+
+.design-notes {
+  flex: 1;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.design-notes h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: #c8b48c;
+  margin-bottom: 20px;
+}
+
+.note-item {
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(200,180,140,0.15);
+}
+
+.note-item .label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b6458;
+  margin-bottom: 4px;
+}
+
+.note-item .value {
+  font-size: 14px;
+  color: #b0a898;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* ─── PALETTE ─── */
+.palette {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.swatch::after {
+  content: attr(data-name);
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #6b6458;
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ─── DIVIDER ─── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,180,140,0.12), transparent);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   CONCEPT 1: WABI-SABI — Zen Stone Minimalism
+   ═══════════════════════════════════════════════ */
+.c1-phone {
+  background: #0c0b09;
+}
+
+.c1-header {
+  padding: 40px 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.c1-menu {
+  width: 20px;
+  height: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.c1-menu span {
+  display: block;
+  height: 1px;
+  background: #6b6458;
+}
+.c1-menu span:nth-child(2) { width: 60%; }
+
+.c1-sync {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #4a4540;
+  letter-spacing: 0.1em;
+}
+
+.c1-hero {
+  padding: 48px 24px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.c1-hero::before {
+  content: '道';
+  font-family: 'Noto Serif JP', serif;
+  font-size: 200px;
+  font-weight: 200;
+  color: rgba(200,180,140,0.025);
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+.c1-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #5a5548;
+}
+
+.c1-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px;
+  font-weight: 300;
+  color: #c8b48c;
+  margin: 12px 0 4px;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.c1-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #4a4540;
+  letter-spacing: 0.05em;
+}
+
+.c1-toggle {
+  display: inline-flex;
+  margin-top: 16px;
+  border: 1px solid rgba(200,180,140,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.c1-toggle span {
+  padding: 6px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: #5a5548;
+}
+
+.c1-toggle .active {
+  background: rgba(200,180,140,0.08);
+  color: #c8b48c;
+}
+
+.c1-categories {
+  padding: 0 24px;
+}
+
+.c1-cat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #3a3530;
+  margin-bottom: 12px;
+}
+
+.c1-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(200,180,140,0.04);
+}
+
+.c1-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.c1-cat-dot {
+  width: 3px;
+  height: 24px;
+  border-radius: 1px;
+}
+
+.c1-cat-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #b0a898;
+}
+
+.c1-cat-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #4a4540;
+  margin-top: 2px;
+}
+
+.c1-cat-income {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #c8b48c;
+  text-align: right;
+}
+
+.c1-cat-share {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #4a4540;
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Chart */
+.c1-chart {
+  padding: 24px;
+  margin-top: 8px;
+}
+
+.c1-chart-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #3a3530;
+  margin-bottom: 16px;
+}
+
+.c1-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+}
+
+.c1-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.c1-bar {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  min-width: 3px;
+}
+
+.c1-bar-year {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: #3a3530;
+  margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════
+   CONCEPT 2: BUSHIDO — Dark Warrior's Ledger
+   ═══════════════════════════════════════════════ */
+.c2-phone {
+  background: #0a0a10;
+}
+
+.c2-header {
+  padding: 40px 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.c2-logo {
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #b8413a;
+  letter-spacing: 0.2em;
+}
+
+.c2-icon {
+  font-size: 14px;
+  color: #3a3540;
+}
+
+.c2-hero {
+  padding: 32px 20px 24px;
+  position: relative;
+}
+
+.c2-enso {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.c2-enso svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.c2-enso-inner {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.c2-enso-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  color: #5a4540;
+  text-transform: uppercase;
+}
+
+.c2-enso-amount {
+  font-family: 'EB Garamond', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: #e8ddd0;
+  margin: 4px 0;
+}
+
+.c2-enso-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #5a4540;
+}
+
+.c2-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 0 20px;
+  background: rgba(184,65,58,0.06);
+  border: 1px solid rgba(184,65,58,0.08);
+}
+
+.c2-stat {
+  padding: 12px 8px;
+  text-align: center;
+  background: #0a0a10;
+}
+
+.c2-stat-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #e8ddd0;
+}
+
+.c2-stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: #4a3a38;
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.c2-section {
+  padding: 24px 20px 0;
+}
+
+.c2-section-title {
+  font-family: 'EB Garamond', serif;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #b8413a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.c2-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(184,65,58,0.12);
+}
+
+.c2-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+.c2-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.c2-cat-mark {
+  width: 2px;
+  height: 20px;
+}
+
+.c2-cat-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #b0a898;
+}
+
+.c2-cat-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #3a3540;
+  margin-top: 1px;
+}
+
+.c2-cat-income {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #e8ddd0;
+  text-align: right;
+}
+
+/* Vertical bars for C2 */
+.c2-chart {
+  padding: 20px 20px 24px;
+}
+
+.c2-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 60px;
+}
+
+.c2-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.c2-bar {
+  width: 100%;
+  min-width: 3px;
+}
+
+.c2-bar-year {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  color: #3a3530;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════
+   CONCEPT 3: KINTSUGI — Broken & Golden
+   ═══════════════════════════════════════════════ */
+.c3-phone {
+  background: #0b0b0e;
+}
+
+.c3-header {
+  padding: 40px 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.c3-heroincome {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: #6b6458;
+  letter-spacing: 0.4em;
+}
+
+.c3-kanji {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 16px;
+  font-weight: 200;
+  color: #d4a843;
+  opacity: 0.5;
+}
+
+.c3-hero {
+  padding: 40px 20px 24px;
+  text-align: center;
+  position: relative;
+}
+
+/* Kintsugi crack decorations */
+.c3-hero::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background:
+    radial-gradient(ellipse 80px 2px at 30% 40%, rgba(212,168,67,0.08), transparent),
+    radial-gradient(ellipse 2px 60px at 60% 30%, rgba(212,168,67,0.06), transparent),
+    radial-gradient(ellipse 50px 1px at 70% 70%, rgba(212,168,67,0.05), transparent);
+  pointer-events: none;
+}
+
+.c3-path-viz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-bottom: 24px;
+}
+
+.c3-path-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(212,168,67,0.15);
+}
+
+.c3-path-dot.active {
+  background: #d4a843;
+  box-shadow: 0 0 8px rgba(212,168,67,0.3);
+}
+
+.c3-path-line {
+  width: 16px;
+  height: 1px;
+  background: rgba(212,168,67,0.1);
+}
+
+.c3-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 44px;
+  font-weight: 300;
+  color: #d4a843;
+  letter-spacing: -0.02em;
+}
+
+.c3-period {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #4a4540;
+  letter-spacing: 0.2em;
+  margin-top: 4px;
+}
+
+.c3-meta-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.c3-meta-item {
+  text-align: center;
+}
+
+.c3-meta-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #b0a898;
+}
+
+.c3-meta-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: #3a3530;
+  letter-spacing: 0.15em;
+  margin-top: 2px;
+}
+
+/* Kintsugi gold line separator */
+.c3-gold-line {
+  height: 1px;
+  margin: 0 20px;
+  background: linear-gradient(90deg, transparent, rgba(212,168,67,0.2), rgba(212,168,67,0.3), rgba(212,168,67,0.15), transparent);
+  position: relative;
+}
+
+.c3-gold-line::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 30%;
+  width: 4px;
+  height: 3px;
+  background: rgba(212,168,67,0.4);
+  border-radius: 50%;
+}
+
+.c3-categories {
+  padding: 20px 20px 0;
+}
+
+.c3-cat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.c3-cat-title {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #4a4540;
+  font-weight: 300;
+}
+
+.c3-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  margin-bottom: 6px;
+  background: rgba(212,168,67,0.02);
+  border: 1px solid rgba(212,168,67,0.04);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.c3-cat-item::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212,168,67,0.2), transparent);
+}
+
+.c3-cat-left { display: flex; align-items: center; gap: 10px; }
+
+.c3-cat-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: rgba(212,168,67,0.06);
+  border: 1px solid rgba(212,168,67,0.08);
+}
+
+.c3-cat-name {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 13px;
+  color: #c0b8a8;
+  font-weight: 400;
+}
+
+.c3-cat-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #3a3530;
+  margin-top: 1px;
+}
+
+.c3-cat-income {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #d4a843;
+  text-align: right;
+}
+
+.c3-cat-share {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: #3a3530;
+  text-align: right;
+  margin-top: 1px;
+}
+
+/* Bottom area */
+.c3-bottom {
+  padding: 20px;
+  text-align: center;
+}
+
+.c3-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: #4a4540;
+  font-weight: 300;
+}
+
+/* ═══════════════════════════════════════════════
+   COMPARISON TABLE
+   ═══════════════════════════════════════════════ */
+.comparison {
+  padding: 80px 40px;
+}
+
+.comparison h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 300;
+  color: #c8b48c;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.compare-card {
+  padding: 32px;
+  border: 1px solid rgba(200,180,140,0.08);
+  border-radius: 12px;
+  background: rgba(200,180,140,0.02);
+}
+
+.compare-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.compare-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.compare-card li {
+  font-size: 13px;
+  color: #9b9588;
+  padding: 6px 0;
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+  font-weight: 300;
+}
+
+.compare-card li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: #4a4540;
+}
+
+.c1-accent { color: #c8b48c; }
+.c2-accent { color: #b8413a; }
+.c3-accent { color: #d4a843; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .concept { padding: 60px 20px; }
+  .mockup-area { flex-direction: column; align-items: center; }
+  .phone { width: 300px; }
+  .design-notes { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ INTRO ═══ -->
+<section class="intro">
+  <div class="intro-kanji">道</div>
+  <h1>W A Y</h1>
+  <div class="subtitle">три концепции редизайна</div>
+  <div class="scroll-hint">scroll ↓</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ CONCEPT 1: WABI-SABI ═══ -->
+<section class="concept" id="c1">
+  <div class="concept-number">01 / 03</div>
+  <div class="concept-title c1-accent">Wabi-Sabi</div>
+  <div class="concept-subtitle">Красота несовершенства и пустоты</div>
+  <div class="concept-description">
+    Дзен-минимализм, где <strong>пустое пространство — это дисциплина</strong>.
+    Иероглиф 道 (Путь) едва проступает за цифрами дохода — как философия,
+    которая стоит за каждым числом. Цвета камня и старой бумаги.
+    Каждый пиксель отвоёван у пустоты — и потому каждый на своём месте.
+    <br><br>
+    <strong>Метафора:</strong> Камни в дзен-саду — мало элементов, но каждый расположен с предельной точностью.
+    Твой портфель — тот же сад. Не количество активов, а качество каждого решения.
+  </div>
+
+  <div class="mockup-area">
+    <div class="phone c1-phone">
+      <div class="phone-notch"></div>
+
+      <div class="c1-header">
+        <div class="c1-menu">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="c1-sync">MOEX · 14:32</div>
+      </div>
+
+      <div class="c1-hero">
+        <div class="c1-label">расчётный пассивный доход</div>
+        <div class="c1-amount">₽ 47 820</div>
+        <div class="c1-meta">доходность 8.4% · портфель ₽ 6.8M</div>
+        <div class="c1-toggle">
+          <span class="active">МЕС</span>
+          <span>ГОД</span>
+        </div>
+      </div>
+
+      <div class="c1-categories">
+        <div class="c1-cat-label">категории активов</div>
+
+        <div class="c1-cat-item">
+          <div class="c1-cat-left">
+            <div class="c1-cat-dot" style="background:#c8b48c"></div>
+            <div>
+              <div class="c1-cat-name">Акции</div>
+              <div class="c1-cat-count">12 позиций</div>
+            </div>
+          </div>
+          <div>
+            <div class="c1-cat-income">₽ 22 400</div>
+            <div class="c1-cat-share">46.8%</div>
+          </div>
+        </div>
+
+        <div class="c1-cat-item">
+          <div class="c1-cat-left">
+            <div class="c1-cat-dot" style="background:#8b7355"></div>
+            <div>
+              <div class="c1-cat-name">Облигации</div>
+              <div class="c1-cat-count">8 позиций</div>
+            </div>
+          </div>
+          <div>
+            <div class="c1-cat-income">₽ 15 200</div>
+            <div class="c1-cat-share">31.8%</div>
+          </div>
+        </div>
+
+        <div class="c1-cat-item">
+          <div class="c1-cat-left">
+            <div class="c1-cat-dot" style="background:#5a5548"></div>
+            <div>
+              <div class="c1-cat-name">Вклады</div>
+              <div class="c1-cat-count">3 позиции</div>
+            </div>
+          </div>
+          <div>
+            <div class="c1-cat-income">₽ 10 220</div>
+            <div class="c1-cat-share">21.4%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c1-chart">
+        <div class="c1-chart-label">выплаты по годам · CAGR +12.3%</div>
+        <div class="c1-bars">
+          <div class="c1-bar-col"><div class="c1-bar" style="height:25%;background:rgba(200,180,140,0.15)"></div><div class="c1-bar-year">'21</div></div>
+          <div class="c1-bar-col"><div class="c1-bar" style="height:40%;background:rgba(200,180,140,0.2)"></div><div class="c1-bar-year">'22</div></div>
+          <div class="c1-bar-col"><div class="c1-bar" style="height:55%;background:rgba(200,180,140,0.3)"></div><div class="c1-bar-year">'23</div></div>
+          <div class="c1-bar-col"><div class="c1-bar" style="height:72%;background:rgba(200,180,140,0.45)"></div><div class="c1-bar-year">'24</div></div>
+          <div class="c1-bar-col"><div class="c1-bar" style="height:88%;background:rgba(200,180,140,0.6)"></div><div class="c1-bar-year">'25</div></div>
+          <div class="c1-bar-col"><div class="c1-bar" style="height:100%;background:#c8b48c"></div><div class="c1-bar-year">'26</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="design-notes">
+      <h3>Ключевые решения</h3>
+
+      <div class="note-item">
+        <div class="label">философия</div>
+        <div class="value">Иероглиф 道 как watermark за главной цифрой — философия за числами. Пустота вокруг элементов = дисциплина на Пути.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">типографика</div>
+        <div class="value">Cormorant Garamond для сумм (утончённость), IBM Plex Mono для меток (точность самурая). Контраст старого и нового.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">палитра</div>
+        <div class="value">Камень, песок, старая бумага. Никакого неона — только тёплые земляные тона. Акцент — потёртое золото, как у старинного свитка.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">анимации</div>
+        <div class="value">Медленные fade-in при появлении (0.8s). Категории раскрываются как разворачивающийся свиток — сверху вниз с задержкой. Числа «проявляются» из тумана.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">настроение</div>
+        <div class="value">Тихий храм в горах. Ты открываешь приложение — и суета рынка стихает. Только твой Путь и твои числа.</div>
+      </div>
+
+      <div class="palette">
+        <div class="swatch" style="background:#0c0b09" data-name="void"></div>
+        <div class="swatch" style="background:#1a1815" data-name="stone"></div>
+        <div class="swatch" style="background:#c8b48c" data-name="gold"></div>
+        <div class="swatch" style="background:#8b7355" data-name="earth"></div>
+        <div class="swatch" style="background:#5a5548" data-name="ash"></div>
+        <div class="swatch" style="background:#3a3530" data-name="shadow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ CONCEPT 2: BUSHIDO ═══ -->
+<section class="concept" id="c2">
+  <div class="concept-number">02 / 03</div>
+  <div class="concept-title c2-accent">Bushido</div>
+  <div class="concept-subtitle">Реестр воина — кровь и сталь</div>
+  <div class="concept-description">
+    Приложение как <strong>боевой журнал самурая</strong>.
+    Каждая выплата — это победа. Каждый актив — оружие в арсенале.
+    Кроваво-красный акцент — не для красоты, а как напоминание:
+    рынок не прощает слабости. Круг энсо (円相) обрамляет главную цифру —
+    <strong>доход как центр дисциплины</strong>.
+    <br><br>
+    <strong>Метафора:</strong> Ты — ронин на финансовых рынках. Без сюзерена, без страховки.
+    Только твоя дисциплина и твой клинок (портфель), который ты точишь каждый день.
+  </div>
+
+  <div class="mockup-area">
+    <div class="phone c2-phone">
+      <div class="phone-notch"></div>
+
+      <div class="c2-header">
+        <div class="c2-logo">HeroIncome</div>
+        <div class="c2-icon">☰</div>
+      </div>
+
+      <div class="c2-hero">
+        <div class="c2-enso">
+          <svg viewBox="0 0 180 180">
+            <!-- Enso circle - imperfect brush stroke -->
+            <path d="M90 15 C 140 15, 168 50, 168 90 C 168 130, 140 165, 90 165 C 40 165, 12 130, 12 90 C 12 50, 40 18, 80 15"
+                  fill="none"
+                  stroke="rgba(184,65,58,0.15)"
+                  stroke-width="3"
+                  stroke-linecap="round"/>
+            <!-- Gap in the circle - the opening of enso -->
+            <path d="M82 16 C 86 14, 88 15, 90 15"
+                  fill="none"
+                  stroke="rgba(184,65,58,0.08)"
+                  stroke-width="2"/>
+          </svg>
+          <div class="c2-enso-inner">
+            <div class="c2-enso-label">доход / мес</div>
+            <div class="c2-enso-amount">₽ 47 820</div>
+            <div class="c2-enso-meta">доходность 8.4%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c2-stats">
+        <div class="c2-stat">
+          <div class="c2-stat-val">₽ 6.8M</div>
+          <div class="c2-stat-label">портфель</div>
+        </div>
+        <div class="c2-stat">
+          <div class="c2-stat-val" style="color:#b8413a">8.4%</div>
+          <div class="c2-stat-label">доход-ть</div>
+        </div>
+        <div class="c2-stat">
+          <div class="c2-stat-val">23</div>
+          <div class="c2-stat-label">позиций</div>
+        </div>
+      </div>
+
+      <div class="c2-section">
+        <div class="c2-section-title">Арсенал</div>
+
+        <div class="c2-cat-item">
+          <div class="c2-cat-left">
+            <div class="c2-cat-mark" style="background:#b8413a"></div>
+            <div>
+              <div class="c2-cat-name">Акции</div>
+              <div class="c2-cat-sub">12 позиций · 46.8%</div>
+            </div>
+          </div>
+          <div class="c2-cat-income">₽ 22 400</div>
+        </div>
+
+        <div class="c2-cat-item">
+          <div class="c2-cat-left">
+            <div class="c2-cat-mark" style="background:#6b3a38"></div>
+            <div>
+              <div class="c2-cat-name">Облигации</div>
+              <div class="c2-cat-sub">8 позиций · 31.8%</div>
+            </div>
+          </div>
+          <div class="c2-cat-income">₽ 15 200</div>
+        </div>
+
+        <div class="c2-cat-item">
+          <div class="c2-cat-left">
+            <div class="c2-cat-mark" style="background:#3a2020"></div>
+            <div>
+              <div class="c2-cat-name">Вклады</div>
+              <div class="c2-cat-sub">3 позиции · 21.4%</div>
+            </div>
+          </div>
+          <div class="c2-cat-income">₽ 10 220</div>
+        </div>
+      </div>
+
+      <div class="c2-chart">
+        <div class="c2-bars">
+          <div class="c2-bar-col"><div class="c2-bar" style="height:25%;background:rgba(184,65,58,0.2);border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'21</div></div>
+          <div class="c2-bar-col"><div class="c2-bar" style="height:40%;background:rgba(184,65,58,0.3);border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'22</div></div>
+          <div class="c2-bar-col"><div class="c2-bar" style="height:55%;background:rgba(184,65,58,0.4);border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'23</div></div>
+          <div class="c2-bar-col"><div class="c2-bar" style="height:72%;background:rgba(184,65,58,0.55);border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'24</div></div>
+          <div class="c2-bar-col"><div class="c2-bar" style="height:88%;background:rgba(184,65,58,0.7);border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'25</div></div>
+          <div class="c2-bar-col"><div class="c2-bar" style="height:100%;background:#b8413a;border-radius:1px 1px 0 0"></div><div class="c2-bar-year">'26</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="design-notes">
+      <h3>Ключевые решения</h3>
+
+      <div class="note-item">
+        <div class="label">философия</div>
+        <div class="value">Энсо (незамкнутый круг) вокруг дохода — символ незавершённости пути. Разрыв в круге = ты всегда в движении, совершенствование не заканчивается.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">типографика</div>
+        <div class="value">EB Garamond для логотипа и сумм — как шрифт из исторической хроники. IBM Plex Mono для данных — точность и контроль.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">палитра</div>
+        <div class="value">Глубокий индиго-чёрный (#0a0a10) + кроваво-красный (#b8413a). Красный — не декорация, а предупреждение: рынок требует уважения.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">структура</div>
+        <div class="value">«Арсенал» вместо «Категории». Статистика в сетке с hair-line разделителями — как таблица в военном журнале.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">настроение</div>
+        <div class="value">Тренировочный зал додзё перед рассветом. Тишина, сосредоточенность, красный акцент как вспышка катаны. Никакого уюта — только путь воина.</div>
+      </div>
+
+      <div class="palette">
+        <div class="swatch" style="background:#0a0a10" data-name="void"></div>
+        <div class="swatch" style="background:#1a1520" data-name="indigo"></div>
+        <div class="swatch" style="background:#b8413a" data-name="blood"></div>
+        <div class="swatch" style="background:#6b3a38" data-name="rust"></div>
+        <div class="swatch" style="background:#e8ddd0" data-name="bone"></div>
+        <div class="swatch" style="background:#3a3540" data-name="steel"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ CONCEPT 3: KINTSUGI ═══ -->
+<section class="concept" id="c3">
+  <div class="concept-number">03 / 03</div>
+  <div class="concept-title c3-accent">Kintsugi</div>
+  <div class="concept-subtitle">Золотые швы — сила в трещинах</div>
+  <div class="concept-description">
+    Кинцуги — японское искусство чинить разбитую керамику золотом.
+    Трещины не прячут — их <strong>подчёркивают</strong>.
+    Каждый кризис, каждая просадка портфеля — это трещина,
+    которую ты заливаешь золотом дисциплины. Путь визуализирован как
+    цепочка точек — <strong>каждая выплата приближает к цели</strong>.
+    <br><br>
+    <strong>Метафора:</strong> Твой портфель — чаша, которую рынок разбивает снова и снова.
+    Но ты собираешь осколки и скрепляешь их золотом. Каждый шрам делает чашу дороже.
+  </div>
+
+  <div class="mockup-area">
+    <div class="phone c3-phone">
+      <div class="phone-notch"></div>
+
+      <div class="c3-header">
+        <div class="c3-heroincome">HeroIncome</div>
+        <div class="c3-kanji">道</div>
+      </div>
+
+      <div class="c3-hero">
+        <div class="c3-path-viz">
+          <div class="c3-path-dot active"></div>
+          <div class="c3-path-line"></div>
+          <div class="c3-path-dot active"></div>
+          <div class="c3-path-line"></div>
+          <div class="c3-path-dot active"></div>
+          <div class="c3-path-line"></div>
+          <div class="c3-path-dot active"></div>
+          <div class="c3-path-line"></div>
+          <div class="c3-path-dot active"></div>
+          <div class="c3-path-line" style="background:rgba(212,168,67,0.05)"></div>
+          <div class="c3-path-dot"></div>
+          <div class="c3-path-line" style="background:rgba(212,168,67,0.03)"></div>
+          <div class="c3-path-dot"></div>
+        </div>
+
+        <div class="c3-amount">₽ 47 820</div>
+        <div class="c3-period">В МЕСЯЦ</div>
+
+        <div class="c3-meta-row">
+          <div class="c3-meta-item">
+            <div class="c3-meta-val">₽ 6.8M</div>
+            <div class="c3-meta-label">портфель</div>
+          </div>
+          <div class="c3-meta-item">
+            <div class="c3-meta-val" style="color:#d4a843">8.4%</div>
+            <div class="c3-meta-label">доход-ть</div>
+          </div>
+          <div class="c3-meta-item">
+            <div class="c3-meta-val">₽ 574K</div>
+            <div class="c3-meta-label">в год</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c3-gold-line"></div>
+
+      <div class="c3-categories">
+        <div class="c3-cat-header">
+          <div class="c3-cat-title">Активы на пути</div>
+        </div>
+
+        <div class="c3-cat-item" style="--w:47%">
+          <div class="c3-cat-left">
+            <div class="c3-cat-icon">株</div>
+            <div>
+              <div class="c3-cat-name">Акции</div>
+              <div class="c3-cat-sub">12 позиций</div>
+            </div>
+          </div>
+          <div>
+            <div class="c3-cat-income">₽ 22 400</div>
+            <div class="c3-cat-share">46.8%</div>
+          </div>
+        </div>
+
+        <div class="c3-cat-item" style="--w:32%">
+          <div class="c3-cat-left">
+            <div class="c3-cat-icon">債</div>
+            <div>
+              <div class="c3-cat-name">Облигации</div>
+              <div class="c3-cat-sub">8 позиций</div>
+            </div>
+          </div>
+          <div>
+            <div class="c3-cat-income">₽ 15 200</div>
+            <div class="c3-cat-share">31.8%</div>
+          </div>
+        </div>
+
+        <div class="c3-cat-item" style="--w:21%">
+          <div class="c3-cat-left">
+            <div class="c3-cat-icon">預</div>
+            <div>
+              <div class="c3-cat-name">Вклады</div>
+              <div class="c3-cat-sub">3 позиции</div>
+            </div>
+          </div>
+          <div>
+            <div class="c3-cat-income">₽ 10 220</div>
+            <div class="c3-cat-share">21.4%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c3-bottom">
+        <div class="c3-quote">«Путь в тысячу ри начинается с одного шага»</div>
+      </div>
+    </div>
+
+    <div class="design-notes">
+      <h3>Ключевые решения</h3>
+
+      <div class="note-item">
+        <div class="label">философия</div>
+        <div class="value">Цепочка точек наверху — визуализация Пути. Яркие = пройденные выплаты, тусклые = впереди. Золотые линии-разделители — швы кинцуги, скрепляющие разделы.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">типографика</div>
+        <div class="value">Zen Kaku Gothic для навигации (современная Япония), Cormorant Garamond для чисел (утончённость). Кандзи вместо иконок категорий: 株 (акция), 債 (облигация), 預 (вклад).</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">палитра</div>
+        <div class="value">Почти чёрный (#0b0b0e) + кинцуги-золото (#d4a843). Золото используется точечно — только для сумм дохода и декоративных швов. Всё остальное — оттенки пепла.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">микро-детали</div>
+        <div class="value">Золотые линии-разделители имеют «утолщения» — имитация настоящих швов кинцуги. Цитата внизу меняется каждый день — мудрость для Пути.</div>
+      </div>
+
+      <div class="note-item">
+        <div class="label">настроение</div>
+        <div class="value">Тёмная чайная комната. Свет золотых швов на старой керамике. Ощущение, что каждая трещина — это опыт, а не потеря. Спокойная сила.</div>
+      </div>
+
+      <div class="palette">
+        <div class="swatch" style="background:#0b0b0e" data-name="void"></div>
+        <div class="swatch" style="background:#1a1818" data-name="char"></div>
+        <div class="swatch" style="background:#d4a843" data-name="gold"></div>
+        <div class="swatch" style="background:#8b7a45" data-name="amber"></div>
+        <div class="swatch" style="background:#c0b8a8" data-name="sand"></div>
+        <div class="swatch" style="background:#3a3530" data-name="ash"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ COMPARISON ═══ -->
+<section class="comparison">
+  <h2>Сравнение концепций</h2>
+  <div class="compare-grid">
+    <div class="compare-card">
+      <h3 class="c1-accent">Wabi-Sabi</h3>
+      <ul>
+        <li>Максимальный минимализм, тишина</li>
+        <li>Иероглиф 道 как фоновый водяной знак</li>
+        <li>Тёплые земляные тона (камень, песок)</li>
+        <li>Медленные, медитативные анимации</li>
+        <li>Для тех, кто ценит покой и созерцательность</li>
+        <li>Минимум UI-элементов, максимум «воздуха»</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h3 class="c2-accent">Bushido</h3>
+      <ul>
+        <li>Энсо (圓相) как рамка для главной цифры</li>
+        <li>Кровавый акцент — рынок не прощает</li>
+        <li>«Арсенал» вместо категорий</li>
+        <li>Сетка статистики как военный реестр</li>
+        <li>Для тех, кто видит себя воином на рынке</li>
+        <li>Наиболее драматичная, напряжённая эстетика</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h3 class="c3-accent">Kintsugi</h3>
+      <ul>
+        <li>Золотые швы как визуальная метафора</li>
+        <li>Путь из точек — прогресс выплат</li>
+        <li>Кандзи вместо иконок категорий</li>
+        <li>Ежедневная цитата-напоминание</li>
+        <li>Для тех, кто превращает трудности в силу</li>
+        <li>Баланс между теплом и дисциплиной</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;padding:40px;font-size:11px;color:#3a3530;font-family:'IBM Plex Mono',monospace;letter-spacing:0.2em">
+  HeroIncome · DESIGN CONCEPTS · 2026
+</div>
+
+</body>
+</html>
