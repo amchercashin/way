@@ -70,42 +70,36 @@ export function FirstLaunchTour() {
     withViewTransition(() => navigate('/'));
   }, [navigate, setActive, setDrawerOpen]);
 
-  // ---- Step 3: spotlight on hamburger ----
+  // ---- Step 3: spotlight on hamburger, click overlay to open drawer ----
   useEffect(() => {
     if (step !== 3) return;
     const el = document.querySelector<HTMLElement>('[data-onboarding="hamburger"]');
-    if (!el) return;
-    setSpotlightRect(el.getBoundingClientRect());
-    spotlightTargetRef.current = el;
-
-    const handleClick = () => {
-      setDrawerOpen(true);
-      setTimeout(() => setStep(4), 350);
-    };
-    el.addEventListener('click', handleClick, { once: true });
-    return () => el.removeEventListener('click', handleClick);
-  }, [step, setDrawerOpen]);
-
-  // ---- Step 4: spotlight on "Данные" in drawer ----
-  useEffect(() => {
-    if (step !== 4) return;
-    const timer = setTimeout(() => {
-      const el = document.querySelector<HTMLElement>('[data-onboarding="menu-data"]');
-      if (!el) return;
+    if (el) {
       setSpotlightRect(el.getBoundingClientRect());
       spotlightTargetRef.current = el;
+    }
+  }, [step]);
 
-      const handleClick = (e: Event) => {
-        e.preventDefault();
-        setDrawerOpen(false);
-        setSpotlightRect(null);
-        withViewTransition(() => navigate('/data'));
-        setTimeout(() => setStep(5), 400);
-      };
-      el.addEventListener('click', handleClick, { once: true });
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [step, navigate, setDrawerOpen]);
+  const handleStep3Click = useCallback(() => {
+    setDrawerOpen(true);
+    // Wait for drawer to render, then find "Данные" and move spotlight
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>('[data-onboarding="menu-data"]');
+      if (el) {
+        setSpotlightRect(el.getBoundingClientRect());
+        spotlightTargetRef.current = el;
+      }
+      setStep(4);
+    }, 500);
+  }, [setDrawerOpen]);
+
+  // ---- Step 4: click overlay to navigate to /data ----
+  const handleStep4Click = useCallback(() => {
+    setDrawerOpen(false);
+    setSpotlightRect(null);
+    withViewTransition(() => navigate('/data'));
+    setTimeout(() => setStep(5), 400);
+  }, [navigate, setDrawerOpen]);
 
   // ---- Step 5 tap ----
   const handleStep5Tap = useCallback(() => {
@@ -256,7 +250,7 @@ export function FirstLaunchTour() {
     case 3:
       content = (
         <>
-          <CoachOverlay targetRect={spotlightRect} passThrough>
+          <CoachOverlay targetRect={spotlightRect} onClick={handleStep3Click}>
             <CoachTooltip
               targetRef={spotlightTargetRef}
               text="Нажмите для доступа к меню"
@@ -272,7 +266,7 @@ export function FirstLaunchTour() {
     case 4:
       content = (
         <>
-          <CoachOverlay targetRect={spotlightRect} passThrough>
+          <CoachOverlay targetRect={spotlightRect} onClick={handleStep4Click}>
             <CoachTooltip
               targetRef={spotlightTargetRef}
               text="Управление портфелем — здесь"
