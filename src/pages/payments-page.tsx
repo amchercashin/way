@@ -1,8 +1,8 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { TypeSection } from '@/components/payments/type-section';
-import { PageTip } from '@/components/onboarding/PageTip';
+import { PaymentsTour } from '@/components/onboarding/PaymentsTour';
 import { useAssets } from '@/hooks/use-assets';
 import { useAllPaymentHistory } from '@/hooks/use-payment-history';
 import type { PaymentHistory } from '@/models/types';
@@ -10,8 +10,6 @@ import type { PaymentHistory } from '@/models/types';
 export function PaymentsPage() {
   const assets = useAssets();
   const allPayments = useAllPaymentHistory();
-  const listRef = useRef<HTMLDivElement>(null);
-
   const location = useLocation();
   const highlightState = location.state as { highlightAssetId?: number } | null;
 
@@ -46,13 +44,13 @@ export function PaymentsPage() {
 
   return (
     <AppShell title="Выплаты">
-      <PageTip storageKey="hi-tip-payments" targetRef={listRef} text="История выплат. Для биржевых активов подтягивается с MOEX, но можно добавить и вручную" />
+      <PaymentsTour />
       {typeGroups.size === 0 ? (
         <div className="text-center text-[var(--hi-muted)] font-mono text-[length:var(--hi-text-body)] py-12">
           Нет активов
         </div>
       ) : (
-        <div ref={listRef} className="space-y-4">
+        <div className="space-y-4">
           {Array.from(typeGroups.entries()).map(([type, groupAssets]) => (
             <TypeSection
               key={type}

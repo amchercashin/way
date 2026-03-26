@@ -53,9 +53,11 @@ export function TypeSection({ type, assets, paymentsByAsset, highlightAssetId }:
   };
 
   return (
-    <div className="border border-[var(--hi-shadow)]/50 rounded-xl overflow-hidden">
+    <div className="border border-[var(--hi-shadow)]/50 rounded-xl overflow-hidden" data-onboarding="type-section">
       <button
         onClick={() => setExpanded(!expanded)}
+        data-onboarding="type-section-toggle"
+        data-expanded={String(expanded)}
         className="w-full bg-[var(--hi-stone)] px-3 py-3 flex items-center justify-between"
       >
         <div className="flex items-center gap-2">

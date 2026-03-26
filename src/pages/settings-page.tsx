@@ -98,7 +98,7 @@ export function SettingsPage() {
               localStorage.removeItem('hi-tip-category');
               localStorage.removeItem('hi-tip-asset');
             }}
-            className="w-full py-3 rounded-lg border border-[rgba(200,180,140,0.08)] text-[var(--hi-ash)] transition-colors hover:text-[var(--hi-gold)] hover:border-[rgba(200,180,140,0.15)]"
+            className="w-full py-3 rounded-lg border border-[rgba(200,180,140,0.08)] text-[var(--hi-ash)] transition-all hover:text-[var(--hi-gold)] hover:border-[rgba(200,180,140,0.15)] active:translate-y-px"
             style={{ fontSize: 'var(--hi-text-body)' }}
           >
             Сбросить подсказки

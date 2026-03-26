@@ -58,6 +58,7 @@ export function PaymentRow({ payment, onToggleExcluded, onDelete }: PaymentRowPr
         ) : (
           <button
             onClick={() => onToggleExcluded(payment.id!)}
+            data-onboarding="exclude-btn"
             className="text-[var(--hi-gold)] hover:text-yellow-300 text-[length:var(--hi-text-heading)] min-w-[32px] min-h-[28px] flex items-center justify-center transition-colors"
             title="Исключить из расчётов"
           >

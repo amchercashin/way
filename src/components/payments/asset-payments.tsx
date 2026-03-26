@@ -71,6 +71,8 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
       <div
         className="flex justify-between items-start px-3 py-2 bg-[var(--hi-void)] cursor-pointer select-none"
         onClick={() => setCollapsed(!collapsed)}
+        data-onboarding="asset-header"
+        data-expanded={String(!collapsed)}
       >
         <div className="flex gap-1.5 min-w-0">
           <span className="text-[var(--hi-muted)] text-[length:var(--hi-text-caption)] mt-0.5 flex-shrink-0">{collapsed ? '▸' : '▾'}</span>
@@ -95,6 +97,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
                 <button
                   onClick={handleSync}
                   disabled={syncing}
+                  data-onboarding="asset-sync-btn"
                   className="text-[var(--hi-ash)] text-[length:var(--hi-text-title)] hover:text-[var(--hi-gold)] transition-colors flex-shrink-0 disabled:opacity-50 ml-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center"
                   title="Синхронизировать выплаты с MOEX"
                 >
@@ -111,6 +114,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setAddFormOpen(!addFormOpen); }}
+          data-onboarding="add-payment-btn"
           className="text-[var(--hi-muted)] text-[length:var(--hi-text-body)] hover:text-[var(--hi-gold)] transition-colors flex-shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
         >
           + выплата
