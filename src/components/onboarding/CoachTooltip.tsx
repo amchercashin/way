@@ -75,7 +75,8 @@ export function CoachTooltip({
           ? {}
           : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }),
         zIndex: 9002,
-        width: 280,
+        width: 'min(280px, calc(100vw - 32px))',
+        maxWidth: 'calc(100vw - 32px)',
         pointerEvents: 'none',
       }}
     >
