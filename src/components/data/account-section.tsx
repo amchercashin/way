@@ -76,7 +76,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
   }
 
   return (
-    <div className="border border-[var(--hi-shadow)]/50 rounded-xl">
+    <div className="border border-[var(--hi-shadow)]/50 rounded-xl" data-onboarding="account-section">
       {/* Header */}
       <div
         role="button"
@@ -84,6 +84,8 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
         onClick={() => setExpanded(!expanded)}
         onKeyDown={(e) => e.key === 'Enter' && setExpanded(!expanded)}
         className={`w-full bg-[var(--hi-stone)] px-3 py-3 flex items-center justify-between cursor-pointer rounded-t-xl ${!expanded ? 'rounded-b-xl' : ''}`}
+        data-onboarding="account-header"
+        data-expanded={String(expanded)}
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[var(--hi-text)] text-[length:var(--hi-text-caption)] flex-shrink-0">{expanded ? '▾' : '▸'}</span>
@@ -108,6 +110,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
               className="border border-[var(--hi-shadow)] text-[var(--hi-ash)] px-2 py-0.5 rounded text-[length:var(--hi-text-body)] min-h-[36px] flex items-center justify-center"
+              data-onboarding="account-menu-btn"
             >
               ⋯
             </button>
@@ -144,7 +147,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
       {/* Body */}
       {expanded && (
         <div>
-          {Array.from(typeGroups.entries()).map(([type, items]) => {
+          {(() => { let globalHoldingIdx = 0; return Array.from(typeGroups.entries()).map(([type, items]) => {
             const groupValue = items.reduce((sum, { asset, holding }) => {
               const price = asset.currentPrice ?? holding.averagePrice ?? 0;
               return sum + price * holding.quantity;
@@ -181,6 +184,8 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
 
                 {/* Rows */}
                 {items.map(({ asset, holding }) => {
+                  const isFirstHolding = globalHoldingIdx === 0;
+                  globalHoldingIdx++;
                   const price = asset.currentPrice ?? holding.averagePrice ?? 0;
                   const rowValue = price * holding.quantity;
                   const isHighlighted = highlightAssetId != null && asset.id === highlightAssetId;
@@ -198,7 +203,10 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                           </div>
                         )}
                       </div>
-                      <span className="text-right text-[var(--hi-text)] tabular-nums">
+                      <span
+                        className="text-right text-[var(--hi-text)] tabular-nums"
+                        {...(isFirstHolding && { 'data-onboarding': 'holding-quantity' })}
+                      >
                         <InlineCell
                           value={String(holding.quantity)}
                           displayValue={Number(holding.quantity).toLocaleString('ru-RU')}
@@ -228,6 +236,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                         {formatCurrency(rowValue)}
                       </span>
                       <button
+                        {...(isFirstHolding && { 'data-onboarding': 'holding-delete' })}
                         onClick={async () => {
                           if (window.confirm(`Удалить ${asset.ticker ?? asset.name} из счёта?`)) {
                             await deleteHolding(holding.id!);
@@ -242,13 +251,14 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                 })}
               </div>
             );
-          })}
+          }); })()}
 
           {/* Add asset button */}
           <div className="px-3 py-2">
             <button
               onClick={() => setAddAssetOpen(true)}
               className="w-full border border-dashed border-[var(--hi-shadow)] text-[var(--hi-muted)] py-1.5 rounded-md text-[length:var(--hi-text-body)] hover:bg-[var(--hi-stone)] transition-colors"
+              data-onboarding="add-asset-btn"
             >
               + Добавить актив
             </button>
