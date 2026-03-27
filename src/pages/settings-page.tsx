@@ -5,6 +5,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
 import { clearAllData } from '@/services/app-settings';
 import { exportAllData, importAllData } from '@/services/backup';
+import { NdflSettings } from '@/components/settings/ndfl-settings';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -53,6 +54,8 @@ export function SettingsPage() {
   return (
     <AppShell leftAction={backButton} title="Настройки">
       <div className="space-y-6">
+        <NdflSettings />
+
         <div>
           <div className="text-[var(--hi-ash)] text-[length:var(--hi-text-body)] mb-2">Экспорт</div>
           <Button onClick={handleExport} className="w-full border border-[rgba(200,180,140,0.2)] text-[var(--hi-gold)] bg-transparent hover:bg-[rgba(200,180,140,0.06)] font-semibold">
