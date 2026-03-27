@@ -128,20 +128,12 @@ export function DataTour() {
 
   switch (step) {
     case 1: {
-      const tooltipTop = spotlightRect
-        ? spotlightRect.top + spotlightRect.height / 2 - 38
-        : undefined;
-      const tooltipLeft = spotlightRect
-        ? Math.min(spotlightRect.right - 40, window.innerWidth - 280 - 16)
-        : undefined;
       content = (
         <CoachOverlay targetRect={spotlightRect} onClick={handleStep1}>
           <CoachTooltip
             text="Ваш портфель по счетам и активам."
             stepIndex={1}
             totalSteps={TOTAL_STEPS}
-            top={tooltipTop}
-            left={tooltipLeft}
           />
           {tapHint}
           {skipButton}
