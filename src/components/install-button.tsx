@@ -35,7 +35,7 @@ export function InstallButton({
   return (
     <>
       <div
-        className="fixed left-4 right-4 z-50 flex items-center justify-between rounded-xl border border-[var(--hi-gold)]/15 bg-[var(--hi-stone)] px-4 py-3 animate-[hi-fade-slide-up_0.4s_ease-out_both]"
+        className="fixed left-4 right-4 z-50 flex items-center justify-between rounded-xl border border-[var(--hi-gold)]/15 bg-[var(--hi-stone)] px-4 py-3"
         style={{
           bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
           animation: 'hi-fade-slide-up 0.4s ease-out both, hi-a2hs-glow 3s ease-in-out 0.4s infinite',
