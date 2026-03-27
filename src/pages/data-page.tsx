@@ -7,6 +7,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { AccountSection } from '@/components/data/account-section';
 import { AddAccountSheet } from '@/components/data/add-account-sheet';
 import { ImportFlow } from '@/components/data/import-flow';
+import { DataTour } from '@/components/onboarding/DataTour';
 
 export function DataPage() {
   const accounts = useAccounts();
@@ -27,6 +28,7 @@ export function DataPage() {
 
   return (
     <AppShell title="Данные">
+      <DataTour />
       <div className="space-y-4">
         {accounts.map((account) => {
           const accountHoldings = holdings.filter(h => h.accountId === account.id);

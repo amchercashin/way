@@ -95,6 +95,7 @@ export function SettingsPage() {
             onClick={() => {
               localStorage.removeItem('hi-onboarding-done');
               localStorage.removeItem('hi-tip-payments');
+              localStorage.removeItem('hi-tip-data');
               localStorage.removeItem('hi-tip-category');
               localStorage.removeItem('hi-tip-asset');
             }}
