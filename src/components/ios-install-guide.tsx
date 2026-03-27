@@ -21,8 +21,6 @@ const STEPS: {
   src: string;
   alt: string;
   caption: string;
-  /** CSS object-position to crop the screenshot to the relevant area */
-  objectPosition: string;
   /** Finger position as CSS properties (top/bottom/left/right in %) */
   finger: React.CSSProperties;
 }[] = [
@@ -30,29 +28,25 @@ const STEPS: {
     src: `${BASE}a2hs/step1-toolbar.jpg`,
     alt: 'Панель Safari с кнопкой ⋯',
     caption: 'Нажмите «⋯» в панели Safari',
-    objectPosition: 'center bottom',
-    finger: { bottom: '8%', right: '8%' },
+    finger: { bottom: '3%', right: '6%' },
   },
   {
     src: `${BASE}a2hs/step2-menu.jpg`,
     alt: 'Меню Safari с пунктом Поделиться',
     caption: 'Нажмите «Поделиться»',
-    objectPosition: 'center 15%',
-    finger: { top: '10%', right: '30%' },
+    finger: { top: '6%', right: '32%' },
   },
   {
     src: `${BASE}a2hs/step3-share.jpg`,
     alt: 'Share sheet с пунктом На экран Домой',
     caption: 'Выберите «Добавить на экран Домой»',
-    objectPosition: 'center 68%',
-    finger: { bottom: '10%', left: '65%' },
+    finger: { bottom: '18%', left: '62%' },
   },
   {
     src: `${BASE}a2hs/step4-confirm.jpg`,
     alt: 'Экран подтверждения с кнопкой Добавить',
     caption: 'Нажмите «Добавить»',
-    objectPosition: 'center top',
-    finger: { top: '8%', right: '8%' },
+    finger: { top: '8%', right: '6%' },
   },
 ];
 
@@ -97,12 +91,11 @@ export function IosInstallGuide({ onClose }: IosInstallGuideProps) {
 
         {/* Screenshot with finger overlay */}
         <div className="px-4 mb-4">
-          <div className="relative rounded-xl overflow-hidden border border-[rgba(200,180,140,0.08)] h-[240px]">
+          <div className="relative rounded-xl overflow-hidden border border-[rgba(200,180,140,0.08)]">
             <img
               src={current.src}
               alt={current.alt}
-              className="w-full h-full block"
-              style={{ objectFit: 'cover', objectPosition: current.objectPosition }}
+              className="w-full h-auto block"
             />
             {/* Animated finger */}
             <span
