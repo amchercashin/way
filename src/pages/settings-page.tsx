@@ -1,23 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withViewTransition } from '@/lib/view-transition';
 import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
-import { getAppSettings, updateAppSetting, clearAllData, type AppSettings } from '@/services/app-settings';
+import { clearAllData } from '@/services/app-settings';
 import { exportAllData, importAllData } from '@/services/backup';
+import { NdflSettings } from '@/components/settings/ndfl-settings';
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-
-  useEffect(() => {
-    getAppSettings().then(setSettings);
-  }, []);
-
-  const toggle = async (key: string, value: string) => {
-    await updateAppSetting(key, value);
-    setSettings(await getAppSettings());
-  };
 
   const handleClear = async () => {
     if (!confirm('Удалить все данные? Это действие необратимо.')) return;
@@ -60,16 +51,10 @@ export function SettingsPage() {
     <button onClick={() => withViewTransition(() => navigate(-1))} className="text-[var(--hi-ash)] text-[length:var(--hi-text-nav)]" aria-label="Назад">‹</button>
   );
 
-  if (!settings) return <AppShell leftAction={backButton} title="Настройки"><div /></AppShell>;
-
   return (
     <AppShell leftAction={backButton} title="Настройки">
       <div className="space-y-6">
-        <SettingRow
-          label="Период по умолчанию"
-          value={settings.defaultPeriod === 'month' ? 'Месяц' : 'Год'}
-          onToggle={() => toggle('defaultPeriod', settings.defaultPeriod === 'month' ? 'year' : 'month')}
-        />
+        <NdflSettings />
 
         <div>
           <div className="text-[var(--hi-ash)] text-[length:var(--hi-text-body)] mb-2">Экспорт</div>
@@ -117,18 +102,5 @@ export function SettingsPage() {
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function SettingRow({ label, value, onToggle }: {
-  label: string; value: string; onToggle: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[var(--hi-text)] text-[length:var(--hi-text-heading)]">{label}</span>
-      <button onClick={onToggle} className="bg-[var(--hi-stone)] text-[var(--hi-gold)] text-[length:var(--hi-text-body)] px-3 py-1.5 rounded-lg">
-        {value}
-      </button>
-    </div>
   );
 }

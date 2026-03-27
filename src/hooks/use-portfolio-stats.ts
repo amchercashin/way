@@ -4,6 +4,7 @@ import { db } from '@/db/database';
 import type { PortfolioStats, CategoryStats } from '@/models/types';
 import { calcAnnualIncomePerUnit, calcAssetIncomePerMonth, calcYieldPercent, type PaymentRecord } from '@/services/income-calculator';
 import { useAllPaymentHistory } from './use-payment-history';
+import { useNdflRates } from './use-ndfl-rates';
 
 export function usePortfolioStats(): {
   portfolio: PortfolioStats;
@@ -12,6 +13,7 @@ export function usePortfolioStats(): {
   const assets = useLiveQuery(() => db.assets.toArray(), [], []);
   const holdings = useLiveQuery(() => db.holdings.toArray(), [], []);
   const allHistory = useAllPaymentHistory();
+  const ndflRates = useNdflRates();
 
   const { portfolio, categories } = useMemo(() => {
     const now = new Date();
@@ -49,7 +51,9 @@ export function usePortfolioStats(): {
       totalValue += assetValue;
 
       const annualIncome = resolveAnnualIncome(asset);
-      const assetIncomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
+      const ndflRate = ndflRates.get(asset.type) ?? 0;
+      const taxMultiplier = 1 - ndflRate / 100;
+      const assetIncomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome) * taxMultiplier;
       totalIncomePerMonth += assetIncomePerMonth;
 
       const cat = categoryMap.get(asset.type);
@@ -81,7 +85,7 @@ export function usePortfolioStats(): {
     categories.sort((a, b) => b.totalIncomePerMonth - a.totalIncomePerMonth);
 
     return { portfolio, categories };
-  }, [assets, holdings, allHistory]);
+  }, [assets, holdings, allHistory, ndflRates]);
 
   return { portfolio, categories };
 }

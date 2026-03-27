@@ -13,6 +13,7 @@ import { usePaymentHistory } from '@/hooks/use-payment-history';
 import { useHoldingsByAsset } from '@/hooks/use-holdings';
 import { useAccounts } from '@/hooks/use-accounts';
 import { calcAnnualIncomePerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
+import { useNdflRates } from '@/hooks/use-ndfl-rates';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export function AssetDetailPage() {
   const paymentFieldRef = useRef<HTMLDivElement>(null);
   const asset = useAsset(assetId);
   const { portfolio } = usePortfolioStats();
+  const ndflRates = useNdflRates();
   const history = usePaymentHistory(assetId);
   const holdings = useHoldingsByAsset(assetId);
   const accounts = useAccounts();
@@ -47,7 +49,9 @@ export function AssetDetailPage() {
       ? holdings.reduce((sum, h) => sum + (h.averagePrice ?? 0) * h.quantity, 0) / totalQuantity
       : undefined;
 
-    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
+    const ndflRate = ndflRates.get(asset.type) ?? 0;
+    const taxMultiplier = 1 - ndflRate / 100;
+    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome) * taxMultiplier;
 
     const price = asset.currentPrice ?? weightedAvgPrice ?? 0;
     const nkd = asset.type === 'Облигации' ? (asset.accruedInterest ?? 0) : 0;
@@ -62,7 +66,7 @@ export function AssetDetailPage() {
     const isManual = asset.paymentPerUnitSource === 'manual';
 
     return { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity };
-  }, [asset, history, holdings, portfolio.totalValue]);
+  }, [asset, history, holdings, portfolio.totalValue, ndflRates]);
 
   const handleSavePaymentPerUnit = useCallback((v: string) => {
     const num = parseFloat(v.replace(',', '.').replace(/[^\d.]/g, ''));

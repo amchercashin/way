@@ -4,7 +4,6 @@ import { HeroIncome } from '@/components/main/hero-income';
 import { CategoryCard } from '@/components/main/category-card';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { useSyncContext } from '@/contexts/sync-context';
-import { getAppSettings } from '@/services/app-settings';
 
 let hasVisitedMainPage = false;
 
@@ -15,10 +14,6 @@ export function MainPage() {
   const animate = useRef(!hasVisitedMainPage).current;
 
   useEffect(() => { hasVisitedMainPage = true; }, []);
-
-  useEffect(() => {
-    getAppSettings().then((s) => setMode(s.defaultPeriod));
-  }, []);
 
   const income =
     mode === 'month'

@@ -8,6 +8,7 @@ import { AssetRow } from '@/components/category/asset-row';
 import { PageTip } from '@/components/onboarding/PageTip';
 import { useAssetsByType } from '@/hooks/use-assets';
 import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
+import { useNdflRates } from '@/hooks/use-ndfl-rates';
 import { useAllPaymentHistory } from '@/hooks/use-payment-history';
 import { calcAnnualIncomePerUnit, type PaymentRecord } from '@/services/income-calculator';
 import { db } from '@/db/database';
@@ -19,6 +20,7 @@ export function CategoryPage() {
   const assets = useAssetsByType(decodedType);
   const firstAssetRef = useRef<HTMLDivElement>(null);
   const { categories } = usePortfolioStats();
+  const ndflRates = useNdflRates();
   const allHistory = useAllPaymentHistory();
   const holdings = useLiveQuery(() => db.holdings.toArray(), [], []);
 
@@ -70,6 +72,8 @@ export function CategoryPage() {
           const history = historyByAsset.get(asset.id!) ?? [];
           annualIncome = calcAnnualIncomePerUnit(history, asset.frequencyPerYear, now).annualIncome;
         }
+        const ndflRate = ndflRates.get(decodedType) ?? 0;
+        annualIncome = annualIncome * (1 - ndflRate / 100);
         return (
           <div key={asset.id} ref={index === 0 ? firstAssetRef : undefined}>
             <AssetRow asset={asset} annualIncome={annualIncome} totalQuantity={quantityByAsset.get(asset.id!) ?? 0} />
