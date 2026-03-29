@@ -14,6 +14,7 @@ import { useHoldingsByAsset } from '@/hooks/use-holdings';
 import { useAccounts } from '@/hooks/use-accounts';
 import { calcAnnualIncomePerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
 import { useNdflRates } from '@/hooks/use-ndfl-rates';
+import { isSyncable } from '@/services/moex-sync';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -74,11 +75,19 @@ export function AssetDetailPage() {
     updateAsset(assetId, { paymentPerUnit: num, paymentPerUnitSource: 'manual' });
   }, [assetId]);
 
+  const handleSaveCurrentPrice = useCallback((v: string) => {
+    const num = parseFloat(v.replace(',', '.').replace(/[^\d.]/g, ''));
+    if (isNaN(num) || num <= 0) return;
+    updateAsset(assetId, { currentPrice: num });
+  }, [assetId]);
+
   if (!asset || !computed) {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
   const { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity } = computed;
+
+  const syncable = isSyncable(asset);
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
 
@@ -123,6 +132,14 @@ export function AssetDetailPage() {
           </div>
         )}
       </div>
+
+      <AssetField
+        label="Текущая цена"
+        value={asset.currentPrice != null ? `₽ ${asset.currentPrice.toLocaleString('ru-RU')}` : '— Укажите'}
+        sourceLabel={syncable ? 'биржа' : 'ручной'}
+        isManualSource={!syncable}
+        onSave={handleSaveCurrentPrice}
+      />
 
       <div ref={paymentFieldRef}>
       <AssetField
