@@ -30,7 +30,8 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
     const trimmedName = name.trim();
     if (!trimmedName) return;
     const qty = parseFloat(quantity) || 0;
-    const price = parseFloat(avgPrice) || undefined;
+    const totalCost = parseFloat(avgPrice) || undefined;
+    const perUnit = totalCost != null && qty > 0 ? totalCost / qty : totalCost;
 
     // Find existing asset by ticker
     let assetId: number;
@@ -48,7 +49,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
         type,
         ticker: trimmedTicker || undefined,
         name: trimmedName,
-        currentPrice: price,
+        currentPrice: perUnit,
         paymentPerUnitSource: 'fact',
         frequencyPerYear: freq,
         dataSource: 'manual',
@@ -62,7 +63,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
       assetId,
       quantity: qty,
       quantitySource: 'manual',
-      averagePrice: price,
+      averagePrice: perUnit,
     });
 
     // Reset form
@@ -132,15 +133,24 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
               />
             </div>
             <div>
-              <label className="text-[length:var(--hi-text-body)] text-[var(--hi-ash)] block mb-1">Цена покупки</label>
+              <label className="text-[length:var(--hi-text-body)] text-[var(--hi-ash)] block mb-1">Стоимость пок.</label>
               <input
                 type="text"
                 inputMode="decimal"
                 value={avgPrice}
                 onChange={(e) => setAvgPrice(e.target.value)}
-                placeholder="250"
+                placeholder="25 000"
                 className={inputCls}
               />
+              {(() => {
+                const q = parseFloat(quantity);
+                const t = parseFloat(avgPrice);
+                return q > 1 && t > 0 ? (
+                  <div className="text-[length:var(--hi-text-micro)] text-[var(--hi-muted)] mt-0.5">
+                    {Math.round(t / q).toLocaleString('ru-RU')} ₽/шт
+                  </div>
+                ) : null;
+              })()}
             </div>
           </div>
           <button
