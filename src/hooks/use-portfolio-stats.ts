@@ -36,7 +36,7 @@ export function usePortfolioStats(): {
         return asset.paymentPerUnit;
       }
       const history = historyByAsset.get(asset.id!) ?? [];
-      return calcAnnualIncomePerUnit(history, asset.frequencyPerYear, now).annualIncome;
+      return calcAnnualIncomePerUnit(history, now).annualIncome;
     };
 
     let totalValue = 0;

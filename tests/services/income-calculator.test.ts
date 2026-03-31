@@ -92,10 +92,20 @@ describe('income-calculator', () => {
         amount: 100,
         date: new Date(2025, 6 + i, 1), // Jul 2025 .. Aug 2026
       }));
+      // now = 2026-06-15; window starts 2025-06-15
+      // Jul 2025 (i=0) through Aug 2026 (i=13): all 14 dates >= 2025-06-15
+      // So all 14 payments are within window
       const result = calcAnnualIncomePerUnit(payments, new Date('2026-06-15'));
-      const inWindow = payments.filter(p => p.date >= new Date(2025, 5, 15));
-      expect(result.annualIncome).toBe(inWindow.length * 100);
-      expect(result.usedPayments).toHaveLength(inWindow.length);
+      expect(result.usedPayments).toHaveLength(14);
+      expect(result.annualIncome).toBe(1400);
+    });
+
+    it('includes payment on the same date as now', () => {
+      const now = new Date('2026-03-16');
+      const history = [{ amount: 100, date: new Date('2026-03-16') }];
+      const result = calcAnnualIncomePerUnit(history, now);
+      expect(result.annualIncome).toBe(100);
+      expect(result.usedPayments).toHaveLength(1);
     });
   });
 

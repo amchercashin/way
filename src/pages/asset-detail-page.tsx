@@ -39,7 +39,7 @@ export function AssetDetailPage() {
     if (asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null) {
       annualIncome = asset.paymentPerUnit;
     } else {
-      const result = calcAnnualIncomePerUnit(historyRecords, asset.frequencyPerYear, now);
+      const result = calcAnnualIncomePerUnit(historyRecords, now);
       annualIncome = result.annualIncome;
       usedPayments = result.usedPayments;
     }

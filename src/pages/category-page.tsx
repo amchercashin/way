@@ -73,7 +73,7 @@ export function CategoryPage() {
           annualIncome = asset.paymentPerUnit;
         } else {
           const history = historyByAsset.get(asset.id!) ?? [];
-          annualIncome = calcAnnualIncomePerUnit(history, asset.frequencyPerYear, now).annualIncome;
+          annualIncome = calcAnnualIncomePerUnit(history, now).annualIncome;
         }
         annualIncome = annualIncome * taxMultiplier;
         return (
