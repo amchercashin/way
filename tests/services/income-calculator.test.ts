@@ -10,86 +10,59 @@ import {
 
 describe('income-calculator', () => {
   describe('calcAnnualIncomePerUnit', () => {
-    it('Lukoil (freq=2): sums last 2 payments', () => {
+    it('sums all payments within 12-month window', () => {
       const history = [
         { amount: 514, date: new Date('2025-07-08') },
         { amount: 793, date: new Date('2025-12-20') },
-        { amount: 400, date: new Date('2024-07-10') },
+        { amount: 400, date: new Date('2025-04-10') },
       ];
-      const result = calcAnnualIncomePerUnit(history, 2, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(1307);
+      const result = calcAnnualIncomePerUnit(history, new Date('2026-03-16'));
+      expect(result.annualIncome).toBe(514 + 793 + 400);
+      expect(result.usedPayments).toHaveLength(3);
+    });
+
+    it('excludes payments older than 12 months', () => {
+      const history = [
+        { amount: 100, date: new Date('2025-01-01') }, // > 12 months ago
+        { amount: 200, date: new Date('2025-06-01') }, // within window
+        { amount: 300, date: new Date('2026-01-01') }, // within window
+      ];
+      const result = calcAnnualIncomePerUnit(history, new Date('2026-03-16'));
+      expect(result.annualIncome).toBe(500);
       expect(result.usedPayments).toHaveLength(2);
     });
 
-    it('bond (freq=4): sums last 4 coupons', () => {
-      const history = [
-        { amount: 30, date: new Date('2025-06-01') },
-        { amount: 30, date: new Date('2025-09-01') },
-        { amount: 30, date: new Date('2025-12-01') },
-        { amount: 30, date: new Date('2026-03-01') },
-      ];
-      const result = calcAnnualIncomePerUnit(history, 4, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(120);
-    });
-
-    it('annual stock (freq=1): takes last 1 payment', () => {
-      const history = [
-        { amount: 186, date: new Date('2025-07-15') },
-        { amount: 150, date: new Date('2024-07-15') },
-      ];
-      const result = calcAnnualIncomePerUnit(history, 1, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(186);
-    });
-
-    it('monthly rent (freq=12): sums last 12 payments', () => {
-      const payments = Array.from({ length: 14 }, (_, i) => ({
-        amount: 45000,
-        date: new Date(2025, 3 + i, 1), // Apr 2025 .. May 2026
-      }));
-      const result = calcAnnualIncomePerUnit(payments, 12, new Date('2026-06-15'));
-      expect(result.annualIncome).toBe(540000);
-      expect(result.usedPayments).toHaveLength(12);
-    });
-
     it('returns 0 for empty history', () => {
-      const result = calcAnnualIncomePerUnit([], 2, new Date('2026-03-16'));
+      const result = calcAnnualIncomePerUnit([], new Date('2026-03-16'));
       expect(result.annualIncome).toBe(0);
       expect(result.usedPayments).toHaveLength(0);
     });
 
-    it('returns 0 when latest payment is stale (>18 months ago)', () => {
-      const history = [{ amount: 100, date: new Date('2024-01-01') }];
-      const result = calcAnnualIncomePerUnit(history, 1, new Date('2026-03-16'));
+    it('returns 0 when all payments are older than 12 months', () => {
+      const history = [
+        { amount: 100, date: new Date('2024-01-01') },
+        { amount: 200, date: new Date('2024-06-01') },
+      ];
+      const result = calcAnnualIncomePerUnit(history, new Date('2026-03-16'));
       expect(result.annualIncome).toBe(0);
+      expect(result.usedPayments).toHaveLength(0);
     });
 
-    it('returns 0 for freq=0', () => {
-      const history = [{ amount: 100, date: new Date('2025-09-01') }];
-      const result = calcAnnualIncomePerUnit(history, 0, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(0);
-    });
-
-    it('returns 0 for negative freq', () => {
-      const history = [{ amount: 100, date: new Date('2025-09-01') }];
-      const result = calcAnnualIncomePerUnit(history, -1, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(0);
-    });
-
-    it('fewer payments than freq: takes what is available', () => {
-      const history = [{ amount: 36.9, date: new Date('2025-09-01') }];
-      const result = calcAnnualIncomePerUnit(history, 2, new Date('2026-03-16'));
-      expect(result.annualIncome).toBe(36.9);
-      expect(result.usedPayments).toHaveLength(1);
-    });
-
-    it('boundary: exactly 18 months ago is NOT stale', () => {
+    it('boundary: payment exactly 12 months ago is included', () => {
       const now = new Date('2026-03-16');
-      const eighteenMonthsAgo = new Date(now);
-      eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
-      // eighteenMonthsAgo = 2024-09-16
-      const history = [{ amount: 50, date: eighteenMonthsAgo }];
-      const result = calcAnnualIncomePerUnit(history, 1, now);
+      const twelveMonthsAgo = new Date(now);
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      const history = [{ amount: 50, date: twelveMonthsAgo }];
+      const result = calcAnnualIncomePerUnit(history, now);
       expect(result.annualIncome).toBe(50);
+    });
+
+    it('boundary: payment one day before 12-month window is excluded', () => {
+      const now = new Date('2026-03-16');
+      const justOutside = new Date('2025-03-15');
+      const history = [{ amount: 50, date: justOutside }];
+      const result = calcAnnualIncomePerUnit(history, now);
+      expect(result.annualIncome).toBe(0);
     });
 
     it('usedPayments sorted descending by date', () => {
@@ -98,13 +71,31 @@ describe('income-calculator', () => {
         { amount: 20, date: new Date('2026-01-01') },
         { amount: 15, date: new Date('2025-09-01') },
       ];
-      const result = calcAnnualIncomePerUnit(history, 3, new Date('2026-03-16'));
+      const result = calcAnnualIncomePerUnit(history, new Date('2026-03-16'));
       expect(result.usedPayments[0].date.getTime()).toBeGreaterThan(
         result.usedPayments[1].date.getTime(),
       );
       expect(result.usedPayments[1].date.getTime()).toBeGreaterThan(
         result.usedPayments[2].date.getTime(),
       );
+    });
+
+    it('handles single payment within window', () => {
+      const history = [{ amount: 186, date: new Date('2025-07-15') }];
+      const result = calcAnnualIncomePerUnit(history, new Date('2026-03-16'));
+      expect(result.annualIncome).toBe(186);
+      expect(result.usedPayments).toHaveLength(1);
+    });
+
+    it('includes many payments within window regardless of count', () => {
+      const payments = Array.from({ length: 14 }, (_, i) => ({
+        amount: 100,
+        date: new Date(2025, 6 + i, 1), // Jul 2025 .. Aug 2026
+      }));
+      const result = calcAnnualIncomePerUnit(payments, new Date('2026-06-15'));
+      const inWindow = payments.filter(p => p.date >= new Date(2025, 6, 15));
+      expect(result.annualIncome).toBe(inWindow.length * 100);
+      expect(result.usedPayments).toHaveLength(inWindow.length);
     });
   });
 
