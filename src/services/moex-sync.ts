@@ -44,6 +44,7 @@ export interface SyncResult {
   failed: number;
   skipped: number;
   errors: string[];
+  warnings: string[];
 }
 
 interface ResolvedAsset {
@@ -60,7 +61,7 @@ export function isSyncable(asset: Asset): boolean {
 
 export async function syncAllAssets(options?: { pricesOnly?: boolean }): Promise<SyncResult> {
   const assets = await db.assets.toArray();
-  const result: SyncResult = { synced: 0, failed: 0, skipped: 0, errors: [] };
+  const result: SyncResult = { synced: 0, failed: 0, skipped: 0, errors: [], warnings: [] };
 
   // Filter syncable assets
   const syncable = assets.filter(isSyncable);
@@ -107,6 +108,7 @@ export async function syncAllAssets(options?: { pricesOnly?: boolean }): Promise
     const r = enrichResults[i];
     if (r.status === 'fulfilled') {
       result.synced++;
+      result.warnings.push(...r.value);
     } else {
       result.failed++;
       const ticker = resolved[i].asset.ticker ?? resolved[i].secid;
@@ -244,11 +246,11 @@ async function enrichAsset(
   ra: ResolvedAsset,
   priceData: StockPriceResult | BondDataResult | undefined,
   options?: { pricesOnly?: boolean },
-): Promise<void> {
+): Promise<string[]> {
   if (ra.market === 'bonds') {
-    await enrichBond(ra, priceData as BondDataResult | undefined, options);
+    return enrichBond(ra, priceData as BondDataResult | undefined, options);
   } else {
-    await enrichStock(ra, priceData as StockPriceResult | undefined, options);
+    return enrichStock(ra, priceData as StockPriceResult | undefined, options);
   }
 }
 
@@ -256,7 +258,9 @@ async function enrichStock(
   ra: ResolvedAsset,
   priceData: StockPriceResult | undefined,
   options?: { pricesOnly?: boolean },
-): Promise<void> {
+): Promise<string[]> {
+  const warnings: string[] = [];
+
   // Write price from Phase 2 batch data
   if (priceData) {
     const currentPrice = priceData.currentPrice ?? priceData.prevPrice;
@@ -268,7 +272,7 @@ async function enrichStock(
     }
   }
 
-  if (options?.pricesOnly) return;
+  if (options?.pricesOnly) return warnings;
 
   // Fetch dividends (not batchable)
   const divInfo = await fetchDividends(ra.secid);
@@ -292,14 +296,28 @@ async function enrichStock(
       frequencyPerYear,
       nextExpectedCutoffDate: divInfo.summary.nextExpectedCutoffDate ?? undefined,
     });
+  } else {
+    // Dividend fetch failed — warn if no existing payments
+    const existing = await db.paymentHistory
+      .where('[assetId+date]')
+      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+      .count();
+    if (existing === 0) {
+      const ticker = ra.asset.ticker ?? ra.secid;
+      warnings.push(`${ticker}: дивиденды не загружены`);
+    }
   }
+
+  return warnings;
 }
 
 async function enrichBond(
   ra: ResolvedAsset,
   priceData: BondDataResult | undefined,
   options?: { pricesOnly?: boolean },
-): Promise<void> {
+): Promise<string[]> {
+  const warnings: string[] = [];
+
   // If no batch data, try individual fetch as fallback
   const bondData = priceData ?? await fetchBondData(ra.secid, ra.boardId);
   if (!bondData) throw new Error('Нет данных на MOEX');
@@ -314,7 +332,7 @@ async function enrichBond(
     });
   }
 
-  if (options?.pricesOnly) return;
+  if (options?.pricesOnly) return warnings;
 
   const frequencyPerYear =
     bondData.couponPeriod > 0
@@ -332,7 +350,19 @@ async function enrichBond(
   const couponHistory = await fetchCouponHistory(ra.secid);
   if (couponHistory.length > 0) {
     await writePaymentHistory(ra.asset.id!, couponHistory, 'coupon');
+  } else {
+    // Coupon fetch returned empty — warn if no existing coupons
+    const existing = await db.paymentHistory
+      .where('[assetId+date]')
+      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+      .count();
+    if (existing === 0) {
+      const ticker = ra.asset.ticker ?? ra.secid;
+      warnings.push(`${ticker}: купоны не загружены`);
+    }
   }
+
+  return warnings;
 }
 
 async function writePaymentHistory(
