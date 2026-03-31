@@ -93,7 +93,7 @@ describe('income-calculator', () => {
         date: new Date(2025, 6 + i, 1), // Jul 2025 .. Aug 2026
       }));
       const result = calcAnnualIncomePerUnit(payments, new Date('2026-06-15'));
-      const inWindow = payments.filter(p => p.date >= new Date(2025, 6, 15));
+      const inWindow = payments.filter(p => p.date >= new Date(2025, 5, 15));
       expect(result.annualIncome).toBe(inWindow.length * 100);
       expect(result.usedPayments).toHaveLength(inWindow.length);
     });

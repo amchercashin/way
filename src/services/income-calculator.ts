@@ -47,22 +47,21 @@ export interface AnnualIncomeResult {
 
 export function calcAnnualIncomePerUnit(
   history: PaymentRecord[],
-  frequencyPerYear: number,
   now: Date = new Date(),
 ): AnnualIncomeResult {
   const empty = { annualIncome: 0, usedPayments: [] as PaymentRecord[] };
-  if (history.length === 0 || frequencyPerYear <= 0) return empty;
+  if (history.length === 0) return empty;
 
-  const sorted = [...history].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const twelveMonthsAgo = new Date(now);
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
-  const eighteenMonthsAgo = new Date(now);
-  eighteenMonthsAgo.setMonth(eighteenMonthsAgo.getMonth() - 18);
-  if (sorted[0].date < eighteenMonthsAgo) return empty;
+  const usedPayments = history
+    .filter(p => p.date >= twelveMonthsAgo)
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  const n = Math.min(frequencyPerYear, sorted.length);
-  const usedPayments = sorted.slice(0, n);
+  if (usedPayments.length === 0) return empty;
+
   const annualIncome = usedPayments.reduce((sum, p) => sum + p.amount, 0);
-
   return { annualIncome, usedPayments };
 }
 
