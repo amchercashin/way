@@ -9,12 +9,21 @@ interface PaymentRowProps {
 const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
+const SOURCE_BADGE: Record<string, { label: string; bg: string; text: string }> = {
+  moex:   { label: 'moex',   bg: 'bg-[#2d5a2d]', text: 'text-[#6bba6b]' },
+  dohod:  { label: 'dohod',  bg: 'bg-[#2d3d5a]', text: 'text-[#6b9eba]' },
+  manual: { label: 'ручной', bg: 'bg-[#5a5a2d]', text: 'text-[#baba6b]' },
+  import: { label: 'импорт', bg: 'bg-[#3a3a3a]', text: 'text-[#9a9a9a]' },
+};
+
 export function PaymentRow({ payment, onToggleExcluded, onDelete }: PaymentRowProps) {
   const isExcluded = payment.excluded;
+  const isForecast = payment.isForecast;
+  const badge = SOURCE_BADGE[payment.dataSource] ?? SOURCE_BADGE.manual;
 
   return (
     <div
-      className={`grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center pl-7 pr-3 py-0.5 text-[length:var(--hi-text-body)] border-t border-[var(--hi-void)] transition-opacity${isExcluded ? ' opacity-50' : ''}`}
+      className={`grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center pl-7 pr-3 py-0.5 text-[length:var(--hi-text-body)] border-t border-[var(--hi-void)] transition-opacity${isExcluded ? ' opacity-50' : isForecast ? ' opacity-60' : ''}`}
       style={isExcluded ? { borderLeftWidth: 2, borderLeftColor: 'var(--hi-gold)' } : undefined}
     >
       {/* Date */}
@@ -27,18 +36,23 @@ export function PaymentRow({ payment, onToggleExcluded, onDelete }: PaymentRowPr
         {payment.amount.toFixed(2)} ₽
       </span>
 
-      {/* Source badge */}
-      <span className={`text-[10px] leading-tight px-1 py-px rounded ${
-        payment.dataSource === 'moex'
-          ? 'bg-[#2d5a2d] text-[#6bba6b]'
-          : 'bg-[#5a5a2d] text-[#baba6b]'
-      }`}>
-        {payment.dataSource === 'moex' ? 'moex' : 'ручной'}
+      {/* Source badge + forecast label */}
+      <span className="flex items-center gap-1">
+        <span className={`text-[10px] leading-tight px-1 py-px rounded ${badge.bg} ${badge.text}`}>
+          {badge.label}
+        </span>
+        {isForecast && (
+          <span className="text-[length:var(--hi-text-micro)] text-[var(--hi-muted)] italic">
+            прогноз
+          </span>
+        )}
       </span>
 
-      {/* Actions */}
+      {/* Actions — no exclude button for forecasts */}
       <div className="flex gap-1 ml-1">
-        {isExcluded ? (
+        {isForecast ? (
+          <div className="min-w-[32px] min-h-[28px]" />
+        ) : isExcluded ? (
           <>
             <button
               onClick={() => onToggleExcluded(payment.id!)}
