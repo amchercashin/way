@@ -27,11 +27,6 @@ export async function reconcilePayments(
   }
   if (!authSource) return;
 
-  // Collect authority dates (fact records only)
-  const authorityDates = new Set(
-    all.filter(r => r.dataSource === authSource && !r.isForecast).map(r => r.date.getTime()),
-  );
-
   // Lower-priority sources
   const authIndex = priority.indexOf(authSource);
   const lowerSources = new Set(priority.slice(authIndex + 1));
@@ -44,7 +39,7 @@ export async function reconcilePayments(
     if (!lowerSources.has(record.dataSource)) continue;
     if (record.isForecast) continue;
 
-    const shouldExclude = !authorityDates.has(record.date.getTime());
+    const shouldExclude = true; // auth source covers this asset — all lower-priority facts are redundant
     const currentlyExcluded = record.excluded ?? false;
     if (shouldExclude !== currentlyExcluded) {
       updates.push({ id: record.id!, excluded: shouldExclude });
