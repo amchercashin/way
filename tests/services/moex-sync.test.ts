@@ -552,6 +552,28 @@ describe('syncAllAssets', () => {
     expect(result.synced).toBe(1);
   });
 
+  it('stores both dohod and moex records on same date (different dataSource)', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Акции', name: 'LKOH', ticker: 'LKOH', moexSecid: 'LKOH',
+      moexBoardId: 'TQBR', moexMarket: 'shares',
+      dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS, frequencySource: 'moex' as const,
+    })) as number;
+
+    await db.paymentHistory.add({
+      assetId, amount: 397, date: new Date('2026-01-12'),
+      type: 'dividend', dataSource: 'moex',
+    });
+    await db.paymentHistory.add({
+      assetId, amount: 397, date: new Date('2026-01-12'),
+      type: 'dividend', dataSource: 'dohod',
+    });
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(2);
+    expect(records.map(r => r.dataSource).sort()).toEqual(['dohod', 'moex']);
+  });
+
   it('handles mixed stock+bond portfolio', async () => {
     await db.assets.add({
       type: 'Акции', ticker: 'SBER', moexSecid: 'SBER', moexBoardId: 'TQBR', moexMarket: 'shares',

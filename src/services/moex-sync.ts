@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import { db } from '@/db/database';
-import type { Asset, PaymentHistory } from '@/models/types';
+import type { Asset, PaymentHistory, DataSource } from '@/models/types';
 import type { DividendHistoryRow, StockPriceResult, BondDataResult } from './moex-api';
 import {
   resolveSecurityInfo,
@@ -369,22 +369,28 @@ async function writePaymentHistory(
   assetId: number,
   rows: DividendHistoryRow[],
   type: PaymentHistory['type'],
+  dataSource: DataSource = 'moex',
+  isForecast?: boolean,
 ): Promise<void> {
   const existing = await db.paymentHistory
     .where('[assetId+date]')
     .between([assetId, Dexie.minKey], [assetId, Dexie.maxKey])
     .toArray();
 
-  const existingDates = new Set(existing.map((r) => r.date.getTime()));
+  // Dedup by date + dataSource: same source should not duplicate its own records
+  const existingKeys = new Set(
+    existing.map((r) => `${r.date.getTime()}:${r.dataSource}`),
+  );
 
   const newRecords = rows
-    .filter((r) => !existingDates.has(r.date.getTime()))
+    .filter((r) => !existingKeys.has(`${r.date.getTime()}:${dataSource}`))
     .map((r) => ({
       assetId,
       amount: r.amount,
       date: r.date,
       type,
-      dataSource: 'moex' as const,
+      dataSource,
+      ...(isForecast ? { isForecast: true } : {}),
     }));
 
   if (newRecords.length > 0) {
