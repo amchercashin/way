@@ -3,6 +3,16 @@ import type { Mock } from 'vitest';
 import Dexie from 'dexie';
 import { db } from '@/db/database';
 
+vi.mock('@/services/heroincome-data', () => ({
+  isDohodAvailable: vi.fn().mockResolvedValue(false),
+  fetchDohodDividends: vi.fn().mockResolvedValue(null),
+  resetDohodCache: vi.fn(),
+}));
+
+vi.mock('@/services/payment-reconciler', () => ({
+  reconcilePayments: vi.fn(),
+}));
+
 vi.mock('@/services/moex-api', () => ({
   resolveSecurityInfo: vi.fn(),
   fetchStockPrice: vi.fn(),
@@ -26,6 +36,7 @@ import {
   fetchBatchStockPrices,
   fetchBatchBondData,
 } from '@/services/moex-api';
+import { isDohodAvailable, fetchDohodDividends } from '@/services/heroincome-data';
 import { syncAllAssets, getLastSyncAt } from '@/services/moex-sync';
 
 const ASSET_DEFAULTS = {
@@ -572,6 +583,36 @@ describe('syncAllAssets', () => {
     const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
     expect(records).toHaveLength(2);
     expect(records.map(r => r.dataSource).sort()).toEqual(['dohod', 'moex']);
+  });
+
+  it('writes both dohod and moex records on stock sync when dohod available', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Акции', name: 'LKOH', ticker: 'LKOH', moexSecid: 'LKOH',
+      moexBoardId: 'TQBR', moexMarket: 'shares',
+      dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS, frequencySource: 'moex' as const,
+    })) as number;
+
+    (isDohodAvailable as Mock).mockResolvedValue(true);
+    (fetchDohodDividends as Mock).mockResolvedValue([
+      { date: new Date('2026-01-12'), amount: 397, isForecast: false },
+      { date: new Date('2026-05-04'), amount: 278, isForecast: true },
+    ]);
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['LKOH', { currentPrice: 7000, prevPrice: 6900 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue({
+      summary: { lastPaymentAmount: 397, lastPaymentDate: new Date('2026-01-12'), frequencyPerYear: 2, nextExpectedCutoffDate: null },
+      history: [{ date: new Date('2026-01-12'), amount: 397 }],
+    });
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(3);
+    expect(records.filter(r => r.dataSource === 'dohod')).toHaveLength(2);
+    expect(records.filter(r => r.dataSource === 'moex')).toHaveLength(1);
+    expect(records.filter(r => r.isForecast)).toHaveLength(1);
   });
 
   it('handles mixed stock+bond portfolio', async () => {

@@ -63,7 +63,7 @@ describe('heroincome-data', () => {
       mockFetchResponses({ 'index.json': MOCK_INDEX });
       await isDohodAvailable('LKOH');
       await isDohodAvailable('SBER');
-      const indexCalls = mockFetch.mock.calls.filter((c: [string]) => c[0].includes('index.json'));
+      const indexCalls = mockFetch.mock.calls.filter((c: unknown[]) => (c[0] as string).includes('index.json'));
       expect(indexCalls).toHaveLength(1);
     });
 
@@ -103,7 +103,7 @@ describe('heroincome-data', () => {
       await isDohodAvailable('LKOH');
       resetDohodCache();
       await isDohodAvailable('SBER');
-      const indexCalls = mockFetch.mock.calls.filter((c: [string]) => c[0].includes('index.json'));
+      const indexCalls = mockFetch.mock.calls.filter((c: unknown[]) => (c[0] as string).includes('index.json'));
       expect(indexCalls).toHaveLength(2);
     });
   });
