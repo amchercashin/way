@@ -13,7 +13,6 @@ import {
   chunk,
 } from './moex-api';
 import { fetchDohodDividends, isDohodAvailable, resetDohodCache } from '@/services/heroincome-data';
-import { reconcilePayments } from '@/services/payment-reconciler';
 
 // ============ Concurrency Helper ============
 
@@ -277,21 +276,28 @@ async function enrichStock(
 
   if (options?.pricesOnly) return warnings;
 
-  // Fetch dividends from both sources in parallel
+  // Priority: dohod > moex. Use one source, not both.
   const ticker = ra.asset.ticker ?? ra.secid;
-  const [dohodAvailable, divInfo] = await Promise.all([
-    isDohodAvailable(ticker),
-    fetchDividends(ra.secid),
-  ]);
+  const dohodAvailable = await isDohodAvailable(ticker);
 
-  // Fetch dohod dividends if available
   let dohodRows: Awaited<ReturnType<typeof fetchDohodDividends>> = null;
   if (dohodAvailable) {
     dohodRows = await fetchDohodDividends(ticker);
   }
 
-  // Write dohod records first (authoritative for stocks)
+  let divInfo: Awaited<ReturnType<typeof fetchDividends>> = null;
+
   if (dohodRows) {
+    // dohod covers this asset — remove old moex dividend records
+    const oldMoex = await db.paymentHistory
+      .where('assetId').equals(ra.asset.id!)
+      .filter(r => r.dataSource === 'moex' && r.type === 'dividend')
+      .toArray();
+    if (oldMoex.length > 0) {
+      await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
+    }
+
+    // Write dohod facts + forecasts
     const facts = dohodRows.filter((r) => !r.isForecast);
     const forecasts = dohodRows.filter((r) => r.isForecast);
     if (facts.length > 0) {
@@ -300,58 +306,47 @@ async function enrichStock(
     if (forecasts.length > 0) {
       await writePaymentHistory(ra.asset.id!, forecasts, 'dividend', 'dohod', true);
     }
-  }
-
-  // Write MOEX records
-  if (divInfo) {
-    await writePaymentHistory(ra.asset.id!, divInfo.history, 'dividend', 'moex');
-  }
-
-  // Reconcile: auto-exclude "extra" records from lower-priority sources
-  await reconcilePayments(ra.asset.id!, ra.asset.type);
-
-  if (divInfo || dohodRows) {
-    // Recalculate frequency from non-excluded, non-forecast DB records
-    const dbRecords = await db.paymentHistory
-      .where('[assetId+date]')
-      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
-      .toArray();
-    const activeDates = dbRecords
-      .filter((r) => !r.excluded && !r.isForecast)
-      .map((r) => r.date)
-      .sort((a, b) => a.getTime() - b.getTime());
-
-    const frequencyPerYear = activeDates.length >= 2
-      ? calcDividendFrequency(activeDates)
-      : (divInfo?.summary.frequencyPerYear ?? 1);
-
-    // nextExpectedCutoffDate: prefer dohod forecast, then MOEX summary
-    let nextExpectedCutoffDate: Date | undefined;
-    if (dohodRows) {
-      const now = new Date();
-      const nextForecast = dohodRows
-        .filter((r) => r.isForecast && r.date > now)
-        .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-      if (nextForecast) {
-        nextExpectedCutoffDate = nextForecast.date;
-      }
-    }
-    if (!nextExpectedCutoffDate && divInfo?.summary.nextExpectedCutoffDate) {
-      nextExpectedCutoffDate = divInfo.summary.nextExpectedCutoffDate;
-    }
-
-    await updateMoexAssetFields(ra.asset, {
-      frequencyPerYear,
-      nextExpectedCutoffDate,
-    });
   } else {
-    const existing = await db.paymentHistory
-      .where('[assetId+date]')
-      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
-      .count();
-    if (existing === 0) {
-      warnings.push(`${ticker}: дивиденды не загружены`);
+    // Fallback to MOEX
+    divInfo = await fetchDividends(ra.secid);
+    if (divInfo) {
+      await writePaymentHistory(ra.asset.id!, divInfo.history, 'dividend', 'moex');
     }
+  }
+
+  // Recalculate frequency from non-forecast DB records
+  const dbRecords = await db.paymentHistory
+    .where('[assetId+date]')
+    .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+    .toArray();
+  const activeDates = dbRecords
+    .filter((r) => !r.isForecast)
+    .map((r) => r.date)
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  const frequencyPerYear = activeDates.length >= 2
+    ? calcDividendFrequency(activeDates)
+    : (divInfo?.summary.frequencyPerYear ?? undefined);
+
+  // nextExpectedCutoffDate: prefer dohod forecast, then MOEX
+  let nextExpectedCutoffDate: Date | undefined;
+  if (dohodRows) {
+    const now = new Date();
+    const nextForecast = dohodRows
+      .filter((r) => r.isForecast && r.date > now)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    if (nextForecast) {
+      nextExpectedCutoffDate = nextForecast.date;
+    }
+  }
+  if (!nextExpectedCutoffDate) {
+    nextExpectedCutoffDate = divInfo?.summary.nextExpectedCutoffDate ?? undefined;
+  }
+
+  if (frequencyPerYear != null) {
+    await updateMoexAssetFields(ra.asset, { frequencyPerYear, nextExpectedCutoffDate });
+  } else if (activeDates.length === 0 && !dohodRows && !divInfo) {
+    warnings.push(`${ticker}: дивиденды не загружены`);
   }
 
   return warnings;
@@ -472,10 +467,7 @@ export async function syncAssetPayments(assetId: number): Promise<{ success: boo
       }
     } else {
       const ticker = ra.asset.ticker ?? ra.secid;
-      const [dohodAvailable, divInfo] = await Promise.all([
-        isDohodAvailable(ticker),
-        fetchDividends(ra.secid),
-      ]);
+      const dohodAvailable = await isDohodAvailable(ticker);
 
       let dohodRows: Awaited<ReturnType<typeof fetchDohodDividends>> = null;
       if (dohodAvailable) {
@@ -483,6 +475,15 @@ export async function syncAssetPayments(assetId: number): Promise<{ success: boo
       }
 
       if (dohodRows) {
+        // dohod covers this asset — remove old moex dividend records
+        const oldMoex = await db.paymentHistory
+          .where('assetId').equals(ra.asset.id!)
+          .filter(r => r.dataSource === 'moex' && r.type === 'dividend')
+          .toArray();
+        if (oldMoex.length > 0) {
+          await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
+        }
+
         const facts = dohodRows.filter((r) => !r.isForecast);
         const forecasts = dohodRows.filter((r) => r.isForecast);
         if (facts.length > 0) {
@@ -491,43 +492,24 @@ export async function syncAssetPayments(assetId: number): Promise<{ success: boo
         if (forecasts.length > 0) {
           await writePaymentHistory(ra.asset.id!, forecasts, 'dividend', 'dohod', true);
         }
+      } else {
+        const divInfo = await fetchDividends(ra.secid);
+        if (divInfo) {
+          await writePaymentHistory(ra.asset.id!, divInfo.history, 'dividend', 'moex');
+        }
       }
 
-      if (divInfo) {
-        await writePaymentHistory(ra.asset.id!, divInfo.history, 'dividend', 'moex');
-      }
-
-      await reconcilePayments(ra.asset.id!, ra.asset.type);
-
-      if (divInfo || dohodRows) {
-        const dbRecords = await db.paymentHistory
-          .where('[assetId+date]')
-          .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
-          .toArray();
-        const activeDates = dbRecords
-          .filter((r) => !r.excluded && !r.isForecast)
-          .map((r) => r.date)
-          .sort((a, b) => a.getTime() - b.getTime());
-        const frequencyPerYear = activeDates.length >= 2
-          ? calcDividendFrequency(activeDates)
-          : (divInfo?.summary.frequencyPerYear ?? 1);
-
-        let nextExpectedCutoffDate: Date | undefined;
-        if (dohodRows) {
-          const now = new Date();
-          const nextForecast = dohodRows
-            .filter((r) => r.isForecast && r.date > now)
-            .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-          if (nextForecast) nextExpectedCutoffDate = nextForecast.date;
-        }
-        if (!nextExpectedCutoffDate && divInfo?.summary.nextExpectedCutoffDate) {
-          nextExpectedCutoffDate = divInfo.summary.nextExpectedCutoffDate;
-        }
-
-        await updateMoexAssetFields(ra.asset, {
-          frequencyPerYear,
-          nextExpectedCutoffDate,
-        });
+      const dbRecords = await db.paymentHistory
+        .where('[assetId+date]')
+        .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+        .toArray();
+      const activeDates = dbRecords
+        .filter((r) => !r.isForecast)
+        .map((r) => r.date)
+        .sort((a, b) => a.getTime() - b.getTime());
+      if (activeDates.length >= 2) {
+        const frequencyPerYear = calcDividendFrequency(activeDates);
+        await updateMoexAssetFields(ra.asset, { frequencyPerYear });
       }
     }
 

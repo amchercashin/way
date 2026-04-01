@@ -38,7 +38,7 @@ export function CategoryPage() {
     const now = new Date();
     const historyByAsset = new Map<number, PaymentRecord[]>();
     for (const h of (allHistory ?? [])) {
-      if (h.excluded || h.isForecast) continue;
+      if (h.isForecast) continue;
       const arr = historyByAsset.get(h.assetId) ?? [];
       arr.push({ amount: h.amount, date: new Date(h.date) });
       historyByAsset.set(h.assetId, arr);

@@ -4,7 +4,6 @@ import type { PaymentRecord } from '@/services/income-calculator';
 import { calcCAGR } from '@/services/income-calculator';
 
 export interface ChartPaymentRecord extends PaymentRecord {
-  excluded?: boolean;
   isForecast?: boolean;
 }
 
@@ -24,16 +23,16 @@ export function PaymentHistoryChart({
 
   // Group history by year (per-unit amounts — no quantity multiplication)
   const byYear = useMemo(() => {
-    const map = new Map<number, { total: number; forecastTotal: number; payments: { date: Date; amount: number; excluded?: boolean; isForecast?: boolean }[] }>();
+    const map = new Map<number, { total: number; forecastTotal: number; payments: { date: Date; amount: number; isForecast?: boolean }[] }>();
     for (const p of history) {
       const year = p.date.getFullYear();
       const entry = map.get(year) ?? { total: 0, forecastTotal: 0, payments: [] };
       if (p.isForecast) {
         entry.forecastTotal += p.amount;
-      } else if (!p.excluded) {
+      } else {
         entry.total += p.amount;
       }
-      entry.payments.push({ date: p.date, amount: p.amount, excluded: p.excluded, isForecast: p.isForecast });
+      entry.payments.push({ date: p.date, amount: p.amount, isForecast: p.isForecast });
       map.set(year, entry);
     }
     for (const entry of map.values()) {
@@ -83,7 +82,7 @@ export function PaymentHistoryChart({
   const maxValue = Math.max(...displayValues, 1);
 
   // CAGR from per-unit history (excludes current year, needs >=2 full years)
-  const activeHistory = useMemo(() => history.filter(p => !p.excluded && !p.isForecast), [history]);
+  const activeHistory = useMemo(() => history.filter(p => !p.isForecast), [history]);
   const cagr = useMemo(
     () => (isNoHistory ? null : calcCAGR(activeHistory, new Date())),
     [activeHistory, isNoHistory],
@@ -161,7 +160,7 @@ export function PaymentHistoryChart({
           </span>
         </div>
         {yearData.payments.map((p, i) => (
-          <div key={i} className={`flex justify-between font-mono text-[length:var(--hi-text-caption)] mb-0.5${p.excluded ? ' opacity-40 line-through' : p.isForecast ? ' opacity-60' : ''}`}>
+          <div key={i} className={`flex justify-between font-mono text-[length:var(--hi-text-caption)] mb-0.5${p.isForecast ? ' opacity-60' : ''}`}>
             <span className="text-[#4a4540]">
               {formatShortDate(p.date)}
               {p.isForecast && <span className="text-[length:var(--hi-text-micro)] text-[var(--hi-muted)] italic ml-1">прогноз</span>}

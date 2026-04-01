@@ -25,7 +25,7 @@ export function usePortfolioStats(): {
 
     const historyByAsset = new Map<number, PaymentRecord[]>();
     for (const h of (allHistory ?? [])) {
-      if (h.excluded) continue;
+      if (h.isForecast) continue;
       const arr = historyByAsset.get(h.assetId) ?? [];
       arr.push({ amount: h.amount, date: new Date(h.date) });
       historyByAsset.set(h.assetId, arr);

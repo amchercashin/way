@@ -30,9 +30,9 @@ export function AssetDetailPage() {
   const computed = useMemo(() => {
     if (!asset) return null;
     const now = new Date();
-    const activeHistory = history.filter((h) => !h.excluded && !h.isForecast);
+    const activeHistory = history.filter((h) => !h.isForecast);
     const historyRecords = activeHistory.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
-    const allHistoryRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date), excluded: h.excluded, isForecast: h.isForecast }));
+    const allHistoryRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date), isForecast: h.isForecast }));
 
     let annualIncome: number;
     let usedPayments: { amount: number; date: Date }[] = [];

@@ -585,7 +585,7 @@ describe('syncAllAssets', () => {
     expect(records.map(r => r.dataSource).sort()).toEqual(['dohod', 'moex']);
   });
 
-  it('writes both dohod and moex records on stock sync when dohod available', async () => {
+  it('writes only dohod records when dohod available (no moex)', async () => {
     const assetId = (await db.assets.add({
       type: 'Акции', name: 'LKOH', ticker: 'LKOH', moexSecid: 'LKOH',
       moexBoardId: 'TQBR', moexMarket: 'shares',
@@ -601,18 +601,16 @@ describe('syncAllAssets', () => {
     (fetchBatchStockPrices as Mock).mockResolvedValue(
       new Map([['LKOH', { currentPrice: 7000, prevPrice: 6900 }]]),
     );
-    (fetchDividends as Mock).mockResolvedValue({
-      summary: { lastPaymentAmount: 397, lastPaymentDate: new Date('2026-01-12'), frequencyPerYear: 2, nextExpectedCutoffDate: null },
-      history: [{ date: new Date('2026-01-12'), amount: 397 }],
-    });
 
     await syncAllAssets();
 
     const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
-    expect(records).toHaveLength(3);
-    expect(records.filter(r => r.dataSource === 'dohod')).toHaveLength(2);
-    expect(records.filter(r => r.dataSource === 'moex')).toHaveLength(1);
+    // Only dohod: 1 fact + 1 forecast, no moex
+    expect(records).toHaveLength(2);
+    expect(records.every(r => r.dataSource === 'dohod')).toBe(true);
     expect(records.filter(r => r.isForecast)).toHaveLength(1);
+    // fetchDividends should NOT have been called (dohod available)
+    expect(fetchDividends).not.toHaveBeenCalled();
   });
 
   it('handles mixed stock+bond portfolio', async () => {

@@ -37,7 +37,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
     }
   }, [isHighlighted]);
 
-  const sorted = [...payments].filter(p => !p.excluded).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sorted = [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const paymentType = PAYMENT_TYPE_MAP[asset.type] ?? 'other';
   const identLine = [asset.ticker, asset.isin].filter(Boolean).join(' · ');
   const syncable = isSyncable(asset);

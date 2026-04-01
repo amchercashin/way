@@ -17,7 +17,6 @@ const SOURCE_BADGE: Record<string, { label: string; bg: string; text: string }> 
 
 export function PaymentRow({ payment, onDelete }: PaymentRowProps) {
   const isForecast = payment.isForecast;
-  const isManual = payment.dataSource === 'manual';
   const badge = SOURCE_BADGE[payment.dataSource] ?? SOURCE_BADGE.manual;
 
   return (
@@ -48,17 +47,13 @@ export function PaymentRow({ payment, onDelete }: PaymentRowProps) {
 
       {/* Actions: delete for manual only */}
       <div className="flex gap-1 ml-1">
-        {isManual ? (
-          <button
-            onClick={() => onDelete(payment.id!)}
-            className="text-red-400 hover:text-red-300 text-[length:var(--hi-text-title)] min-w-[32px] min-h-[28px] flex items-center justify-center transition-colors"
-            title="Удалить"
-          >
-            ×
-          </button>
-        ) : (
-          <div className="min-w-[32px] min-h-[28px]" />
-        )}
+        <button
+          onClick={() => onDelete(payment.id!)}
+          className="text-red-400 hover:text-red-300 text-[length:var(--hi-text-title)] min-w-[32px] min-h-[28px] flex items-center justify-center transition-colors"
+          title="Удалить"
+        >
+          ×
+        </button>
       </div>
     </div>
   );
