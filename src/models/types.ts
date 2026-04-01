@@ -1,4 +1,4 @@
-export type DataSource = 'moex' | 'import' | 'manual';
+export type DataSource = 'moex' | 'dohod' | 'import' | 'manual';
 
 export interface Asset {
   id?: number;
@@ -45,6 +45,7 @@ export interface PaymentHistory {
   type: 'dividend' | 'coupon' | 'rent' | 'interest' | 'distribution' | 'other';
   dataSource: DataSource;
   excluded?: boolean;
+  isForecast?: boolean;
 }
 
 export interface ImportRecord {
