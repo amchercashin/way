@@ -7,6 +7,8 @@ vi.mock('@/services/heroincome-data', () => ({
   isDohodAvailable: vi.fn().mockResolvedValue(false),
   fetchDohodDividends: vi.fn().mockResolvedValue(null),
   resetDohodCache: vi.fn(),
+  findFundKey: vi.fn().mockResolvedValue(null),
+  fetchFundDistributions: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('@/services/payment-reconciler', () => ({
@@ -36,7 +38,7 @@ import {
   fetchBatchStockPrices,
   fetchBatchBondData,
 } from '@/services/moex-api';
-import { isDohodAvailable, fetchDohodDividends } from '@/services/heroincome-data';
+import { isDohodAvailable, fetchDohodDividends, findFundKey, fetchFundDistributions } from '@/services/heroincome-data';
 import { syncAllAssets, getLastSyncAt } from '@/services/moex-sync';
 
 const ASSET_DEFAULTS = {
@@ -611,6 +613,90 @@ describe('syncAllAssets', () => {
     expect(records.filter(r => r.isForecast)).toHaveLength(1);
     // fetchDividends should NOT have been called (dohod available)
     expect(fetchDividends).not.toHaveBeenCalled();
+  });
+
+  it('writes fund distributions from heroincome-data with type distribution', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Фонды', name: 'PLZ5', ticker: 'PLZ5', isin: 'RU000A1022Z1',
+      moexSecid: 'PLZ5', moexBoardId: 'TQPI', moexMarket: 'shares',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS, frequencyPerYear: 12, frequencySource: 'moex' as const,
+    })) as number;
+
+    (findFundKey as Mock).mockResolvedValue('PLZ5');
+    (fetchFundDistributions as Mock).mockResolvedValue([
+      { date: new Date('2026-02-27'), amount: 72.45 },
+      { date: new Date('2026-01-30'), amount: 68.9 },
+    ]);
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['PLZ5', { currentPrice: 8100, prevPrice: 8050 }]]),
+    );
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(2);
+    expect(records.every(r => r.type === 'distribution')).toBe(true);
+    expect(records.every(r => r.dataSource === 'dohod')).toBe(true);
+    expect(records.every(r => !r.isForecast)).toBe(true);
+    expect(fetchDividends).not.toHaveBeenCalled();
+    expect(isDohodAvailable).not.toHaveBeenCalled();
+  });
+
+  it('falls back to MOEX when fund not in heroincome-data', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Фонды', name: 'SBMX', ticker: 'SBMX',
+      moexSecid: 'SBMX', moexBoardId: 'TQTF', moexMarket: 'shares',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS, frequencyPerYear: 12,
+    })) as number;
+
+    (findFundKey as Mock).mockResolvedValue(null);
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBMX', { currentPrice: 20, prevPrice: 19.8 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue({
+      summary: { lastPaymentAmount: 0.5, lastPaymentDate: new Date('2025-12-15'), frequencyPerYear: 4, nextExpectedCutoffDate: null },
+      history: [{ date: new Date('2025-12-15'), amount: 0.5 }],
+    });
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    expect(records).toHaveLength(1);
+    expect(records[0].type).toBe('distribution');
+    expect(records[0].dataSource).toBe('moex');
+  });
+
+  it('deletes old moex distribution records when heroincome-data covers a fund', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Фонды', name: 'PLZ5', ticker: 'PLZ5',
+      moexSecid: 'PLZ5', moexBoardId: 'TQPI', moexMarket: 'shares',
+      dataSource: 'import', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS, frequencyPerYear: 12, frequencySource: 'moex' as const,
+    })) as number;
+
+    // Pre-existing moex distribution
+    await db.paymentHistory.add({
+      assetId, amount: 60.0, date: new Date('2025-07-15'),
+      type: 'distribution', dataSource: 'moex',
+    });
+
+    (findFundKey as Mock).mockResolvedValue('PLZ5');
+    (fetchFundDistributions as Mock).mockResolvedValue([
+      { date: new Date('2026-02-27'), amount: 72.45 },
+    ]);
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['PLZ5', { currentPrice: 8100, prevPrice: 8050 }]]),
+    );
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory.where('assetId').equals(assetId).toArray();
+    // Old moex record deleted, only dohod record remains
+    expect(records).toHaveLength(1);
+    expect(records[0].dataSource).toBe('dohod');
+    expect(records[0].amount).toBe(72.45);
   });
 
   it('handles mixed stock+bond portfolio', async () => {

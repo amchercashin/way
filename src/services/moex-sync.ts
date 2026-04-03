@@ -12,7 +12,13 @@ import {
   calcDividendFrequency,
   chunk,
 } from './moex-api';
-import { fetchDohodDividends, isDohodAvailable, resetDohodCache } from '@/services/heroincome-data';
+import {
+  fetchDohodDividends,
+  isDohodAvailable,
+  resetDohodCache,
+  findFundKey,
+  fetchFundDistributions,
+} from '@/services/heroincome-data';
 
 // ============ Concurrency Helper ============
 
@@ -276,8 +282,58 @@ async function enrichStock(
 
   if (options?.pricesOnly) return warnings;
 
-  // Priority: dohod > moex. Use one source, not both.
   const ticker = ra.asset.ticker ?? ra.secid;
+
+  // ---- Fund distribution path (heroincome-data > moex) ----
+  if (ra.asset.type === 'Фонды') {
+    const fundKey = await findFundKey(ra.asset.ticker, ra.asset.isin);
+    let fundRows: Awaited<ReturnType<typeof fetchFundDistributions>> = null;
+    if (fundKey) {
+      fundRows = await fetchFundDistributions(fundKey);
+    }
+
+    if (fundRows && fundRows.length > 0) {
+      // heroincome-data covers this fund — remove old moex distribution records
+      const oldMoex = await db.paymentHistory
+        .where('assetId').equals(ra.asset.id!)
+        .filter(r => r.dataSource === 'moex' && r.type === 'distribution')
+        .toArray();
+      if (oldMoex.length > 0) {
+        await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
+      }
+      await writePaymentHistory(ra.asset.id!, fundRows, 'distribution', 'dohod');
+    } else {
+      // Fallback to MOEX
+      const divInfo = await fetchDividends(ra.secid);
+      if (divInfo) {
+        await writePaymentHistory(ra.asset.id!, divInfo.history, 'distribution', 'moex');
+      }
+    }
+
+    // Recalculate frequency from non-forecast DB records
+    const dbRecords = await db.paymentHistory
+      .where('[assetId+date]')
+      .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+      .toArray();
+    const activeDates = dbRecords
+      .filter((r) => !r.isForecast)
+      .map((r) => r.date)
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const frequencyPerYear = activeDates.length >= 2
+      ? calcDividendFrequency(activeDates)
+      : undefined;
+
+    if (frequencyPerYear != null) {
+      await updateMoexAssetFields(ra.asset, { frequencyPerYear });
+    } else if (activeDates.length === 0 && !fundRows) {
+      warnings.push(`${ticker}: распределения не загружены`);
+    }
+
+    return warnings;
+  }
+
+  // ---- Stock dividend path (dohod > moex) ----
   const dohodAvailable = await isDohodAvailable(ticker);
 
   let dohodRows: Awaited<ReturnType<typeof fetchDohodDividends>> = null;
@@ -465,7 +521,44 @@ export async function syncAssetPayments(assetId: number): Promise<{ success: boo
       if (couponHistory.length > 0) {
         await writePaymentHistory(ra.asset.id!, couponHistory, 'coupon');
       }
+    } else if (ra.asset.type === 'Фонды') {
+      // Fund distribution path (heroincome-data > moex)
+      const fundKey = await findFundKey(ra.asset.ticker, ra.asset.isin);
+      let fundRows: Awaited<ReturnType<typeof fetchFundDistributions>> = null;
+      if (fundKey) {
+        fundRows = await fetchFundDistributions(fundKey);
+      }
+
+      if (fundRows && fundRows.length > 0) {
+        const oldMoex = await db.paymentHistory
+          .where('assetId').equals(ra.asset.id!)
+          .filter(r => r.dataSource === 'moex' && r.type === 'distribution')
+          .toArray();
+        if (oldMoex.length > 0) {
+          await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
+        }
+        await writePaymentHistory(ra.asset.id!, fundRows, 'distribution', 'dohod');
+      } else {
+        const divInfo = await fetchDividends(ra.secid);
+        if (divInfo) {
+          await writePaymentHistory(ra.asset.id!, divInfo.history, 'distribution', 'moex');
+        }
+      }
+
+      const dbRecords = await db.paymentHistory
+        .where('[assetId+date]')
+        .between([ra.asset.id!, Dexie.minKey], [ra.asset.id!, Dexie.maxKey])
+        .toArray();
+      const activeDates = dbRecords
+        .filter((r) => !r.isForecast)
+        .map((r) => r.date)
+        .sort((a, b) => a.getTime() - b.getTime());
+      if (activeDates.length >= 2) {
+        const frequencyPerYear = calcDividendFrequency(activeDates);
+        await updateMoexAssetFields(ra.asset, { frequencyPerYear });
+      }
     } else {
+      // Stock dividend path (dohod > moex)
       const ticker = ra.asset.ticker ?? ra.secid;
       const dohodAvailable = await isDohodAvailable(ticker);
 

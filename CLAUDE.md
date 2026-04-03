@@ -44,13 +44,14 @@ Manual values override calculated ones. Reset buttons revert to the calculated/i
 
 ### Multi-source dividend data
 
-Dividend history uses source priority: `dohod > moex` for stocks.
+Dividend/distribution history uses source priority: `dohod > moex` for stocks and funds.
 - `DataSource` type: `'moex' | 'dohod' | 'import' | 'manual'`
 - If dohod.ru covers a stock ticker, only dohod records are stored; old moex dividend records deleted on sync
 - If dohod unavailable for a ticker, moex is used as fallback
-- `heroincome-data.ts` fetches from `raw.githubusercontent.com/amchercashin/heroincome-data`; caches index per sync session
+- Funds (ЗПИФы): heroincome-data fund distributions when available (Parus funds), MOEX as fallback. Uses `amountBeforeTax` and `recordDate`.
+- `heroincome-data.ts` fetches from `raw.githubusercontent.com/amchercashin/heroincome-data`; separate caches for stock index (`data/stocks/dohod/`) and fund index (`data/funds/`)
 - `isForecast` flag on `PaymentHistory` marks predicted payments (shown on chart, excluded from income calculations)
-- Bonds/funds use moex only (no dohod coverage)
+- Bonds use moex only (no dohod coverage)
 
 ### NDFL tax
 
