@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { syncAllAssets, syncSingleAsset, getLastSyncAt, type SyncResult } from '@/services/moex-sync';
+import { syncAllAssets, syncSingleAsset, getLastSyncAt, getLastPriceSyncAt, type SyncResult } from '@/services/moex-sync';
 
 interface SyncContextValue {
   syncing: boolean;
@@ -11,6 +11,7 @@ interface SyncContextValue {
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
+const PRICE_SYNC_STALE_MS = 4 * 60 * 60 * 1000;
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false);
@@ -52,11 +53,36 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     await syncSingleAsset(assetId);
   }, []);
 
-  // Auto-sync on mount (once per session)
+  const triggerPriceSyncIfStale = useCallback(async (): Promise<void> => {
+    if (syncingRef.current) return;
+    const lastPriceSyncAt = await getLastPriceSyncAt();
+    const isStale = !lastPriceSyncAt || Date.now() - lastPriceSyncAt.getTime() > PRICE_SYNC_STALE_MS;
+    if (!isStale) {
+      setLastSyncAt(lastPriceSyncAt);
+      return;
+    }
+
+    syncingRef.current = true;
+    setSyncing(true);
+    setError(null);
+    try {
+      const result = await syncAllAssets({ pricesOnly: true });
+      if (result.synced > 0) setLastSyncAt(new Date());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      syncingRef.current = false;
+      setSyncing(false);
+    }
+  }, []);
+
+  // Auto-sync prices on mount when stale; full payment sync remains manual.
   useEffect(() => {
-    getLastSyncAt().then(setLastSyncAt);
-    triggerSync();
-  }, [triggerSync]);
+    Promise.all([getLastPriceSyncAt(), getLastSyncAt()]).then(([lastPrice, lastFull]) => {
+      setLastSyncAt(lastPrice ?? lastFull);
+    });
+    triggerPriceSyncIfStale();
+  }, [triggerPriceSyncIfStale]);
 
   return (
     <SyncContext.Provider value={{ syncing, lastSyncAt, error, warning, triggerSync, syncAsset }}>

@@ -1,25 +1,14 @@
 import { TransitionLink } from '@/components/ui/transition-link';
 import type { Asset } from '@/models/types';
 import { formatCurrency, formatPercent } from '@/lib/utils';
-import { calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
+import type { CalculatedAssetStats } from '@/services/portfolio-calculator';
 
 interface AssetRowProps {
   asset: Asset;
-  annualIncome: number;
-  totalQuantity: number;
+  stats: CalculatedAssetStats;
 }
 
-export function AssetRow({ asset, annualIncome, totalQuantity }: AssetRowProps) {
-  const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome);
-  const value = asset.currentPrice != null
-    ? asset.currentPrice * totalQuantity
-    : null;
-
-  const totalAnnualIncome = annualIncome * totalQuantity;
-  const yieldPercent = value != null && value > 0
-    ? calcYieldPercent(totalAnnualIncome, value)
-    : null;
-
+export function AssetRow({ asset, stats }: AssetRowProps) {
   const isManual = asset.paymentPerUnitSource === 'manual';
 
   return (
@@ -38,7 +27,7 @@ export function AssetRow({ asset, annualIncome, totalQuantity }: AssetRowProps) 
         </div>
         <div>
           <div className="flex items-center gap-1.5 justify-end">
-            <span className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">{formatCurrency(incomePerMonth)}</span>
+            <span className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">{formatCurrency(stats.incomePerMonth)}</span>
             <span className={`font-mono text-[length:var(--hi-text-caption)] px-1.5 py-0.5 rounded min-w-[52px] text-center ${
               isManual
                 ? 'bg-[rgba(90,85,72,0.15)] text-[var(--hi-ash)]'
@@ -47,15 +36,15 @@ export function AssetRow({ asset, annualIncome, totalQuantity }: AssetRowProps) 
               {isManual ? 'ручной' : 'факт'}
             </span>
           </div>
-          {yieldPercent != null && (
+          {stats.yieldPercent != null && (
             <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] text-right mt-0.5">
-              {formatPercent(yieldPercent)} годовых
+              {formatPercent(stats.yieldPercent)} годовых
             </div>
           )}
         </div>
       </div>
       <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-1">
-        {totalQuantity} шт · {formatCurrency(value)}
+        {stats.totalQuantity} шт · {formatCurrency(stats.value)}
       </div>
     </TransitionLink>
   );

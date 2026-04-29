@@ -30,10 +30,10 @@ describe('parseTypeLabel', () => {
 describe('parseMDTable', () => {
   it('parses standard Markdown table', () => {
     const text = `
-| Тикер | Название | Тип | Кол-во | Ср.цена | Посл.выплата | Частота |
-|-------|----------|-----|--------|---------|--------------|---------|
-| SBER | Сбербанк | акция | 800 | 298.60 | 34.84 | 1 |
-| LKOH | Лукойл | акция | 10 | 6750 | 498 | 1 |
+| Тикер | Название | Тип | Кол-во | Ср.цена | Валюта | Посл.выплата | Частота |
+|-------|----------|-----|--------|---------|--------|--------------|---------|
+| SBER | Сбербанк | акция | 800 | 298.60 | RUB | 34.84 | 1 |
+| LKOH | Лукойл | акция | 10 | 6750 | RUB | 498 | 1 |
 `;
     const rows = parseMDTable(text);
     expect(rows).toHaveLength(2);
@@ -43,6 +43,7 @@ describe('parseMDTable', () => {
       type: 'Акции',
       quantity: 800,
       averagePrice: 298.60,
+      currency: 'RUB',
       lastPaymentAmount: 34.84,
       frequencyPerYear: 1,
     });
@@ -111,6 +112,17 @@ Let me know if you need anything else!
     expect(rows[0].isin).toBe('RU0009029540');
   });
 
+  it('parses currency column', () => {
+    const text = `
+| Ticker | Name | Type | Quantity | Avg Price | Currency |
+|--------|------|------|----------|-----------|----------|
+| USDY | Dollar asset | stock | 2 | 100 | usd |
+`;
+    const rows = parseMDTable(text);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].currency).toBe('USD');
+  });
+
   it('parses table with ISIN but without ticker', () => {
     const text = `
 | ISIN | Название | Тип | Кол-во | Ср.цена |
@@ -156,13 +168,14 @@ Let me know if you need anything else!
 
 describe('parseCSV', () => {
   it('parses CSV with headers', () => {
-    const text = `Тикер,Название,Тип,Кол-во,Ср.цена,Посл.выплата,Частота
-SBER,Сбербанк,акция,800,298.60,34.84,1
-LKOH,Лукойл,акция,10,6750,498,1`;
+    const text = `Тикер,Название,Тип,Кол-во,Ср.цена,Валюта,Посл.выплата,Частота
+SBER,Сбербанк,акция,800,298.60,RUB,34.84,1
+LKOH,Лукойл,акция,10,6750,RUB,498,1`;
     const rows = parseCSV(text);
     expect(rows).toHaveLength(2);
     expect(rows[0].ticker).toBe('SBER');
     expect(rows[0].quantity).toBe(800);
+    expect(rows[0].currency).toBe('RUB');
   });
 
   it('returns empty array for empty input', () => {

@@ -143,6 +143,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
             <AddPaymentForm
               assetId={asset.id!}
               paymentType={paymentType}
+              currency={asset.currency ?? 'RUB'}
               onAdd={async (p) => {
                 await addPayment(p);
                 setAddFormOpen(false);
@@ -156,6 +157,7 @@ export function AssetPayments({ asset, payments, isHighlighted }: AssetPaymentsP
               <PaymentRow
                 key={p.id}
                 payment={p}
+                currency={asset.currency ?? 'RUB'}
                 onDelete={deletePayment}
               />
             ))

@@ -9,13 +9,15 @@ describe('backup v3', () => {
     await db.open();
   });
 
-  it('exports version 3 with accounts and holdings', async () => {
+  it('exports version 4 with accounts, holdings, and exchange rates', async () => {
     await db.accounts.add({ name: 'Test', createdAt: new Date(), updatedAt: new Date() });
+    await db.exchangeRates.put({ currency: 'USD', rateToRub: 90, updatedAt: new Date(), source: 'manual' });
     const json = await exportAllData();
     const data = JSON.parse(json);
-    expect(data.version).toBe(3);
+    expect(data.version).toBe(4);
     expect(data.accounts).toHaveLength(1);
     expect(data.holdings).toBeDefined();
+    expect(data.exchangeRates).toHaveLength(1);
   });
 
   it('imports v3 format with accounts and holdings', async () => {
@@ -53,7 +55,7 @@ describe('backup v3', () => {
   it('exports empty database', async () => {
     const json = await exportAllData();
     const data = JSON.parse(json);
-    expect(data.version).toBe(3);
+    expect(data.version).toBe(4);
     expect(data.accounts).toHaveLength(0);
     expect(data.assets).toHaveLength(0);
     expect(data.holdings).toHaveLength(0);
@@ -130,5 +132,45 @@ describe('backup v3', () => {
 
   it('rejects JSON without required arrays', async () => {
     await expect(importAllData(JSON.stringify({ foo: 'bar' }))).rejects.toThrow('версия 3');
+  });
+
+  it('rejects holdings that reference missing assets without clearing current data', async () => {
+    const now = new Date().toISOString();
+    await db.accounts.add({ name: 'Keep Me', createdAt: new Date(), updatedAt: new Date() });
+
+    const json = JSON.stringify({
+      version: 3,
+      accounts: [{ id: 1, name: 'Сбер', createdAt: now, updatedAt: now }],
+      assets: [],
+      holdings: [{ id: 1, accountId: 1, assetId: 999, quantity: 100, quantitySource: 'import', createdAt: now, updatedAt: now }],
+      paymentHistory: [],
+      importRecords: [],
+      settings: [],
+    });
+
+    await expect(importAllData(json)).rejects.toThrow('assetId');
+    expect(await db.accounts.count()).toBe(1);
+    expect((await db.accounts.toArray())[0].name).toBe('Keep Me');
+  });
+
+  it('imports exchange rates when present', async () => {
+    const json = JSON.stringify({
+      version: 4,
+      accounts: [],
+      assets: [],
+      holdings: [],
+      paymentHistory: [],
+      importRecords: [],
+      settings: [],
+      exchangeRates: [{ currency: 'USD', rateToRub: 90, updatedAt: new Date().toISOString(), source: 'manual' }],
+    });
+
+    await importAllData(json);
+
+    expect(await db.exchangeRates.get('USD')).toMatchObject({
+      currency: 'USD',
+      rateToRub: 90,
+      source: 'manual',
+    });
   });
 });

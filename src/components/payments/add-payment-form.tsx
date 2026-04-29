@@ -4,11 +4,12 @@ import type { PaymentHistory } from '@/models/types';
 interface AddPaymentFormProps {
   assetId: number;
   paymentType: PaymentHistory['type'];
+  currency: string;
   onAdd: (payment: Omit<PaymentHistory, 'id'>) => void;
   onCancel: () => void;
 }
 
-export function AddPaymentForm({ assetId, paymentType, onAdd, onCancel }: AddPaymentFormProps) {
+export function AddPaymentForm({ assetId, paymentType, currency, onAdd, onCancel }: AddPaymentFormProps) {
   const [dateStr, setDateStr] = useState(new Date().toISOString().slice(0, 10));
   const [amountStr, setAmountStr] = useState('');
 
@@ -40,7 +41,7 @@ export function AddPaymentForm({ assetId, paymentType, onAdd, onCancel }: AddPay
         inputMode="decimal"
         value={amountStr}
         onChange={(e) => setAmountStr(e.target.value)}
-        placeholder="Сумма ₽"
+        placeholder={`Сумма ${currency}`}
         className="bg-transparent border border-[var(--hi-shadow)] rounded px-2 py-1 text-base text-[var(--hi-text)] font-mono w-[90px]"
         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
       />

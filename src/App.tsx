@@ -1,15 +1,17 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { PwaUpdatePrompt } from '@/components/pwa-update-prompt';
 import { SyncProvider } from '@/contexts/sync-context';
 import { OnboardingProvider } from '@/contexts/onboarding-context';
-import { FirstLaunchTour } from '@/components/onboarding/FirstLaunchTour';
-import { MainPage } from '@/pages/main-page';
-import { CategoryPage } from '@/pages/category-page';
-import { AssetDetailPage } from '@/pages/asset-detail-page';
-import { DataPage } from '@/pages/data-page';
-import { SettingsPage } from '@/pages/settings-page';
-import { PaymentsPage } from '@/pages/payments-page';
+
+const MainPage = lazy(() => import('@/pages/main-page').then((m) => ({ default: m.MainPage })));
+const CategoryPage = lazy(() => import('@/pages/category-page').then((m) => ({ default: m.CategoryPage })));
+const AssetDetailPage = lazy(() => import('@/pages/asset-detail-page').then((m) => ({ default: m.AssetDetailPage })));
+const DataPage = lazy(() => import('@/pages/data-page').then((m) => ({ default: m.DataPage })));
+const SettingsPage = lazy(() => import('@/pages/settings-page').then((m) => ({ default: m.SettingsPage })));
+const PaymentsPage = lazy(() => import('@/pages/payments-page').then((m) => ({ default: m.PaymentsPage })));
+const FirstLaunchTour = lazy(() => import('@/components/onboarding/FirstLaunchTour').then((m) => ({ default: m.FirstLaunchTour })));
 
 export default function App() {
   return (
@@ -18,15 +20,17 @@ export default function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <OnboardingProvider>
           <SyncProvider>
-            <Routes>
-              <Route path="/" element={<MainPage />} />
-              <Route path="/category/:type" element={<CategoryPage />} />
-              <Route path="/asset/:id" element={<AssetDetailPage />} />
-              <Route path="/data" element={<DataPage />} />
-              <Route path="/payments" element={<PaymentsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Routes>
-            <FirstLaunchTour />
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/" element={<MainPage />} />
+                <Route path="/category/:type" element={<CategoryPage />} />
+                <Route path="/asset/:id" element={<AssetDetailPage />} />
+                <Route path="/data" element={<DataPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Routes>
+              <FirstLaunchTour />
+            </Suspense>
           </SyncProvider>
         </OnboardingProvider>
       </BrowserRouter>

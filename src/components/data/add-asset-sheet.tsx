@@ -4,7 +4,7 @@ import { db } from '@/db/database';
 import { addHolding } from '@/hooks/use-holdings';
 import { getTypeSuggestions, getDefaultFrequency } from '@/models/account';
 import { useSyncContext } from '@/contexts/sync-context';
-import type { Asset } from '@/models/types';
+import { createAssetDraft } from '@/services/asset-factory';
 
 interface AddAssetSheetProps {
   open: boolean;
@@ -14,6 +14,7 @@ interface AddAssetSheetProps {
 }
 
 const EXCHANGE_TYPES = new Set(['Акции', 'Облигации', 'Фонды', 'Крипта']);
+const CURRENCY_OPTIONS = ['RUB', 'USD', 'EUR', 'CNY'] as const;
 
 export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAssetSheetProps) {
   const { syncAsset } = useSyncContext();
@@ -22,6 +23,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
   const [ticker, setTicker] = useState('');
   const [quantity, setQuantity] = useState('');
   const [avgPrice, setAvgPrice] = useState('');
+  const [currency, setCurrency] = useState('RUB');
 
   const suggestions = getTypeSuggestions(existingTypes);
   const isExchangeType = EXCHANGE_TYPES.has(type);
@@ -45,17 +47,18 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
     } else {
       const now = new Date();
       const freq = getDefaultFrequency(type) ?? 12;
-      assetId = (await db.assets.add({
+      assetId = (await db.assets.add(createAssetDraft({
         type,
         ticker: trimmedTicker || undefined,
         name: trimmedName,
         currentPrice: perUnit,
+        currency,
         paymentPerUnitSource: 'fact',
         frequencyPerYear: freq,
+        frequencySource: 'manual',
         dataSource: 'manual',
-        createdAt: now,
-        updatedAt: now,
-      } as Asset)) as number;
+        now,
+      }))) as number;
     }
 
     await addHolding({
@@ -72,6 +75,7 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
     setTicker('');
     setQuantity('');
     setAvgPrice('');
+    setCurrency('RUB');
     onClose();
     syncAsset(assetId); // fire-and-forget
   };
@@ -104,6 +108,16 @@ export function AddAssetSheet({ open, onClose, accountId, existingTypes }: AddAs
               {suggestions.map((s) => (
                 <option key={s} value={s}>
                   {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[length:var(--hi-text-body)] text-[var(--hi-ash)] block mb-1">Валюта</label>
+            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>

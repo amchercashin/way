@@ -1,0 +1,131 @@
+import type { Asset, AssetStats, CategoryStats, PaymentHistory, PortfolioStats } from '@/models/types';
+import type { Holding } from '@/models/account';
+import {
+  calcAnnualIncomePerUnit,
+  calcAssetIncomePerMonth,
+  calcYieldPercent,
+  type PaymentRecord,
+} from './income-calculator';
+import { getRateToRub } from './exchange-rates';
+
+export interface CalculatedAssetStats extends AssetStats {
+  assetId: number;
+  totalQuantity: number;
+  annualIncomePerUnit: number;
+  incomePerYear: number;
+  currency: string;
+  rateToRub: number;
+}
+
+export interface PortfolioSnapshot {
+  portfolio: PortfolioStats;
+  categories: CategoryStats[];
+  assetsById: Map<number, CalculatedAssetStats>;
+}
+
+export interface PortfolioCalculationInput {
+  assets: Asset[];
+  holdings: Holding[];
+  paymentHistory: PaymentHistory[];
+  ndflRates: Map<string, number>;
+  exchangeRates: Map<string, number>;
+  now?: Date;
+}
+
+export function calculatePortfolioSnapshot(input: PortfolioCalculationInput): PortfolioSnapshot {
+  const now = input.now ?? new Date();
+  const quantityByAsset = new Map<number, number>();
+  for (const holding of input.holdings) {
+    quantityByAsset.set(
+      holding.assetId,
+      (quantityByAsset.get(holding.assetId) ?? 0) + holding.quantity,
+    );
+  }
+
+  const historyByAsset = new Map<number, PaymentRecord[]>();
+  for (const payment of input.paymentHistory) {
+    if (payment.isForecast) continue;
+    const arr = historyByAsset.get(payment.assetId) ?? [];
+    arr.push({ amount: payment.amount, date: new Date(payment.date) });
+    historyByAsset.set(payment.assetId, arr);
+  }
+
+  let totalValue = 0;
+  let totalIncomePerMonth = 0;
+  const assetsById = new Map<number, CalculatedAssetStats>();
+  const categoryMap = new Map<string, { value: number; incomePerMonth: number; count: number }>();
+
+  for (const asset of input.assets) {
+    const assetId = asset.id;
+    if (assetId == null) continue;
+
+    const totalQuantity = quantityByAsset.get(assetId) ?? 0;
+    const currency = asset.currency ?? 'RUB';
+    const rateToRub = getRateToRub(currency, input.exchangeRates);
+    const price = asset.currentPrice ?? 0;
+    const nkd = asset.type === 'Облигации' ? (asset.accruedInterest ?? 0) : 0;
+    const value = (price + nkd) * totalQuantity * rateToRub;
+
+    const annualIncomePerUnit = asset.paymentPerUnitSource === 'manual' && asset.paymentPerUnit != null
+      ? asset.paymentPerUnit
+      : calcAnnualIncomePerUnit(historyByAsset.get(assetId) ?? [], now).annualIncome;
+    const ndflRate = input.ndflRates.get(asset.type) ?? 0;
+    const taxMultiplier = 1 - ndflRate / 100;
+    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncomePerUnit) * taxMultiplier * rateToRub;
+    const incomePerYear = incomePerMonth * 12;
+    const yieldPercent = value > 0 ? calcYieldPercent(incomePerYear, value) : 0;
+
+    totalValue += value;
+    totalIncomePerMonth += incomePerMonth;
+    assetsById.set(assetId, {
+      assetId,
+      totalQuantity,
+      annualIncomePerUnit,
+      incomePerMonth,
+      incomePerYear,
+      value,
+      yieldPercent,
+      portfolioSharePercent: 0,
+      currency,
+      rateToRub,
+    });
+
+    const category = categoryMap.get(asset.type);
+    if (category) {
+      category.value += value;
+      category.incomePerMonth += incomePerMonth;
+      category.count += 1;
+    } else {
+      categoryMap.set(asset.type, { value, incomePerMonth, count: 1 });
+    }
+  }
+
+  const totalIncomePerYear = totalIncomePerMonth * 12;
+  const portfolio: PortfolioStats = {
+    totalIncomePerMonth,
+    totalIncomePerYear,
+    totalValue,
+    yieldPercent: totalValue > 0 ? calcYieldPercent(totalIncomePerYear, totalValue) : 0,
+  };
+
+  for (const stats of assetsById.values()) {
+    stats.portfolioSharePercent = totalValue > 0 ? (stats.value / totalValue) * 100 : 0;
+  }
+
+  const categories: CategoryStats[] = [];
+  for (const [type, category] of categoryMap) {
+    const categoryIncomePerYear = category.incomePerMonth * 12;
+    categories.push({
+      type,
+      assetCount: category.count,
+      totalIncomePerMonth: category.incomePerMonth,
+      totalIncomePerYear: categoryIncomePerYear,
+      totalValue: category.value,
+      yieldPercent: category.value > 0 ? calcYieldPercent(categoryIncomePerYear, category.value) : 0,
+      portfolioSharePercent: totalValue > 0 ? (category.value / totalValue) * 100 : 0,
+    });
+  }
+  categories.sort((a, b) => b.totalIncomePerMonth - a.totalIncomePerMonth);
+
+  return { portfolio, categories, assetsById };
+}

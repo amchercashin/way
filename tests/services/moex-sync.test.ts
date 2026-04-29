@@ -39,7 +39,7 @@ import {
   fetchBatchBondData,
 } from '@/services/moex-api';
 import { isDohodAvailable, fetchDohodDividends, findFundKey, fetchFundDistributions } from '@/services/heroincome-data';
-import { syncAllAssets, getLastSyncAt } from '@/services/moex-sync';
+import { syncAllAssets, getLastSyncAt, getLastPriceSyncAt } from '@/services/moex-sync';
 
 const ASSET_DEFAULTS = {
   paymentPerUnitSource: 'fact' as const,
@@ -468,6 +468,72 @@ describe('syncAllAssets', () => {
 
     const records = await db.paymentHistory.where('[assetId+date]').between([assetId, Dexie.minKey], [assetId, Dexie.maxKey]).toArray();
     expect(records).toHaveLength(2); // not 3
+  });
+
+  it('stores separate timestamp for prices-only sync', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Акции', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
+      dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+    })) as number;
+
+    (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 300, prevPrice: 298 }]]),
+    );
+
+    await syncAllAssets({ pricesOnly: true });
+
+    expect(await getLastPriceSyncAt()).toBeInstanceOf(Date);
+    expect(await getLastSyncAt()).toBeNull();
+    expect(await db.assets.get(assetId)).toMatchObject({ currentPrice: 300 });
+    expect(fetchDividends).not.toHaveBeenCalled();
+  });
+
+  it('updates and removes stale source payments without touching manual rows', async () => {
+    const assetId = (await db.assets.add({
+      type: 'Акции', name: 'Sber', ticker: 'SBER', moexSecid: 'SBER',
+      dataSource: 'moex', createdAt: new Date(), updatedAt: new Date(),
+      ...ASSET_DEFAULTS,
+    })) as number;
+
+    await db.paymentHistory.bulkAdd([
+      {
+        assetId, amount: 33.3, date: new Date('2024-07-11'),
+        type: 'dividend', dataSource: 'moex',
+      },
+      {
+        assetId, amount: 10, date: new Date('2023-07-11'),
+        type: 'dividend', dataSource: 'moex',
+      },
+      {
+        assetId, amount: 99, date: new Date('2023-07-11'),
+        type: 'dividend', dataSource: 'manual',
+      },
+    ]);
+
+    (resolveSecurityInfo as Mock).mockResolvedValue({ secid: 'SBER', primaryBoardId: 'TQBR', market: 'shares' });
+    (fetchBatchStockPrices as Mock).mockResolvedValue(
+      new Map([['SBER', { currentPrice: 300, prevPrice: 298 }]]),
+    );
+    (fetchDividends as Mock).mockResolvedValue({
+      summary: { lastPaymentAmount: 34.84, lastPaymentDate: new Date('2025-07-18'), frequencyPerYear: 1, nextExpectedCutoffDate: null },
+      history: [
+        { date: new Date('2024-07-11'), amount: 34.84 },
+        { date: new Date('2025-07-18'), amount: 40 },
+      ],
+    });
+
+    await syncAllAssets();
+
+    const records = await db.paymentHistory
+      .where('[assetId+date]')
+      .between([assetId, Dexie.minKey], [assetId, Dexie.maxKey])
+      .toArray();
+    expect(records).toHaveLength(3);
+    expect(records.find((r) => r.dataSource === 'moex' && r.date.getTime() === new Date('2024-07-11').getTime())?.amount).toBe(34.84);
+    expect(records.some((r) => r.dataSource === 'moex' && r.date.getTime() === new Date('2023-07-11').getTime())).toBe(false);
+    expect(records.find((r) => r.dataSource === 'manual')?.amount).toBe(99);
   });
 
   it('syncs asset with ISIN but no ticker', async () => {

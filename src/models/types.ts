@@ -1,5 +1,12 @@
 export type DataSource = 'moex' | 'dohod' | 'parus' | 'import' | 'manual';
 
+export interface ExchangeRate {
+  currency: string;
+  rateToRub: number;
+  updatedAt: Date;
+  source: 'manual';
+}
+
 export interface Asset {
   id?: number;
   type: string;

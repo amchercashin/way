@@ -1,14 +1,19 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource/cormorant-garamond/300.css";
-@import "@fontsource/cormorant-garamond/400.css";
-@import "@fontsource/ibm-plex-mono/300.css";
-@import "@fontsource/ibm-plex-mono/400.css";
-@import "@fontsource/ibm-plex-mono/500.css";
-@import "@fontsource/dm-sans/300.css";
-@import "@fontsource/dm-sans/400.css";
-@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/cormorant-garamond/cyrillic-300.css";
+@import "@fontsource/cormorant-garamond/cyrillic-400.css";
+@import "@fontsource/cormorant-garamond/latin-300.css";
+@import "@fontsource/cormorant-garamond/latin-400.css";
+@import "@fontsource/ibm-plex-mono/cyrillic-300.css";
+@import "@fontsource/ibm-plex-mono/cyrillic-400.css";
+@import "@fontsource/ibm-plex-mono/cyrillic-500.css";
+@import "@fontsource/ibm-plex-mono/latin-300.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/dm-sans/latin-300.css";
+@import "@fontsource/dm-sans/latin-400.css";
+@import "@fontsource/dm-sans/latin-500.css";
 
 @custom-variant dark (&:is(.dark *));
 
