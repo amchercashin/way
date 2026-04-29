@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { clearAllData } from '@/services/app-settings';
 import { exportAllData, importAllData } from '@/services/backup';
 import { NdflSettings } from '@/components/settings/ndfl-settings';
+import { ExchangeRatesSettings } from '@/components/settings/exchange-rates-settings';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ export function SettingsPage() {
       await importAllData(json);
       setStatus('Данные восстановлены');
       setBackupError(null);
-    } catch {
-      setBackupError('Ошибка: невалидный JSON файл');
+    } catch (e) {
+      setBackupError(e instanceof Error ? e.message : 'Ошибка: невалидный JSON файл');
     }
   };
 
@@ -55,6 +56,7 @@ export function SettingsPage() {
     <AppShell leftAction={backButton} title="Настройки">
       <div className="space-y-6">
         <NdflSettings />
+        <ExchangeRatesSettings />
 
         <div>
           <div className="text-[var(--hi-ash)] text-[length:var(--hi-text-body)] mb-2">Экспорт</div>

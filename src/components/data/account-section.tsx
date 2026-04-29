@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Account, Holding } from '@/models/account';
 import type { Asset } from '@/models/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatMoney } from '@/lib/utils';
 import { updateHolding, deleteHolding } from '@/hooks/use-holdings';
 import { updateAsset } from '@/hooks/use-assets';
 import { updateAccount, deleteAccount } from '@/hooks/use-accounts';
+import { useExchangeRateMap } from '@/hooks/use-exchange-rates';
+import { getRateToRub } from '@/services/exchange-rates';
 import { InlineCell } from './inline-cell';
 import { TypeCombobox } from './type-combobox';
 import { AddAssetSheet } from './add-asset-sheet';
@@ -23,6 +25,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const highlightRowRef = useRef<HTMLDivElement>(null);
+  const exchangeRates = useExchangeRateMap();
 
   // Auto-expand and scroll to highlighted row
   useEffect(() => {
@@ -52,7 +55,8 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
   const totalValue = holdings.reduce((sum, h) => {
     const asset = assets.find(a => a.id === h.assetId);
     const price = asset?.currentPrice ?? h.averagePrice ?? 0;
-    return sum + price * h.quantity;
+    const rate = getRateToRub(asset?.currency, exchangeRates);
+    return sum + price * h.quantity * rate;
   }, 0);
 
   // Derive status: "импорт" if all holdings from import, "ручной" if any manual
@@ -150,7 +154,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
           {(() => { let globalHoldingIdx = 0; return Array.from(typeGroups.entries()).map(([type, items]) => {
             const groupValue = items.reduce((sum, { asset, holding }) => {
               const price = asset.currentPrice ?? holding.averagePrice ?? 0;
-              return sum + price * holding.quantity;
+              return sum + price * holding.quantity * getRateToRub(asset.currency, exchangeRates);
             }, 0);
 
             return (
@@ -240,7 +244,7 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                       <span className="text-right text-[var(--hi-ash)] tabular-nums">
                         <InlineCell
                           value={asset.currentPrice != null ? Math.round(asset.currentPrice * holding.quantity).toString() : ''}
-                          displayValue={formatCurrency(rowValue)}
+                          displayValue={formatMoney(rowValue, asset.currency)}
                           type="number"
                           onSave={(v) => {
                             const totalValue = parseFloat(v);
@@ -269,6 +273,14 @@ export function AccountSection({ account, holdings, assets, onImport, highlightA
                     </div>
                   );
                 })}
+                {items.some(({ asset }) => getRateToRub(asset.currency, exchangeRates) !== 1) && (
+                  <div className="px-3 pb-2 text-right font-mono text-[length:var(--hi-text-micro)] text-[var(--hi-muted)]">
+                    Итого в ₽: {formatCurrency(items.reduce((sum, { asset, holding }) => {
+                      const price = asset.currentPrice ?? holding.averagePrice ?? 0;
+                      return sum + price * holding.quantity * getRateToRub(asset.currency, exchangeRates);
+                    }, 0))}
+                  </div>
+                )}
               </div>
             );
           }); })()}

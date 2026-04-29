@@ -54,6 +54,9 @@ export interface SyncResult {
   warnings: string[];
 }
 
+const LAST_FULL_SYNC_KEY = 'lastSyncAt';
+const LAST_PRICE_SYNC_KEY = 'lastPriceSyncAt';
+
 interface ResolvedAsset {
   asset: Asset;
   secid: string;
@@ -128,14 +131,19 @@ export async function syncAllAssets(options?: { pricesOnly?: boolean }): Promise
   if (result.synced > 0) {
     await db
       .table('settings')
-      .put({ key: 'lastSyncAt', value: new Date().toISOString() });
+      .put({ key: pricesOnly ? LAST_PRICE_SYNC_KEY : LAST_FULL_SYNC_KEY, value: new Date().toISOString() });
   }
 
   return result;
 }
 
 export async function getLastSyncAt(): Promise<Date | null> {
-  const setting = await db.table('settings').get('lastSyncAt');
+  const setting = await db.table('settings').get(LAST_FULL_SYNC_KEY);
+  return setting ? new Date(setting.value) : null;
+}
+
+export async function getLastPriceSyncAt(): Promise<Date | null> {
+  const setting = await db.table('settings').get(LAST_PRICE_SYNC_KEY);
   return setting ? new Date(setting.value) : null;
 }
 
@@ -353,15 +361,7 @@ async function enrichStock(
       await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
     }
 
-    // Write dohod facts + forecasts
-    const facts = dohodRows.filter((r) => !r.isForecast);
-    const forecasts = dohodRows.filter((r) => r.isForecast);
-    if (facts.length > 0) {
-      await writePaymentHistory(ra.asset.id!, facts, 'dividend', 'dohod');
-    }
-    if (forecasts.length > 0) {
-      await writePaymentHistory(ra.asset.id!, forecasts, 'dividend', 'dohod', true);
-    }
+    await writePaymentHistory(ra.asset.id!, dohodRows, 'dividend', 'dohod');
   } else {
     // Fallback to MOEX
     divInfo = await fetchDividends(ra.secid);
@@ -464,7 +464,7 @@ async function enrichBond(
 
 async function writePaymentHistory(
   assetId: number,
-  rows: DividendHistoryRow[],
+  rows: (DividendHistoryRow & { isForecast?: boolean })[],
   type: PaymentHistory['type'],
   dataSource: DataSource = 'moex',
   isForecast?: boolean,
@@ -472,27 +472,53 @@ async function writePaymentHistory(
   const existing = await db.paymentHistory
     .where('[assetId+date]')
     .between([assetId, Dexie.minKey], [assetId, Dexie.maxKey])
+    .filter((r) => r.type === type && r.dataSource === dataSource)
     .toArray();
 
-  // Dedup by date + dataSource: same source should not duplicate its own records
-  const existingKeys = new Set(
-    existing.map((r) => `${r.date.getTime()}:${r.dataSource}`),
-  );
-
-  const newRecords = rows
-    .filter((r) => !existingKeys.has(`${r.date.getTime()}:${dataSource}`))
-    .map((r) => ({
+  const incoming = new Map<number, Omit<PaymentHistory, 'id'>>();
+  for (const row of rows) {
+    incoming.set(row.date.getTime(), {
       assetId,
-      amount: r.amount,
-      date: r.date,
+      amount: row.amount,
+      date: row.date,
       type,
       dataSource,
-      ...(isForecast ? { isForecast: true } : {}),
-    }));
-
-  if (newRecords.length > 0) {
-    await db.paymentHistory.bulkAdd(newRecords);
+      ...((row.isForecast ?? isForecast) ? { isForecast: true } : {}),
+    });
   }
+
+  await db.transaction('rw', db.paymentHistory, async () => {
+    const seenExistingKeys = new Set<number>();
+
+    for (const record of existing) {
+      const key = record.date.getTime();
+      const next = incoming.get(key);
+
+      if (!next || seenExistingKeys.has(key)) {
+        await db.paymentHistory.delete(record.id!);
+        continue;
+      }
+
+      seenExistingKeys.add(key);
+      const nextIsForecast = next.isForecast === true;
+      const currentIsForecast = record.isForecast === true;
+      if (record.amount !== next.amount || currentIsForecast !== nextIsForecast) {
+        await db.paymentHistory.update(record.id!, {
+          amount: next.amount,
+          isForecast: next.isForecast,
+        });
+      }
+    }
+
+    const existingKeys = new Set(existing.map((record) => record.date.getTime()));
+    const newRecords = [...incoming.entries()]
+      .filter(([key]) => !existingKeys.has(key))
+      .map(([, record]) => record);
+
+    if (newRecords.length > 0) {
+      await db.paymentHistory.bulkAdd(newRecords);
+    }
+  });
 }
 
 // ============ Payment-only sync ============
@@ -577,14 +603,7 @@ export async function syncAssetPayments(assetId: number): Promise<{ success: boo
           await db.paymentHistory.bulkDelete(oldMoex.map(r => r.id!));
         }
 
-        const facts = dohodRows.filter((r) => !r.isForecast);
-        const forecasts = dohodRows.filter((r) => r.isForecast);
-        if (facts.length > 0) {
-          await writePaymentHistory(ra.asset.id!, facts, 'dividend', 'dohod');
-        }
-        if (forecasts.length > 0) {
-          await writePaymentHistory(ra.asset.id!, forecasts, 'dividend', 'dohod', true);
-        }
+        await writePaymentHistory(ra.asset.id!, dohodRows, 'dividend', 'dohod');
       } else {
         const divInfo = await fetchDividends(ra.secid);
         if (divInfo) {

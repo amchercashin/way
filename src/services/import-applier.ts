@@ -1,6 +1,6 @@
 import { db } from '@/db/database';
 import type { ImportRecord } from '@/models/types';
-import { getDefaultFrequency } from '@/models/account';
+import { createAssetDraft } from './asset-factory';
 import type { ImportAssetRow } from './import-parser';
 import type { ImportDiff } from './import-diff';
 
@@ -84,18 +84,22 @@ export async function applyImportDiff(
 }
 
 async function createAsset(row: ImportAssetRow): Promise<number> {
-  const freq = row.frequencyPerYear ?? getDefaultFrequency(row.type) ?? 12;
-  const now = new Date();
-  return await db.assets.add({
-    type: row.type, ticker: row.ticker, isin: row.isin, name: row.name,
-    currentPrice: row.currentPrice ?? row.averagePrice, faceValue: row.faceValue,
-    currency: row.currency, emitter: row.emitter,
-    securityCategory: row.securityCategory, issueInfo: row.issueInfo,
+  return await db.assets.add(createAssetDraft({
+    type: row.type,
+    ticker: row.ticker,
+    isin: row.isin,
+    name: row.name,
+    currentPrice: row.currentPrice ?? row.averagePrice,
+    faceValue: row.faceValue,
+    currency: row.currency,
+    emitter: row.emitter,
+    securityCategory: row.securityCategory,
+    issueInfo: row.issueInfo,
     paymentPerUnit: row.lastPaymentAmount ?? undefined,
     paymentPerUnitSource: row.lastPaymentAmount ? 'manual' : 'fact',
-    frequencyPerYear: freq,
-    dataSource: 'import', createdAt: now, updatedAt: now,
-  } as any) as number;
+    frequencyPerYear: row.frequencyPerYear,
+    dataSource: 'import',
+  })) as number;
 }
 
 async function updateAssetFields(assetId: number, row: ImportAssetRow): Promise<void> {
@@ -115,6 +119,7 @@ async function updateAssetFields(assetId: number, row: ImportAssetRow): Promise<
   }
   if (row.frequencyPerYear != null) {
     updates.frequencyPerYear = row.frequencyPerYear;
+    updates.frequencySource = 'manual';
   }
   await db.assets.update(assetId, updates);
 }

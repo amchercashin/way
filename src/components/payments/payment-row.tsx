@@ -1,7 +1,9 @@
 import type { PaymentHistory } from '@/models/types';
+import { formatMoney } from '@/lib/utils';
 
 interface PaymentRowProps {
   payment: PaymentHistory;
+  currency: string;
   onDelete: (id: number) => void;
 }
 
@@ -16,7 +18,7 @@ const SOURCE_BADGE: Record<string, { label: string; bg: string; text: string }> 
   import: { label: 'импорт', bg: 'bg-[#3a3a3a]', text: 'text-[#9a9a9a]' },
 };
 
-export function PaymentRow({ payment, onDelete }: PaymentRowProps) {
+export function PaymentRow({ payment, currency, onDelete }: PaymentRowProps) {
   const isForecast = payment.isForecast;
   const badge = SOURCE_BADGE[payment.dataSource] ?? SOURCE_BADGE.manual;
 
@@ -31,7 +33,7 @@ export function PaymentRow({ payment, onDelete }: PaymentRowProps) {
 
       {/* Amount */}
       <span className="font-mono tabular-nums text-right text-[var(--hi-ash)]">
-        {payment.amount.toFixed(2)} ₽
+        {formatMoney(payment.amount, currency)}
       </span>
 
       {/* Source badge + forecast label */}

@@ -12,8 +12,8 @@ import { usePortfolioStats } from '@/hooks/use-portfolio-stats';
 import { usePaymentHistory } from '@/hooks/use-payment-history';
 import { useHoldingsByAsset } from '@/hooks/use-holdings';
 import { useAccounts } from '@/hooks/use-accounts';
-import { calcAnnualIncomePerUnit, calcAssetIncomePerMonth, calcYieldPercent } from '@/services/income-calculator';
-import { useNdflRates } from '@/hooks/use-ndfl-rates';
+import { calcAnnualIncomePerUnit } from '@/services/income-calculator';
+import { formatMoney } from '@/lib/utils';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +21,7 @@ export function AssetDetailPage() {
   const assetId = Number(id);
   const paymentFieldRef = useRef<HTMLDivElement>(null);
   const asset = useAsset(assetId);
-  const { portfolio } = usePortfolioStats();
-  const ndflRates = useNdflRates();
+  const { assetsById } = usePortfolioStats();
   const history = usePaymentHistory(assetId);
   const holdings = useHoldingsByAsset(assetId);
   const accounts = useAccounts();
@@ -33,6 +32,7 @@ export function AssetDetailPage() {
     const activeHistory = history.filter((h) => !h.isForecast);
     const historyRecords = activeHistory.map((h) => ({ amount: h.amount, date: new Date(h.date) }));
     const allHistoryRecords = history.map((h) => ({ amount: h.amount, date: new Date(h.date), isForecast: h.isForecast }));
+    const stats = assetsById.get(asset.id!);
 
     let annualIncome: number;
     let usedPayments: { amount: number; date: Date }[] = [];
@@ -49,24 +49,15 @@ export function AssetDetailPage() {
       ? holdings.reduce((sum, h) => sum + (h.averagePrice ?? 0) * h.quantity, 0) / totalQuantity
       : undefined;
 
-    const ndflRate = ndflRates.get(asset.type) ?? 0;
-    const taxMultiplier = 1 - ndflRate / 100;
-    const incomePerMonth = calcAssetIncomePerMonth(totalQuantity, annualIncome) * taxMultiplier;
-
-    const price = asset.currentPrice ?? weightedAvgPrice ?? 0;
-    const nkd = asset.type === 'Облигации' ? (asset.accruedInterest ?? 0) : 0;
-    const value = (price + nkd) * totalQuantity;
-    const yieldPct = value > 0
-      ? calcYieldPercent(incomePerMonth * 12, value)
-      : null;
-    const sharePercent = (value > 0 && portfolio.totalValue > 0)
-      ? (value / portfolio.totalValue) * 100
-      : null;
+    const incomePerMonth = stats?.incomePerMonth ?? 0;
+    const value = stats?.value ?? 0;
+    const yieldPct = stats ? stats.yieldPercent : null;
+    const sharePercent = stats ? stats.portfolioSharePercent : null;
 
     const isManual = asset.paymentPerUnitSource === 'manual';
 
-    return { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity };
-  }, [asset, history, holdings, portfolio.totalValue, ndflRates]);
+    return { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity, weightedAvgPrice };
+  }, [asset, history, holdings, assetsById]);
 
   const handleSavePaymentPerUnit = useCallback((v: string) => {
     const num = parseFloat(v.replace(',', '.').replace(/[^\d.]/g, ''));
@@ -80,7 +71,7 @@ export function AssetDetailPage() {
     return <AppShell title="Загрузка..."><div /></AppShell>;
   }
 
-  const { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity } = computed;
+  const { annualIncome, usedPayments, incomePerMonth, value, yieldPct, sharePercent, isManual, allHistoryRecords, totalQuantity, weightedAvgPrice } = computed;
 
 
   const title = asset.ticker ? `${asset.ticker} · ${asset.name}` : asset.name;
@@ -137,7 +128,7 @@ export function AssetDetailPage() {
       >
         <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-ash)] mb-1">Текущая цена</div>
         <div className="font-mono text-[length:var(--hi-text-heading)] text-[var(--hi-text)]">
-          {asset.currentPrice != null ? `₽ ${asset.currentPrice.toLocaleString('ru-RU')}` : '—'}
+          {asset.currentPrice != null ? formatMoney(asset.currentPrice, asset.currency) : (weightedAvgPrice != null ? formatMoney(weightedAvgPrice, asset.currency) : '—')}
         </div>
       </div>
 

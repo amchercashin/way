@@ -3,3 +3,5 @@ dist/
 .superpowers/
 *.local
 test-data/
+test-results/
+playwright-report/

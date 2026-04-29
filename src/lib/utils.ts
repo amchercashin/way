@@ -21,6 +21,14 @@ export function formatCurrencyFull(value: number | null | undefined): string {
   return `₽ ${Math.round(value).toLocaleString('ru-RU')}`;
 }
 
+export function formatMoney(value: number | null | undefined, currency = 'RUB'): string {
+  if (value == null) return '—';
+  const rounded = Math.round(value).toLocaleString('ru-RU');
+  const normalized = currency.trim().toUpperCase() || 'RUB';
+  if (normalized === 'RUB') return `₽ ${rounded}`;
+  return `${rounded} ${normalized}`;
+}
+
 export function formatPercent(value: number | null | undefined): string {
   if (value == null) return '—';
   return `${(Math.round(value * 10) / 10).toFixed(1)}%`;

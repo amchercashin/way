@@ -37,6 +37,7 @@ interface ColumnMap {
   type?: number;
   quantity?: number;
   averagePrice?: number;
+  currency?: number;
   lastPaymentAmount?: number;
   frequencyPerYear?: number;
 }
@@ -48,6 +49,7 @@ const HEADER_PATTERNS: [keyof ColumnMap, RegExp][] = [
   ['type', /тип|type/i],
   ['quantity', /кол[- ]?во|количество|qty|quantity|шт/i],
   ['averagePrice', /ср\.?\s*цена|средн.*цена|avg.*price|цена|price/i],
+  ['currency', /валют|currency|ccy/i],
   ['lastPaymentAmount', /посл\.?\s*выплат|last.*payment|дивиденд|купон|выплата|payment/i],
   ['frequencyPerYear', /частот|frequency|freq|раз.*год/i],
 ];
@@ -86,6 +88,7 @@ function cellsToRow(cells: string[], colMap: ColumnMap): ImportAssetRow | null {
     type: colMap.type !== undefined ? parseTypeLabel(cells[colMap.type]) : 'Прочее',
     quantity,
     averagePrice: colMap.averagePrice !== undefined ? parseNumber(cells[colMap.averagePrice]) : undefined,
+    currency: colMap.currency !== undefined ? cells[colMap.currency]?.trim().toUpperCase() || undefined : undefined,
     lastPaymentAmount: colMap.lastPaymentAmount !== undefined ? parseNumber(cells[colMap.lastPaymentAmount]) : undefined,
     frequencyPerYear: colMap.frequencyPerYear !== undefined ? parseNumber(cells[colMap.frequencyPerYear]) : undefined,
   };

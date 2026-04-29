@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Asset, PaymentHistory, ImportRecord } from '@/models/types';
+import type { Asset, PaymentHistory, ImportRecord, ExchangeRate } from '@/models/types';
 import type { Account, Holding } from '@/models/account';
 
 const FREQUENCY_DEFAULTS: Record<string, number> = {
@@ -16,6 +16,7 @@ class HeroIncomeDB extends Dexie {
   holdings!: EntityTable<Holding, 'id'>;
   paymentHistory!: EntityTable<PaymentHistory, 'id'>;
   importRecords!: EntityTable<ImportRecord, 'id'>;
+  exchangeRates!: EntityTable<ExchangeRate, 'currency'>;
 
   constructor() {
     super('HeroIncomeDB');
@@ -135,6 +136,22 @@ class HeroIncomeDB extends Dexie {
           if (p.type === 'distribution' && p.dataSource === 'dohod') {
             p.dataSource = 'parus';
           }
+        });
+      });
+    this.version(8)
+      .stores({
+        accounts: '++id',
+        assets: '++id, type, ticker, isin',
+        holdings: '++id, accountId, assetId, &[accountId+assetId]',
+        paymentHistory: '++id, [assetId+date]',
+        importRecords: '++id, date',
+        exchangeRates: 'currency',
+        settings: 'key',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('assets').toCollection().modify((asset: Record<string, unknown>) => {
+          if (!asset.currency) asset.currency = 'RUB';
+          if (!asset.frequencySource) asset.frequencySource = 'manual';
         });
       });
   }

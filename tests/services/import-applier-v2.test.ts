@@ -43,7 +43,8 @@ describe('applyImportDiff (account-scoped)', () => {
     expect(sber.paymentPerUnit).toBe(34.84);
     expect(sber.paymentPerUnitSource).toBe('manual');
     expect(sber.frequencyPerYear).toBe(1);
-    expect(sber.frequencySource).toBeUndefined();
+    expect(sber.frequencySource).toBe('manual');
+    expect(sber.currency).toBe('RUB');
 
     const holdings = await db.holdings.where('accountId').equals(accountId).toArray();
     expect(holdings).toHaveLength(2);

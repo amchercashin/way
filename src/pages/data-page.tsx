@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAccounts } from '@/hooks/use-accounts';
 import { useHoldings } from '@/hooks/use-holdings';
@@ -6,8 +6,9 @@ import { useAssets } from '@/hooks/use-assets';
 import { AppShell } from '@/components/layout/app-shell';
 import { AccountSection } from '@/components/data/account-section';
 import { AddAccountSheet } from '@/components/data/add-account-sheet';
-import { ImportFlow } from '@/components/data/import-flow';
 import { DataTour } from '@/components/onboarding/DataTour';
+
+const ImportFlow = lazy(() => import('@/components/data/import-flow').then((m) => ({ default: m.ImportFlow })));
 
 export function DataPage() {
   const accounts = useAccounts();
@@ -59,12 +60,16 @@ export function DataPage() {
         onImport={() => { setAddAccountOpen(false); setImportTarget({ accountId: null }); }}
       />
 
-      <ImportFlow
-        open={importTarget !== null}
-        onClose={() => setImportTarget(null)}
-        accountId={importTarget?.accountId ?? null}
-        accountName={importTarget?.accountName}
-      />
+      {importTarget !== null && (
+        <Suspense fallback={null}>
+          <ImportFlow
+            open
+            onClose={() => setImportTarget(null)}
+            accountId={importTarget.accountId}
+            accountName={importTarget.accountName}
+          />
+        </Suspense>
+      )}
     </AppShell>
   );
 }
