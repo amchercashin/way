@@ -11,7 +11,7 @@ let hasVisitedMainPage = false;
 
 export function MainPage() {
   const [mode, setMode] = useState<'month' | 'year'>('month');
-  const { portfolio, categories } = usePortfolioStats();
+  const { portfolio, categories, isLoading } = usePortfolioStats();
   const { syncing, lastSyncAt, error, triggerSync } = useSyncContext();
   const animate = useRef(!hasVisitedMainPage).current;
   const install = useInstallPrompt();
@@ -42,7 +42,7 @@ export function MainPage() {
       )}
 
       <div className="mt-4">
-        {categories.length === 0 && (
+        {!isLoading && categories.length === 0 && (
           <div className="text-center text-[var(--hi-muted)] text-[length:var(--hi-text-body)] py-12">
             Пока нет активов. Добавьте первый актив через меню ☰
           </div>
