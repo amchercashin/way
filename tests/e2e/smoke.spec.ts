@@ -113,12 +113,14 @@ test('mobile manual flow supports foreign currency asset and payment', async ({ 
   await page.getByPlaceholder('100').fill('2');
   await page.getByPlaceholder('25 000').fill('200');
   await page.getByRole('button', { name: 'Добавить' }).click();
+  await expect(page.getByText('200 USD')).toBeVisible();
 
   await page.goto('/settings');
   const usdRateInput = page.locator('input[placeholder="курс"]').nth(2);
   await usdRateInput.fill('90');
   await usdRateInput.press('Enter');
   await expect(page.locator('input[value="90"]')).toBeVisible();
+  await expect(page.getByText(/обновлён/)).toBeVisible();
 
   await page.goto('/data');
   const convertedAccountButton = page.getByRole('button', { name: /Валютный счёт/ });
