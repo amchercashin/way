@@ -18,8 +18,11 @@ export function NdflSettings() {
 
   return (
     <div>
-      <div className="text-[var(--hi-ash)] text-[length:var(--hi-text-caption)] font-mono uppercase tracking-[0.15em] mb-3">
-        НДФЛ
+      <div className="text-[var(--hi-ash)] text-[length:var(--hi-text-caption)] font-mono uppercase tracking-[0.15em] mb-1.5">
+        НДФЛ с дохода
+      </div>
+      <div className="text-[var(--hi-muted)] text-[length:var(--hi-text-caption)] leading-relaxed mb-3">
+        Выплаты хранятся до налога. Доход и доходность считаются после применения ставки.
       </div>
       <div className="bg-[var(--hi-stone)] rounded-xl px-4 border border-[rgba(200,180,140,0.06)]">
         {categories.map((type, i) => (

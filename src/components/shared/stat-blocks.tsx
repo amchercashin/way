@@ -32,15 +32,20 @@ export function StatBlocks({ incomePerMonth, totalValue, yieldPercent, portfolio
           <div className={`font-mono text-[length:var(--hi-text-heading)] font-medium mt-1 ${stat.color}`}>
             {stat.value}
           </div>
-          {index === 0 && isManualIncome != null && (
-            <div className="flex justify-center mt-1">
-              <span className={`font-mono text-[length:var(--hi-text-caption)] px-1.5 py-0.5 rounded ${
-                isManualIncome
-                  ? 'bg-[rgba(90,85,72,0.15)] text-[var(--hi-ash)]'
-                  : 'bg-[rgba(200,180,140,0.1)] text-[var(--hi-gold)]'
-              }`}>
-                {isManualIncome ? 'ручной' : 'факт'}
+          {index === 0 && (
+            <div className="flex flex-wrap justify-center gap-1 mt-1">
+              <span className="font-mono text-[length:var(--hi-text-micro)] px-1.5 py-0.5 rounded bg-[rgba(200,180,140,0.08)] text-[var(--hi-gold)]">
+                после НДФЛ
               </span>
+              {isManualIncome != null && (
+                <span className={`font-mono text-[length:var(--hi-text-caption)] px-1.5 py-0.5 rounded ${
+                  isManualIncome
+                    ? 'bg-[rgba(90,85,72,0.15)] text-[var(--hi-ash)]'
+                    : 'bg-[rgba(200,180,140,0.1)] text-[var(--hi-gold)]'
+                }`}>
+                  {isManualIncome ? 'ручной' : 'факт'}
+                </span>
+              )}
             </div>
           )}
         </div>

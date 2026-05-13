@@ -134,7 +134,7 @@ export function AssetDetailPage() {
 
       <div ref={paymentFieldRef}>
       <AssetField
-        label="Доход на шт. / год"
+        label="Доход/шт./год до НДФЛ"
         value={annualIncome > 0 ? `₽ ${annualIncome.toLocaleString('ru-RU')}` : '— Укажите'}
         sourceLabel={asset.paymentPerUnitSource === 'fact' ? 'факт' : 'ручной'}
         isManualSource={asset.paymentPerUnitSource === 'manual'}

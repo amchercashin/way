@@ -18,7 +18,7 @@ export function ExpectedPayment({
 
   return (
     <div className="border border-[rgba(200,180,140,0.08)] rounded-lg p-3.5 mt-3">
-      <div className="font-mono text-[length:var(--hi-text-caption)] uppercase tracking-wider text-[var(--hi-gold)] mb-2">Ожидаемая выплата</div>
+      <div className="font-mono text-[length:var(--hi-text-caption)] uppercase tracking-wider text-[var(--hi-gold)] mb-2">Ожидаемая выплата до НДФЛ</div>
       <div className="space-y-1">
         <div className="flex justify-between">
           <span className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)]">Выплата на единицу</span>

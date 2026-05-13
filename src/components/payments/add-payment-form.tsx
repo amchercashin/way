@@ -29,31 +29,33 @@ export function AddPaymentForm({ assetId, paymentType, currency, onAdd, onCancel
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-[var(--hi-void)] border-t border-[var(--hi-shadow)]/30">
+    <div className="grid grid-cols-[minmax(118px,0.95fr)_minmax(0,1fr)_32px_32px] items-center gap-1.5 px-3 py-2 bg-[var(--hi-void)] border-t border-[var(--hi-shadow)]/30">
       <input
         type="date"
         value={dateStr}
         onChange={(e) => setDateStr(e.target.value)}
-        className="bg-transparent border border-[var(--hi-shadow)] rounded px-2 py-1 text-base text-[var(--hi-text)] font-mono w-[130px]"
+        aria-label="Дата выплаты"
+        className="min-w-0 w-full bg-transparent border border-[var(--hi-shadow)] rounded px-2 py-1 text-base text-[var(--hi-text)] font-mono"
       />
       <input
         type="text"
         inputMode="decimal"
         value={amountStr}
         onChange={(e) => setAmountStr(e.target.value)}
-        placeholder={`Сумма ${currency}`}
-        className="bg-transparent border border-[var(--hi-shadow)] rounded px-2 py-1 text-base text-[var(--hi-text)] font-mono w-[90px]"
+        placeholder="До НДФЛ"
+        aria-label={`Сумма выплаты до НДФЛ, ${currency}`}
+        className="min-w-0 w-full bg-transparent border border-[var(--hi-shadow)] rounded px-2 py-1 text-base text-[var(--hi-text)] font-mono"
         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
       />
       <button
         onClick={handleSubmit}
-        className="text-[#6bba6b] text-[length:var(--hi-text-body)] hover:text-green-300 transition-colors"
+        className="min-w-8 min-h-8 text-[#6bba6b] text-[length:var(--hi-text-body)] hover:text-green-300 transition-colors"
       >
         ✓
       </button>
       <button
         onClick={onCancel}
-        className="text-[var(--hi-muted)] text-[length:var(--hi-text-body)] hover:text-[var(--hi-ash)] transition-colors"
+        className="min-w-8 min-h-8 text-[var(--hi-muted)] text-[length:var(--hi-text-body)] hover:text-[var(--hi-ash)] transition-colors"
       >
         ×
       </button>

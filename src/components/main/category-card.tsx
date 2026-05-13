@@ -30,6 +30,7 @@ export function CategoryCard({ type, assetCount, income, yieldPercent }: Categor
         <div className="text-right">
           <div className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">{formatCurrency(income)}</div>
           <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)]">{formatPercent(yieldPercent)}</div>
+          <div className="font-mono text-[length:var(--hi-text-micro)] text-[var(--hi-ash)]">после НДФЛ</div>
         </div>
         <span className="text-[var(--hi-shadow)]">›</span>
       </div>

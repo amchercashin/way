@@ -16,16 +16,16 @@ export function AssetRow({ asset, stats }: AssetRowProps) {
       to={`/asset/${asset.id}`}
       className="block py-3 border-b border-[rgba(200,180,140,0.04)] transition-colors active:bg-[var(--hi-stone)]"
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="text-[length:var(--hi-text-body)] font-medium text-[var(--hi-text)]">{asset.name}</div>
+      <div className="flex justify-between items-start gap-3">
+        <div className="min-w-0">
+          <div className="text-[length:var(--hi-text-body)] font-medium text-[var(--hi-text)] truncate">{asset.name}</div>
           {(asset.ticker || asset.isin) && (
             <div className="text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-0.5">
               {[asset.ticker, asset.isin].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>
-        <div>
+        <div className="flex-shrink-0 text-right">
           <div className="flex items-center gap-1.5 justify-end">
             <span className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">{formatCurrency(stats.incomePerMonth)}</span>
             <span className={`font-mono text-[length:var(--hi-text-caption)] px-1.5 py-0.5 rounded min-w-[52px] text-center ${
@@ -41,6 +41,9 @@ export function AssetRow({ asset, stats }: AssetRowProps) {
               {formatPercent(stats.yieldPercent)} годовых
             </div>
           )}
+          <div className="font-mono text-[length:var(--hi-text-micro)] text-[var(--hi-ash)] text-right">
+            после НДФЛ
+          </div>
         </div>
       </div>
       <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-1">

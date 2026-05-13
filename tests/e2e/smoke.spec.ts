@@ -132,7 +132,7 @@ test('mobile manual flow supports foreign currency asset and payment', async ({ 
   await page.getByRole('button', { name: /Прочее/ }).click();
   await page.getByText('Валютный актив').click();
   await page.getByRole('button', { name: '+ выплата' }).click();
-  await page.getByPlaceholder('Сумма USD').fill('12');
+  await page.getByPlaceholder('До НДФЛ').fill('12');
   await page.getByRole('button', { name: '✓' }).click();
   await expect(page.getByText('12 USD')).toBeVisible();
 

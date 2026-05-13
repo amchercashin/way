@@ -50,8 +50,14 @@ export function MockMainPage() {
             расчётный пассивный доход
           </div>
 
+          <div className="mt-1 flex justify-center">
+            <span className="font-mono text-[length:var(--hi-text-micro)] uppercase tracking-[0.12em] px-2 py-0.5 rounded border border-[rgba(200,180,140,0.12)] bg-[rgba(200,180,140,0.06)] text-[var(--hi-gold)]">
+              после НДФЛ
+            </span>
+          </div>
+
           {/* Meta line */}
-          <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-0.5 flex items-center justify-center gap-1.5">
+          <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-1 flex items-center justify-center gap-1.5">
             <span>доходность 8.2% · портфель ₽ 516K</span>
             <span className="text-[var(--hi-ash)] text-[length:var(--hi-text-caption)]">⟳</span>
           </div>
@@ -84,6 +90,7 @@ export function MockMainPage() {
               <div className="text-right">
                 <div className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">₽ 31K</div>
                 <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)]">6.0%</div>
+                <div className="font-mono text-[length:var(--hi-text-micro)] text-[var(--hi-ash)]">после НДФЛ</div>
               </div>
               <span className="text-[var(--hi-shadow)]">›</span>
             </div>
@@ -102,6 +109,7 @@ export function MockMainPage() {
               <div className="text-right">
                 <div className="font-mono text-[length:var(--hi-text-body)] font-medium text-[var(--hi-gold)]">₽ 11K</div>
                 <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)]">4.3%</div>
+                <div className="font-mono text-[length:var(--hi-text-micro)] text-[var(--hi-ash)]">после НДФЛ</div>
               </div>
               <span className="text-[var(--hi-shadow)]">›</span>
             </div>

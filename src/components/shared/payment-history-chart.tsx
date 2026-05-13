@@ -137,7 +137,7 @@ export function PaymentHistoryChart({
             <span className="font-mono text-[length:var(--hi-text-caption)] text-[#b0a898]">{formatCompact(fallbackAnnual!)} ₽ / ед.</span>
           </div>
           <div className="font-mono text-[length:var(--hi-text-micro)] text-[#3a3530] italic">
-            Расчётно: {formatCompact(paymentPerUnit)} ₽ / год
+            Расчётно до НДФЛ: {formatCompact(paymentPerUnit)} ₽ / год
           </div>
         </div>
       );

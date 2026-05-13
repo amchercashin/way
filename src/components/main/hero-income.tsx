@@ -34,7 +34,12 @@ export function HeroIncome({ income, yieldPercent, totalValue, mode, onToggle, o
            {...a('hi-fade-in 0.5s ease-out 0.4s both')}>
         расчётный пассивный доход
       </div>
-      <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-0.5 flex items-center justify-center gap-1.5"
+      <div className="mt-1 flex justify-center" {...a('hi-fade-in 0.5s ease-out 0.5s both')}>
+        <span className="font-mono text-[length:var(--hi-text-micro)] uppercase tracking-[0.12em] px-2 py-0.5 rounded border border-[rgba(200,180,140,0.12)] bg-[rgba(200,180,140,0.06)] text-[var(--hi-gold)]">
+          после НДФЛ
+        </span>
+      </div>
+      <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-1 flex items-center justify-center gap-1.5"
            {...a('hi-fade-in 0.5s ease-out 0.6s both')}>
         <span>доходность {formatPercent(yieldPercent)} · портфель {formatCurrency(totalValue)}</span>
         <button
