@@ -18,12 +18,15 @@ export function AssetRow({ asset, stats }: AssetRowProps) {
     >
       <div className="flex justify-between items-start gap-3">
         <div className="min-w-0">
-          <div className="text-[length:var(--hi-text-body)] font-medium text-[var(--hi-text)] truncate">{asset.name}</div>
+          <div className="text-[length:var(--hi-text-body)] font-medium leading-tight text-[var(--hi-text)] truncate">{asset.name}</div>
           {(asset.ticker || asset.isin) && (
-            <div className="text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-0.5">
+            <div className="text-[length:var(--hi-text-caption)] leading-tight text-[var(--hi-muted)] mt-0.5">
               {[asset.ticker, asset.isin].filter(Boolean).join(' · ')}
             </div>
           )}
+          <div className="font-mono text-[length:var(--hi-text-caption)] leading-tight text-[var(--hi-muted)] mt-1.5">
+            {stats.totalQuantity} шт · {formatCurrency(stats.value)}
+          </div>
         </div>
         <div className="flex-shrink-0 text-right">
           <div className="flex items-center gap-1.5 justify-end">
@@ -45,9 +48,6 @@ export function AssetRow({ asset, stats }: AssetRowProps) {
             после НДФЛ
           </div>
         </div>
-      </div>
-      <div className="font-mono text-[length:var(--hi-text-caption)] text-[var(--hi-muted)] mt-1">
-        {stats.totalQuantity} шт · {formatCurrency(stats.value)}
       </div>
     </TransitionLink>
   );
